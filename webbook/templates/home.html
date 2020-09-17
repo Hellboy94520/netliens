@@ -1,0 +1,14 @@
+{% load i18n %}
+<!DOCTYPE html>
+<head>
+    <meta charset="UTF-8">
+    {% include 'header.html' %}
+</head>
+<body>
+    {% if user.is_authenticated %}
+        <h1 style="margin-top: 20px;">{% blocktrans with username=user.get_username %}Welcome {{ username }}!{% endblocktrans %}</h1>
+    {% else %}
+        <h1>{% trans "Welcome !" %}</h1>
+    {% endif %}
+</body>
+</html>

@@ -1,0 +1,193 @@
+{% load i18n %}
+<!DOCTYPE html>
+<html>
+{% load static %}
+<meta charset="UTF-8">
+<head>
+	<title>Net-Liens</title>
+	<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+	<link rel="stylesheet" type="text/css" href="{% static 'css/my-amber-theme.css' %}">
+</head>
+
+<body onresize="resize_header()" onload="resize_header()">
+	<!--------------------------------------------------------
+	Navbar
+	--------------------------------------------------------->
+	<div class="w3-top">
+		<div class="w3-bar my-amber-theme w3-card" style="box-shadow: 0 5px 5px 0 rgba(0, 0, 0, 0.25)">
+			<!-- Menu Button (MEDIUM AND SMALL SCREEN ONLY) -->
+			<a class="w3-bar-item my-amber-hover-theme-d4 w3-button w3-padding-large w3-hide-large w3-hide-small" href="javascript:void(0)" onclick="header_menu_press()" title="Menu" style="font-size: 17px;"><i class="fa fa-bars fa-3x"></i></a>
+			<a class="w3-bar-item my-amber-hover-theme-d4 w3-button w3-padding-large w3-hide-large w3-hide-medium" href="javascript:void(0)" onclick="header_menu_press()" title="Menu"><i class="fa fa-bars fa-5x"></i></a>
+			<!-- Home Button (IMAGE - ALL SCREEN) -->
+			<a href="/">
+				<img class="w3-bar-item my-amber-hover-theme w3-button" src="{%static 'images/net-liens.gif' %}" class="mainlogo" id="myLogoHomeButton"></img>
+			</a>
+			<!-- Loisirs Tourisme (LINK - LARGE AND MEDIUM SCREEN) -->
+			<a href="http://www.loisirs-tourisme.com" target="_blankclass" class="w3-bar-item w3-blue w3-hover-black w3-button w3-padding-large w3-hide-medium w3-hide-small" style="font-size: 18px;">Loisirs Tourisme</a>
+			<!-- Language Selection (LARGE SCREEN ONLY) -->
+			<div class="w3-dropdown-hover w3-hide-small w3-hide-medium w3-right">
+				<button class="w3-padding-large my-amber-hover-theme-d4 w3-button" title="Language" style="font-size: 18px;">{% trans "Language" %} <i class="fa fa-caret-down"></i></button>
+				<div class="w3-dropdown-content w3-amber w3-bar-block w3-card-4">
+					<a href="/languages/en?next={{ request.get_full_path }}" class="w3-bar-item my-amber-hover-theme-d4 w3-button w3-padding-large w3-hide-small">{% trans 'English' %}</a>
+					<a href="/languages/fr?next={{ request.get_full_path }}" class="w3-bar-item my-amber-hover-theme-d4 w3-button w3-padding-large w3-hide-small">{% trans 'French' %}</a>
+				</div>
+			</div>
+			<!-- TODO: Problem dimension when user is admin -->
+			<!-- Language Selection (MEDIUM SCREEN ONLY) -->
+			<div class="w3-dropdown-hover w3-hide-small w3-hide-large w3-right">
+				<button class="w3-padding-large my-amber-hover-theme-d4 w3-button" style="font-size: 17px;"><i class="fa fa-globe fa-3x"></i></button>
+				<div class="w3-dropdown-content w3-amber w3-bar-block w3-card-4">
+					<a href="/languages/en?next={{ request.get_full_path }}" class="w3-bar-item my-amber-hover-theme-d4 w3-button w3-padding-large w3-hide-small">{% trans 'English' %}</a>
+					<a href="/languages/fr?next={{ request.get_full_path }}" class="w3-bar-item my-amber-hover-theme-d4 w3-button w3-padding-large w3-hide-small">{% trans 'French' %}</a>
+				</div>
+			</div>
+			<!-- Account management (LARGE AND MEDIUM SCREEN) -->
+			{% if user.is_authenticated %}
+				<!-- Log Out -->
+				<a href="/account/logout" class="w3-bar-item my-amber-hover-theme-d4 w3-button w3-padding-large w3-hide-small w3-hide-medium w3-right" style="font-size: 18px;">{% trans "Log Out" %}</a>
+				<a href="/account/logout" class="w3-bar-item my-amber-hover-theme-d4 w3-button w3-padding-large w3-hide-small w3-hide-large w3-right" style="font-size: 17px;"><i class="fa fa-sign-out fa-3x"></i></a>
+				<!-- Account -->
+				<a href="/account/" class="w3-bar-item my-amber-hover-theme-d4 w3-button w3-padding-large w3-hide-small w3-hide-medium w3-right" style="font-size: 18px;">{% trans "Account" %}</a>
+				<a href="/account/" class="w3-bar-item my-amber-hover-theme-d4 w3-button w3-padding-large w3-hide-small w3-hide-large w3-right" style="font-size: 17px;"><i class="fa fa-user fa-3x"></i></a>	
+				<!-- Administration -->
+				{% if user.is_staff %}
+					<a href="/admin" class="w3-bar-item my-amber-hover-theme-d4 w3-button w3-padding-large w3-hide-small w3-hide-medium w3-right" style="font-size: 18px;">Administration</a>
+					<a href="/admin" class="w3-bar-item my-amber-hover-theme-d4 w3-button w3-padding-large w3-hide-small w3-hide-large w3-right" style="font-size: 17px;"><i class="fa fa-cog fa-3x"></i></a>
+				{% endif %}
+			{% else %}
+				<!-- Sign Up -->
+				<a href="/account/signup" class="w3-bar-item my-amber-hover-theme-d4 w3-button w3-padding-large w3-hide-small w3-hide-medium w3-right" style="font-size: 18px;">{% trans "Sign up" %}</a>
+				<a href="/account/signup" class="w3-bar-item my-amber-hover-theme-d4 w3-button w3-padding-large w3-hide-small w3-hide-large w3-right" style="font-size: 17px;"><i class="fa fa-user-plus fa-3x"></i></a>
+				<!-- Log In -->
+				<a href="/account/login" class="w3-bar-item my-amber-hover-theme-d4 w3-button w3-padding-large w3-hide-small w3-hide-medium w3-right" style="font-size: 18px;">{% trans "Log in" %}</a>
+				<a href="/account/login" class="w3-bar-item my-amber-hover-theme-d4 w3-button w3-padding-large w3-hide-small w3-hide-large w3-right" style="font-size: 17px;"><i class="fa fa-user fa-3x"></i></a>
+			{% endif %}
+		</div> 
+	</div>
+	<div style="margin-left: 1%; margin-right: 1%" id="myHeaderNavbarSeparation"></div>
+	<div class="w3-bar my-amber-theme"></div>
+	<!--------------------------------------------------------
+	Menu Bar (MEDIUM AND SMALL SCREEN ONLY)
+	--------------------------------------------------------->
+	<div id="myMenu" class="w3-bar-block my-amber-theme w3-hide w3-hide-large w3-top">
+		<a class="w3-bar-item w3-black my-amber-hover-theme-d4 w3-button w3-padding-large" onclick="header_menu_element_press()" id="myMenu_closeMenu"><i class="fa fa-bars"></i>{% trans "Close Menu" %}</a>
+		<!-- Account management (SMALL SCREEN ONLY) -->
+		{% if user.is_authenticated %}
+			<!-- Administration -->
+			{% if user.is_staff %}
+				<a href="/admin" class="w3-bar-item my-amber-hover-theme-d4 w3-button w3-padding-large w3-hide-medium w3-hide-large" onclick="header_menu_element_press()" style="font-size: 30px;">Administration</a>
+			{% endif %}
+			<!-- Account -->
+			<a href="/account" class="w3-bar-item my-amber-hover-theme-d4 w3-button w3-padding-large w3-hide-medium w3-hide-large" onclick="header_menu_element_press()" style="font-size: 30px;">{% trans "Account" %}</a>
+			<!-- Log Out -->
+			<a href="/account/logout" class="w3-bar-item my-amber-hover-theme-d4 w3-button w3-padding-large w3-hide-medium w3-hide-large" onclick="header_menu_element_press()" style="font-size: 30px;">{% trans "Log Out" %}</a>
+		{% else %}
+			<!-- Log In -->
+			<a href="/account/login" class="w3-bar-item my-amber-hover-theme-d4 w3-button w3-padding-large w3-hide-medium w3-hide-large" onclick="header_menu_element_press()" style="font-size: 30px;">{% trans "Log in" %}</a>
+			<!-- Sign Up -->
+			<a href="/account/signup" class="w3-bar-item my-amber-hover-theme-d4 w3-button w3-padding-large w3-hide-medium w3-hide-large" onclick="header_menu_element_press()" style="font-size: 30px;">{% trans "Sign up" %}</a>
+		{% endif %}
+		<!-- Language Selection (SMALL SCREEN ONLY) -->
+		<button class="w3-bar-item my-amber-hover-theme-d4 w3-button w3-padding-large w3-hide-medium w3-hide-large w3-button" onclick="header_menu_language_press()" title="Language" style="font-size: 30px;">{% trans "Language" %}</button>
+		<div class="w3-bar-item my-amber-hover-theme-d4 w3-button w3-padding-large w3-hide-medium w3-hide-large" style="display: none" id="myMenu_language_en">
+			<a href="/languages/en?next={{ request.get_full_path }}" class="w3-bar-item my-amber-hover-theme-d4 w3-button w3-padding-large">EN</a>
+		</div>
+		<div class="w3-bar-item my-amber-hover-theme-d4 w3-button w3-padding-large w3-hide-medium w3-hide-large" style="display: none" id="myMenu_language_fr">
+			<a href="/languages/fr?next={{ request.get_full_path }}" class="w3-bar-item my-amber-hover-theme-d4 w3-button w3-padding-large">FR</a>
+		</div>
+		<!-- Other (MEDIUM AND SMALL SCREEN) -->
+		<a href="http://www.loisirs-tourisme.com" target="_blankclass" class="w3-bar-item w3-blue my-amber-hover-theme-d4 w3-button w3-padding-large" onclick="header_menu_element_press()" id="myMenu_loisirstourisme">Loisirs Tourisme</a>
+		<a href="#contact" class="w3-bar-item my-amber-hover-theme-d4 w3-button w3-padding-large" onclick="header_menu_element_press()" id="myMenu_contact">Contact</a>
+		<a href="#aboutNetLiens" class="w3-bar-item my-amber-hover-theme-d4 w3-button w3-padding-large" onclick="header_menu_element_press()" id="myMenu_aboutNetLiens">{% trans "About Net-Liens" %}</a>
+		<a href="#aboutCharter" class="w3-bar-item my-amber-hover-theme-d4 w3-button w3-padding-large" onclick="header_menu_element_press()" id="myMenu_aboutCharter">{% trans "About Charter" %}</a>
+		<a href="#aboutAdds" class="w3-bar-item my-amber-hover-theme-d4 w3-button w3-padding-large" onclick="header_menu_element_press()" id="myMenu_aboutAdds">{% trans "About Adds" %}</a>
+	</div>
+</body>
+
+<!-- -------------------------------- SCRIPT  ------------------------------------------- -->
+<script>
+	/* Variable for default size */
+	const element_navbar_height_large  = "50px";
+	const element_navbar_height_medium = "75px";
+	const element_navbar_height_small  = "100px";
+	const font_size_medium = "20px";
+	const font_size_small  = "30px";
+
+	/* Event (resize or load) */
+	function resize_header() {
+		// w3-large
+		if(window.innerWidth > 992) {
+			document.getElementById("myLogoHomeButton").style.height = element_navbar_height_large;
+			if(document.getElementById("myLogoHomeButton").className.includes("w3-right")) {
+				document.getElementById("myLogoHomeButton").className = document.getElementById("myLogoHomeButton").className.replace(" w3-right", "");
+			}
+			document.getElementById("myHeaderNavbarSeparation").style.marginTop = element_navbar_height_large;
+		}
+		// w3-medium
+		else if (window.innerWidth <= 992 && window.innerWidth >= 601) {
+			document.getElementById("myLogoHomeButton").style.height = element_navbar_height_medium;
+			if(document.getElementById("myLogoHomeButton").className.includes("w3-right") ) {
+				document.getElementById("myLogoHomeButton").className = document.getElementById("myLogoHomeButton").className.replace(" w3-right", "");
+			}
+			document.getElementById("myHeaderNavbarSeparation").style.marginTop = element_navbar_height_medium;
+			document.getElementById("myMenu").style.marginTop = element_navbar_height_medium;
+			document.getElementById("myMenu_closeMenu").style.fontSize = font_size_medium;
+			document.getElementById("myMenu_loisirstourisme").style.fontSize = font_size_medium;
+			document.getElementById("myMenu_contact").style.fontSize = font_size_medium;
+			document.getElementById("myMenu_aboutNetLiens").style.fontSize = font_size_medium;
+			document.getElementById("myMenu_aboutCharter").style.fontSize = font_size_medium;
+			document.getElementById("myMenu_aboutAdds").style.fontSize = font_size_medium;
+		}
+		// w3-small
+		else {
+			document.getElementById("myLogoHomeButton").style.height = element_navbar_height_small;
+			if(!document.getElementById("myLogoHomeButton").className.includes("w3-right")) {
+				document.getElementById("myLogoHomeButton").className  += " w3-right";
+			}
+			document.getElementById("myHeaderNavbarSeparation").style.marginTop = element_navbar_height_small;
+			document.getElementById("myMenu").style.marginTop = element_navbar_height_small;
+			document.getElementById("myMenu_closeMenu").style.fontSize = font_size_small;
+			document.getElementById("myMenu_loisirstourisme").style.fontSize = font_size_small;
+			document.getElementById("myMenu_contact").style.fontSize = font_size_small;
+			document.getElementById("myMenu_aboutNetLiens").style.fontSize = font_size_small;
+			document.getElementById("myMenu_aboutCharter").style.fontSize = font_size_small;
+			document.getElementById("myMenu_aboutAdds").style.fontSize = font_size_small;
+		}
+	}
+
+	/* Called by Menu button */
+	function header_menu_press() {
+		// Show or hid menu bar
+		var l_menu_bar = document.getElementById("myMenu");
+		if(l_menu_bar.className.includes("w3-show")) {
+			l_menu_bar.className = l_menu_bar.className.replace(" w3-show", "");
+		}
+		else {
+			l_menu_bar.className += " w3-show";
+		}
+	}
+	/* Called when an element inside menu is pressed */
+	function header_menu_element_press() {
+		document.getElementById("myMenu").className = document.getElementById("myMenu").className.replace(" w3-show", "");
+		document.getElementById("myMenu_language_en").style.display = 'none';
+		document.getElementById("myMenu_language_fr").style.display = 'none';
+	}
+	/* Called when language is pressed */
+	function header_menu_language_press() {
+		if(document.getElementById("myMenu_language_en").style.display == "block") {
+			document.getElementById("myMenu_language_en").style.display = "none";
+		}
+		else {
+			document.getElementById("myMenu_language_en").style.display = 'block';
+		}
+		if(document.getElementById("myMenu_language_fr").style.display == "block") {
+			document.getElementById("myMenu_language_fr").style.display = "none";
+		}
+		else {
+			document.getElementById("myMenu_language_fr").style.display = 'block';
+		}
+	}
+</script>
+</html>
