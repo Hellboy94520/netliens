@@ -74,6 +74,9 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'netliens.wsgi.application'
 
+# Required to use AbstractUser Object
+# https://docs.djangoproject.com/fr/3.1/topics/auth/customizing/#substituting-a-custom-user-model
+AUTH_USER_MODEL = 'webbook.User'
 
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
@@ -85,12 +88,6 @@ DATABASES = {
         'HOST': "mongodb"
     }
 }
-
-# Login
-LOGIN_URL = '/account/login'
-LOGIN_REDIRECT_URL = 'home'
-LOGOUT_URL = "/account/logout"
-LOGOUT_REDIRECT_URL = 'home'
 
 # Password validation
 # https://docs.djangoproject.com/en/2.2/ref/settings/#auth-password-validators
@@ -207,6 +204,7 @@ STATIC_ROOT = "/django_app/static"
 # Media files (Images)
 MEDIA_URL = 'media/'
 MEDIA_ROOT = "/django_app/media"
+
 
 # URLS
 # - Login
