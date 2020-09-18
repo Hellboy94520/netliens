@@ -41,16 +41,17 @@ class AdminUserForm(forms.ModelForm):
 class SignUpForm(UserCreationForm):
     class Meta:
         model = User
-        fields = [ 'username', 'email', 'last_name', 'first_name' ]
+        fields = [ 'username', 'email', 'last_name', 'first_name', 'company' ]
 
     def __init__(self, *args, **kwargs):
         super(SignUpForm, self).__init__(*args, **kwargs)
         self.fields['username'].widget.attrs['placeholder'] = self.fields['username'].label
         self.fields['email'].widget.attrs['placeholder'] = self.fields['email'].label
-        self.fields['last_name'].widget.attrs['placeholder'] = self.fields['last_name'].label
-        self.fields['first_name'].widget.attrs['placeholder'] = self.fields['first_name'].label
         self.fields['password1'].widget.attrs['placeholder'] = self.fields['password1'].label
         self.fields['password2'].widget.attrs['placeholder'] = self.fields['password2'].label
+        self.fields['last_name'].widget.attrs['placeholder'] = self.fields['last_name'].label
+        self.fields['first_name'].widget.attrs['placeholder'] = self.fields['first_name'].label
+        self.fields['company'].widget.attrs['placeholder'] = self.fields['company'].label
 
     def save(self, *args, **kwargs):
         l_user = super(SignUpForm, self).save(commit=False)

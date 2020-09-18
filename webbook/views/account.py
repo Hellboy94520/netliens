@@ -1,9 +1,6 @@
 from django.shortcuts import render, redirect
 from django.conf import settings
 from django.contrib.auth import login
-# from django.contrib.auth.models import User
-# from django.contrib.auth.forms import AuthenticationForm
-# from django.utils.encoding import force_bytes, force_text
 from django.utils.decorators import method_decorator
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
@@ -11,6 +8,10 @@ from django.contrib.auth.decorators import login_required
 from django.views import View
 
 from ..forms import PublicUserForm, SignUpForm
+from ..views import User
+
+#TODO: To delete when ErrorPages will be implement when activation link is incorrect
+from django.http import HttpResponse
 
 # -----------------------------
 # Token
@@ -42,9 +43,6 @@ class HomeView(View):
         p_form = PublicUserForm(request.POST)
         if p_form.is_valid():
             user = p_form.save()
-            #TODO: Send email
-            # print(f"Uid='{urlsafe_base64_encode(force_bytes(user.pk))}'")
-            # print(f"Token='{account_activation_token.make_token(user)}'")
             return redirect('/')
         return render(request, self.template_name, locals())
 
@@ -60,25 +58,24 @@ class SignupView(View):
         p_form = SignUpForm(request.POST)
         if p_form.is_valid():
             user = p_form.save()
-            #TODO: Send email
-            # print(f"Uid='{urlsafe_base64_encode(force_bytes(user.pk))}'")
-            # print(f"Token='{account_activation_token.make_token(user)}'")
             return redirect(settings.LOGIN_REDIRECT_URL)
         return render(request, self.template_name, locals())
 
 # -----------------------------
 def activation(request, uidb64, token):
-    uid = force_text(urlsafe_base64_decode(uidb64))
+    try:
+        uid = force_text(urlsafe_base64_decode(uidb64))
+    except:
+        return HttpResponse(status=404)
+
     try:
         l_user = User.objects.get(pk=uid)
     except(TypeError, ValueError, OverflowError, User.DoesNotExist):
-        #TODO: Write template to contact administration in case of problem or to resend an email
-        return HttpResponse('Activation link is invalid!')
+        return HttpResponse(status=404)
     else:
-        if account_activation_token.check_token(user, token):
+        if account_activation_token.check_token(l_user, token):
             l_user.is_active = True
             l_user.save()
             login(request, l_user)
             return redirect(settings.LOGIN_REDIRECT_URL)
-        #TODO: Write template to contact administration in case of problem or to resend an email
-        return HttpResponse('Activation link is invalid!')
+    return HttpResponse(status=404)
