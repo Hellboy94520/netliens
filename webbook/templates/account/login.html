@@ -1,0 +1,34 @@
+{% load i18n %}
+<!DOCTYPE html>
+<html lang="en">     
+<head>
+    <meta charset="UTF-8">
+    {% include 'header.html' %}
+</head>
+<body>
+    <div class="w3-card" style="margin-top: 20px; margin-left: 5%; margin-right: 5%; padding-bottom: 10px;">
+        <header class="w3-container my-amber-theme-l1">
+            <h1 class="w3-center">{% trans "Log In" %}</h1>
+        </header>
+        <div class="w3-container w3-center" style="margin-top: 10px; margin-bottom: 10px;">
+            <form method="post">
+            {% csrf_token %}
+                {% trans "Username" as tr_username %}
+                <input type="text" name="username" placeholder="{{ tr_username }}" autofocus required id="id_username">
+                <div class="w3-hide-large w3-hide-medium"><br></div>
+                {% trans "Password" as tr_password %}
+                <input type="password" name="password" placeholder="{{ tr_password }}" autofocus required id="id_password">
+                <div class="w3-hide-large w3-hide-medium"><br></div>
+                <input name="submit" type="hidden" value="submit"/>
+                <button type="submit" >{% trans "Login" %}</button>
+                {% for error in form.field_errors %}
+                    <a style="color: red;">{{ error }}</a><br>
+                {% endfor %}
+                {% for error in form.non_field_errors %}
+                    <a style="color: red;">{{ error }}</a><br>
+                {% endfor %}
+            </form>
+            <p><a href="/account/password_reset">{% trans 'Lost password?' %}</a></p>
+        </div>
+    </div>
+</body>

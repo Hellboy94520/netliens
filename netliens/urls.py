@@ -17,5 +17,5 @@ from django.urls import path, include
 from webbook import views
 
 urlpatterns = [
-    path('', include('webbook.urls'))
+    path('', include('webbook.urls')),
 ]

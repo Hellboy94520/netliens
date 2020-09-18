@@ -1,13 +1,14 @@
 from django.test import TestCase
 from django.utils import timezone
+from django.conf import settings
 
-from webbook.models import User, UserType
+from webbook.models import User
 from webbook.forms import PublicUserForm, AdminUserForm
 
 class UserModelTestCase(TestCase):
     def setUp(self):
         self.username = "toto"
-        self.email = "alexandre.delahaye@free.fr"
+        self.email = "toto@toto.fr"
         self.password = "tototititutu" 
         self.first_name = "Toto"
         self.last_name = "Titi"
@@ -25,7 +26,7 @@ class UserModelTestCase(TestCase):
         self.assertEqual(l_user.groups.count(), 0, "[LOCAL] Groups already exist !")        
         self.assertEqual(l_user.user_permissions.count(), 0, "[LOCAL] User_Permissions already exist !")
         self.assertFalse(l_user.is_staff, "[LOCAL] is_staff is not False !")
-        self.assertFalse(l_user.is_active, "[LOCAL] is_active is not False !")
+        self.assertTrue(l_user.is_active, "[LOCAL] is_active is not True !")
         self.assertFalse(l_user.is_superuser, "[LOCAL] is_super_user is not False !")
 
     def test_minimal_construction_database(self):
@@ -40,7 +41,7 @@ class UserModelTestCase(TestCase):
         self.assertEqual(l_user.groups.count(), 0, "[DB] Groups already exist !")        
         self.assertEqual(l_user.user_permissions.count(), 0, "[DB] User_Permissions already exist !")
         self.assertFalse(l_user.is_staff, "[DB] is_staff is not False !")
-        self.assertFalse(l_user.is_active, "[DB] is_active is not False !")
+        self.assertTrue(l_user.is_active, "[DB] is_active is not True !")
         self.assertFalse(l_user.is_superuser, "[DB] is_super_user is not False !")
 
     def test_constructor(self):
@@ -79,14 +80,11 @@ class UserModelTestCase(TestCase):
 class PublicUserFormTestCase(TestCase):
     def setUp(self):
         self.username = "toto"
-        self.email = "alexandre.delahaye@free.fr"
+        self.email = "toto@toto.fr"
         self.password = "tototititutu" 
         self.first_name = "Toto"
         self.last_name = "Titi"
         self.company = "Tutu"
-        self.is_staff = False
-        self.is_active = False
-        self.is_superuser = False
 
     def test_userform_valid(self):
         l_user = PublicUserForm(data={  'username': self.username,
@@ -109,7 +107,7 @@ class PublicUserFormTestCase(TestCase):
         self.assertEqual(l_user.groups.count(), 0, "[DB] Groups already exist !")        
         self.assertEqual(l_user.user_permissions.count(), 0, "[DB] User_Permissions already exist !")
         self.assertFalse(l_user.is_staff, "[DB] is_staff is not False !")
-        self.assertFalse(l_user.is_active, "[DB] is_active is not False !")
+        self.assertTrue(l_user.is_active, "[DB] is_active is not True !")
         self.assertFalse(l_user.is_superuser, "[DB] is_super_user is not False !")
 
     def test_userform_constructor_error_email(self):
@@ -192,3 +190,147 @@ class PublicUserFormTestCase(TestCase):
         self.assertEqual(len(l_user['company'].errors), 1, "Expected only 1 error for 'company' field !")
         self.assertEqual(l_user['company'].errors[0], "This field is required.", "Error message not expected !")
 
+class AdminUserFormTestCase(TestCase):
+    def setUp(self):
+        self.username = "toto"
+        self.email = "toto@toto.fr"
+        self.password = "tototititutu" 
+        self.first_name = "Toto"
+        self.last_name = "Titi"
+
+    def test_userform_valid(self):
+        l_user = AdminUserForm(data={   'username': self.username,
+                                        'email': self.email,
+                                        'password': self.password,
+                                        'first_name': self.first_name,
+                                        'last_name': self.last_name,
+                                        'is_superuser': False})
+        self.assertTrue(l_user.is_valid(), "Form is not valid !")
+        self.assertEqual(User.objects.all().count(), 0, "[DB] an User already exist !")
+        l_user.save()
+        self.assertEqual(User.objects.all().count(), 1, "[DB] User has not been created after save form !")
+        l_user = User.objects.get(username=self.username)
+        self.assertEqual(l_user.username, self.username, "[DB] username invalid !")
+        self.assertEqual(l_user.email, self.email, "[DB] email invalid !")
+        self.assertEqual(l_user.password, self.password, "[DB] password invalid !")        
+        self.assertEqual(l_user.first_name, self.first_name, "[DB] first_name invalid !")
+        self.assertEqual(l_user.last_name, self.last_name, "[DB] last_name invalid !")
+        self.assertEqual(l_user.groups.count(), 0, "[DB] Groups already exist !")        
+        self.assertEqual(l_user.user_permissions.count(), 0, "[DB] User_Permissions already exist !")
+        self.assertTrue(l_user.is_staff, "[DB] is_staff is not True !")
+        self.assertTrue(l_user.is_active, "[DB] is_active is not True !")
+        self.assertFalse(l_user.is_superuser, "[DB] is_super_user is not False !")
+
+    def test_superuser_userform_valid(self):
+        l_user = AdminUserForm(data={   'username': self.username,
+                                        'email': self.email,
+                                        'password': self.password,
+                                        'first_name': self.first_name,
+                                        'last_name': self.last_name,
+                                        'is_superuser': True})
+        self.assertTrue(l_user.is_valid(), "Form is not valid !")
+        self.assertEqual(User.objects.all().count(), 0, "[DB] an User already exist !")
+        l_user.save()
+        self.assertEqual(User.objects.all().count(), 1, "[DB] User has not been created after save form !")
+        l_user = User.objects.get(username=self.username)
+        self.assertEqual(l_user.username, self.username, "[DB] username invalid !")
+        self.assertEqual(l_user.email, self.email, "[DB] email invalid !")
+        self.assertEqual(l_user.password, self.password, "[DB] password invalid !")        
+        self.assertEqual(l_user.first_name, self.first_name, "[DB] first_name invalid !")
+        self.assertEqual(l_user.last_name, self.last_name, "[DB] last_name invalid !")
+        self.assertEqual(l_user.groups.count(), 0, "[DB] Groups already exist !")        
+        self.assertEqual(l_user.user_permissions.count(), 0, "[DB] User_Permissions already exist !")
+        self.assertTrue(l_user.is_staff, "[DB] is_staff is not True !")
+        self.assertTrue(l_user.is_active, "[DB] is_active is not True !")
+        self.assertTrue(l_user.is_superuser, "[DB] is_super_user is not True !")
+
+class SignUpView(TestCase):
+    def setUp(self):
+        self.username = "toto"
+        self.email = "toto@toto.fr"
+        self.password = "tototititutu" 
+        self.first_name = "Toto"
+        self.last_name = "Titi"
+
+    def test_valid_new_user_creation(self):
+        response = self.client.post(
+            "/account/signup/", data={  "username": self.username,
+                                        "email": self.email,
+                                        "password1": self.password,
+                                        "password2": self.password,
+                                        "last_name": self.last_name,
+                                        "first_name": self.first_name})
+        self.assertEqual(response.url, settings.LOGIN_REDIRECT_URL, f"Redirection not exist in response '{response}'")
+        self.assertEqual(User.objects.all().count(), 1, "[DB] UserForm has not been created after submit valid form !")
+
+    def test_user_already_exist_creation(self):
+        response = self.client.post(
+            "/account/signup/", data={  "username": self.username,
+                                        "email": self.email,
+                                        "password1": self.password,
+                                        "password2": self.password,
+                                        "last_name": self.last_name,
+                                        "first_name": self.first_name})
+        self.assertEqual(response.url, settings.LOGIN_REDIRECT_URL)
+        self.assertEqual(User.objects.all().count(), 1, "[DB] UserForm has not been created after submit valid form !")
+
+        response = self.client.post(
+            "/account/signup/", data={  "username": self.username,
+                                        "email": self.email,
+                                        "password1": self.password,
+                                        "password2": self.password,
+                                        "last_name": self.last_name,
+                                        "first_name": self.first_name})
+        self.assertEqual(User.objects.all().count(), 1, "[DB] UserForm has been created after submit incorrect form !")
+        
+        response = self.client.post(
+            "/account/signup/", data={  "username": self.username,
+                                        "email": "toto@gmail.com",
+                                        "password1": self.password,
+                                        "password2": self.password,
+                                        "last_name": self.last_name,
+                                        "first_name": self.first_name})
+        self.assertEqual(User.objects.all().count(), 1, "[DB] UserForm has been created after submit incorrect form !")
+
+        response = self.client.post(
+            "/account/signup/", data={  "username": "titi",
+                                        "email": self.email,
+                                        "password1": self.password,
+                                        "password2": self.password,
+                                        "last_name": self.last_name,
+                                        "first_name": self.first_name})
+        self.assertEqual(User.objects.all().count(), 1, "[DB] UserForm has been created after submit incorrect form !")
+
+class LoginView(TestCase):
+    def setUp(self):
+        self.username = "toto"
+        self.email = "toto@toto.fr"
+        self.password = "tototititutu"
+        User.objects.create_user(username=self.username, password=self.password)
+
+    def test_valid_login(self):
+        self.assertEqual(User.objects.all().count(), 1, "[DB] UserForm has not been created after submit valid form !")
+        response = self.client.post(
+            "/account/login/", {    'username': self.username,
+                                    'password': self.password })
+        self.assertEqual(response.url, settings.LOGIN_REDIRECT_URL, f"Redirection not exist in response '{response}'")
+        response = self.client.get(settings.LOGIN_REDIRECT_URL)
+        self.assertTrue(response.context['user'].is_authenticated, "User is not authentificated !")
+        self.assertEqual(response.context['user'].username, self.username, "Wrong user authentificated !")
+
+    def test_wrong_username(self):
+        self.assertEqual(User.objects.all().count(), 1, "[DB] UserForm has not been created after submit valid form !")
+        response = self.client.post(
+            "/account/login/", {    'username': 'titi',
+                                    'password': self.password })
+        response = self.client.get(settings.LOGIN_REDIRECT_URL)
+        self.assertFalse(response.context['user'].is_authenticated, "User is not authentificated !")
+
+    def test_wrong_password(self):
+        self.assertEqual(User.objects.all().count(), 1, "[DB] UserForm has not been created after submit valid form !")
+        response = self.client.post(
+            "/account/login/", {    'username': self.username,
+                                    'password': 'titi' })
+        response = self.client.get(settings.LOGIN_REDIRECT_URL)
+        self.assertFalse(response.context['user'].is_authenticated, "User is not authentificated !")
+       

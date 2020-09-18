@@ -35,7 +35,6 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    #'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -209,9 +208,9 @@ MEDIA_ROOT = "/django_app/media"
 # URLS
 # - Login
 LOGIN_URL = '/account/login'
-LOGIN_REDIRECT_URL = 'home'
+LOGIN_REDIRECT_URL = '/'
 LOGOUT_URL = "/account/logout"
-LOGOUT_REDIRECT_URL = 'home'
+LOGOUT_REDIRECT_URL = '/'
 # - Errors
 # https://docs.djangoproject.com/fr/2.2/topics/http/views/
 handler404 = 'annuaire.views.errors.error404'

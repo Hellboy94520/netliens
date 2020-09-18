@@ -1,0 +1,35 @@
+{% load i18n %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    {% include 'header.html' %}
+</head>
+
+<body>
+    <div class="w3-card" style="margin-top: 20px; margin-left: 5%; margin-right: 5%; padding-bottom: 10px;">
+        <header class="w3-container my-amber-theme-l1">
+            <h1 class="w3-center">{% trans "Sign Up" %}</h1>
+        </header>
+        <div class="w3-container w3-center" style="margin-top: 10px; margin-bottom: 10px;">
+            <form method="post">
+            {% csrf_token %}
+                {% for field in p_form %}
+                    <p>
+                        {{ field.label }}: 
+                        <span class="w3-hide-large w3-hide-medium"><br></span>
+                        {{ field }}<br>
+                        <!-- <a class="w3-text-grey w3-left" style="font-size:12px">{{ field.help_text }}</a> -->
+                        {% for error in field.errors %}
+                            <p style="color: red">{{ error }}</p>
+                        {% endfor %}
+                    </p>
+                {% endfor %}
+                {% for error in p_form.non_field_errors %}
+                    <a style="color: red;">{{ error }}</a><br>
+                {% endfor %}
+                <button type="submit">{% trans "Sign up" %}</button>
+        </form>
+    </div>
+</body>
+</html>
