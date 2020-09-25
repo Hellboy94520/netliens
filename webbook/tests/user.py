@@ -249,6 +249,30 @@ class AdminUserFormTestCase(TestCase):
         self.assertTrue(l_user.is_active, "[DB] is_active is not True !")
         self.assertTrue(l_user.is_superuser, "[DB] is_super_user is not True !")
 
+class HomeViewTestCase(TestCase):
+    def setUp(self):
+        self.username = "toto"
+        self.password = "tototititutu"
+        User.objects.create_user(username=self.username, password=self.password)
+
+    def test_authentificated_account_home(self):
+        self.assertEqual(User.objects.all().count(), 1, "[DB] UserForm has not been created after submit valid form !")
+        response = self.client.post(
+            "/account/login/", {    'username': self.username,
+                                    'password': self.password })
+        self.assertEqual(response.url, settings.LOGIN_REDIRECT_URL, f"Redirection not exist in response '{response}'")
+        response = self.client.get(settings.LOGIN_REDIRECT_URL)
+        self.assertTrue(response.context['user'].is_authenticated, "User is not authentificated !")
+        self.assertEqual(response.context['user'].username, self.username, "Wrong user authentificated !")
+        response = self.client.get("/account/")
+        self.assertEqual(response.status_code, 200, "No Error 200 page for access authentificated to account homepage !")
+
+    def test_anonymous_account_home(self):
+        response = self.client.get("/account/")
+        self.assertEqual(response.status_code, 302, "No Error 302 page for access anonymously to account homepage !")
+        self.assertEqual(response.url, "/account/login?next=/account/", "Incorrect url for access anonymously to account homepage !")
+
+
 class SignUpView(TestCase):
     def setUp(self):
         self.username = "toto"

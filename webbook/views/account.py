@@ -25,6 +25,9 @@ from django.utils.http import urlsafe_base64_decode
 # -----------------------------
 @method_decorator(login_required, name='dispatch')
 class HomeView(View):
+    """
+        View to update account (non important data)
+    """
     template_name = 'account/home.html'
 
     def get(self, request, *args, **kwargs):
@@ -40,6 +43,9 @@ class HomeView(View):
 
 # -----------------------------
 class SignupView(View):
+    """
+        Authentification view
+    """
     template_name = "account/signup.html"
 
     def get(self, request, *args, **kwargs):
@@ -55,6 +61,9 @@ class SignupView(View):
 
 # -----------------------------
 def activation(request, uidb64, token):
+    """
+        Access to activate an account from email received
+    """
     try:
         uid = force_text(urlsafe_base64_decode(uidb64))
     except:

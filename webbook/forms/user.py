@@ -62,6 +62,7 @@ class SignUpForm(UserCreationForm):
         l_user.is_superuser = False
         l_user.save()
         l_act_email = ActivationEmail.objects.get_or_create(pk=0)
+        #TODO: Add link to message to send
         try:
             send_mail(
                 subject=l_act_email.subject,
