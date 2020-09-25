@@ -19,5 +19,4 @@ urlpatterns = [
   path('account/logout/', auth_views.LogoutView.as_view()),
   path('account/signup/', account.SignupView.as_view()),
   url(r'^account/activation/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/$', account.activation, name='activate'),
-
 ]

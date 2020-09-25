@@ -123,7 +123,7 @@ class PublicUserFormTestCase(TestCase):
                                         'last_name': self.last_name,
                                         'company': self.company})
         self.assertFalse(l_user.is_valid(), "Form is valid !")
-        self.assertEqual(len(l_user.errors), 1)
+        self.assertEqual(len(l_user.errors), 1, "Expected only 1 error !")
         self.assertEqual(len(l_user['email'].errors), 1, "Expected only 1 error for 'email' field !")
         self.assertEqual(l_user['email'].errors[0], "Enter a valid email address.", "Error message not expected !")
 
@@ -134,7 +134,7 @@ class PublicUserFormTestCase(TestCase):
                                         'last_name': self.last_name,
                                         'company': self.company})
         self.assertFalse(l_user.is_valid(), "Form is valid !")
-        self.assertEqual(len(l_user.errors), 1)
+        self.assertEqual(len(l_user.errors), 1, "Expected only 1 error !")
         self.assertEqual(len(l_user['email'].errors), 1, "Expected only 1 error for 'email' field !")
         self.assertEqual(l_user['email'].errors[0], "Enter a valid email address.", "Error message not expected !")
 
@@ -157,7 +157,7 @@ class PublicUserFormTestCase(TestCase):
                                         'last_name': self.last_name,
                                         'company': self.company})
         self.assertFalse(l_user.is_valid(), "Form is valid !")
-        self.assertEqual(len(l_user.errors), 2)
+        self.assertEqual(len(l_user.errors), 2, "Expected only 2 errors !")
         self.assertEqual(len(l_user['username'].errors), 1, "Expected only 1 error for 'username' field !")
         self.assertEqual(l_user['username'].errors[0], "A user with that username already exists.", "Error message not expected !")
         self.assertEqual(len(l_user['email'].errors), 1, "Expected only 1 error for 'email' field !")
@@ -166,7 +166,7 @@ class PublicUserFormTestCase(TestCase):
     def test_userform_not_valid_only_username(self):
         l_user = PublicUserForm(data={'username': self.username})
         self.assertFalse(l_user.is_valid(), "Form is valid !")
-        self.assertEqual(len(l_user.errors), 5)
+        self.assertEqual(len(l_user.errors), 5, "Expected only 5 errors !")
         self.assertEqual(len(l_user['password'].errors), 1, "Expected only 1 error for 'password' field !")
         self.assertEqual(l_user['password'].errors[0], "This field is required.", "Error message not expected !")
         self.assertEqual(len(l_user['email'].errors), 1, "Expected only 1 error for 'email' field !")
@@ -181,7 +181,7 @@ class PublicUserFormTestCase(TestCase):
     def test_userform_not_valid_no_data(self):
         l_user = PublicUserForm(data={})
         self.assertFalse(l_user.is_valid(), "Form is valid !")
-        self.assertEqual(len(l_user.errors), 6)
+        self.assertEqual(len(l_user.errors), 6, "Expected only 6 errors !")
         self.assertEqual(len(l_user['password'].errors), 1, "Expected only 1 error for 'password' field !")
         self.assertEqual(l_user['password'].errors[0], "This field is required.", "Error message not expected !")
         self.assertEqual(len(l_user['username'].errors), 1, "Expected only 1 error for 'username' field !")

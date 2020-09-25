@@ -2,8 +2,10 @@ from django import forms
 from django.utils.translation import ugettext_lazy as _
 from django.utils import translation
 
-from ..models import User
+from ..models import User, ActivationEmail
 from django.contrib.auth.forms import UserCreationForm
+
+from django.core.mail import send_mail
 
 import logging
 logger = logging.getLogger("forms")
@@ -59,5 +61,13 @@ class SignUpForm(UserCreationForm):
         l_user.is_active = False
         l_user.is_superuser = False
         l_user.save()
-        #TODO: Send email
+        l_act_email = ActivationEmail.objects.get_or_create(pk=0)
+        try:
+            send_mail(
+                subject=l_act_email.subject,
+                message=l_act_email.message,
+                recipient_list=[l_user.email],
+                fail_silently=False)
+        except:
+            return None
         return l_user

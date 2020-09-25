@@ -7,6 +7,7 @@ from django.contrib.auth.decorators import login_required
 
 from django.views import View
 
+from ..models import account_activation_token
 from ..forms import PublicUserForm, SignUpForm
 from ..views import User
 
@@ -17,16 +18,7 @@ from django.http import HttpResponse
 # Token
 # -----------------------------
 from django.utils.encoding import force_bytes, force_text
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from django.contrib.auth.tokens import PasswordResetTokenGenerator
-from django.utils import six
-class TokenGenerator(PasswordResetTokenGenerator):
-    def _make_hash_value(self, user, timestamp):
-        return (
-            six.text_type(user.pk) + six.text_type(timestamp) +
-            six.text_type(user.is_active)
-        )
-account_activation_token = TokenGenerator()
+from django.utils.http import urlsafe_base64_decode
 
 # -----------------------------
 # View
