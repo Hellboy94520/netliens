@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from django.core.validators import MaxValueValidator, MinValueValidator
+from django.db.models.signals import post_save
 
 from .user import User
 from .statistics import Statistics
@@ -10,6 +11,11 @@ NL_LEVEL_MAX=10
 NL_LEVEL_MIN=0
 
 
+""" --------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
+Models
+------------------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------- """
 class Announcement(models.Model):
     title = models.CharField(max_length=TITLE_MAX_LENGTH,
                              default="",
@@ -39,11 +45,30 @@ class Announcement(models.Model):
     is_valid = models.BooleanField(default=False,
                                    verbose_name=_("Valid"),
                                    help_text=_("Announcement is valid"))
-    stats = models.OneToOneField(Statistics,
-                                 on_delete=models.CASCADE,
-                                 verbose_name=_("Statistics"),
-                                 help_text=_("Statistics of Announcement"))
 
     """ ---------------------------------------------------- """
     def get_statistics(self):
-        return Statistics.objects.get(Announcement=self)
+        return AnnouncementStats.objects.get(announcement=self)
+
+    class Meta:
+        verbose_name = _("Announcement")
+
+
+class AnnouncementStats(Statistics):
+    announcement = models.OneToOneField(Announcement, on_delete=models.CASCADE, primary_key=True)
+
+
+""" --------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
+Signals
+------------------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------- """
+def annoucement_creation(instance, created, **kwargs):
+    """
+        Creation or update stat
+    """
+    if created:
+        l_stat = AnnouncementStats(announcement=instance)
+        l_stat.save()
+
+post_save.connect(annoucement_creation, sender = Announcement)

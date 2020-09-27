@@ -184,6 +184,7 @@ USE_TZ = False
 gettext = lambda x: x
 LANGUAGES = (
     ('en', gettext('English')),
+    #TODO: Implement models and forms with languages
     ('fr', gettext('French')),
 )
 MIDDLEWARE_CLASSES = (

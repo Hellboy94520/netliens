@@ -6,7 +6,7 @@ from PIL import Image
 from io import BytesIO # Python 2: from StringIO import StringIO
 from django.core.files.uploadedfile import InMemoryUploadedFile
 
-from webbook.models import Statistics, Announcement, User
+from webbook.models import Announcement, AnnouncementStats, User
 from webbook.forms import AnnouncementUserForm, AnnouncementAdminForm
 
 class AnnouncementModelTestCase(TestCase):
@@ -39,7 +39,7 @@ class AnnouncementModelTestCase(TestCase):
         self.assertFalse(l_announcement.is_enable, "[LOCAL] Is_Enable is not False !")
         self.assertFalse(l_announcement.is_valid, "[LOCAL] Is_Valid is not False !")
         with self.assertRaises(ObjectDoesNotExist):
-            l_announcement.stats
+            l_announcement.get_statistics()
 
     def test_default_construction_database(self):
         l_announcement = Announcement()
@@ -56,8 +56,7 @@ class AnnouncementModelTestCase(TestCase):
             l_announcement.owner
         self.assertFalse(l_announcement.is_enable, "[LOCAL] Is_Enable is not False !")
         self.assertFalse(l_announcement.is_valid, "[LOCAL] Is_Valid is not False !")
-        with self.assertRaises(ObjectDoesNotExist):
-            l_announcement.stats
+        self.assertEqual(l_announcement.get_statistics().announcement, l_announcement, "[DB] Stats is not link to Announcement !")
 
     def test_construction(self):
         l_announcement = Announcement(  title=self.title,
@@ -77,7 +76,7 @@ class AnnouncementModelTestCase(TestCase):
         self.assertEqual(l_announcement.is_enable, self.is_enable, "[LOCAL] Is_Enable is not False !")
         self.assertEqual(l_announcement.is_valid, self.is_valid, "[LOCAL] Is_Valid is not False !")
         with self.assertRaises(ObjectDoesNotExist):
-            l_announcement.stats
+            l_announcement.get_statistics()
 
     def test_construction_with_owner(self):
         l_username = "toto"
@@ -87,12 +86,15 @@ class AnnouncementModelTestCase(TestCase):
         self.assertEqual(l_announcement.owner.username, l_username, "[LOCAL] Username is incorrect !")
 
     def test_construction_with_stats(self):
-        l_stats = Statistics()
-        self.assertEqual(Statistics.objects.all().count(), 0, "[DB] Announcement already exist !")
-        l_stats.save()
-        self.assertEqual(Statistics.objects.all().count(), 1, "[DB] Announcement has not been created !")
-        l_announcement = Announcement(stats=l_stats)
-        self.assertEqual(l_announcement.stats, Statistics.objects.filter()[0], "[LOCAL] Statistics' Announcement does not exist !")
+        l_announcement = Announcement(  title=self.title,
+                                        content=self.content,
+                                        image=self.image,
+                                        website=self.website,
+                                        nllevel=self.nllevel,
+                                        is_enable=self.is_enable,
+                                        is_valid=self.is_valid)
+        with self.assertRaises(ObjectDoesNotExist):
+            l_announcement.get_statistics()
 
     def test_construction_database(self):
         l_announcement = Announcement(  title=self.title,
@@ -115,8 +117,6 @@ class AnnouncementModelTestCase(TestCase):
             l_announcement.owner
         self.assertEqual(l_announcement.is_enable, self.is_enable, "[DB] Is_Enable is not False !")
         self.assertEqual(l_announcement.is_valid, self.is_valid, "[DB] Is_Valid is not False !")
-        with self.assertRaises(ObjectDoesNotExist):
-            l_announcement.stats
 
     def test_construction_with_owner_database(self):
         l_username = "toto"
@@ -130,16 +130,12 @@ class AnnouncementModelTestCase(TestCase):
         self.assertEqual(l_announcement.owner.username, l_username, "[DB] Username is incorrect !")
 
     def test_construction_with_stats_database(self):
-        l_stats = Statistics()
-        self.assertEqual(Statistics.objects.all().count(), 0, "[DB] Announcement already exist !")
-        l_stats.save()
-        self.assertEqual(Statistics.objects.all().count(), 1, "[DB] Announcement has not been created !")
-        l_announcement = Announcement(stats=l_stats)
+        l_announcement = Announcement()
         self.assertEqual(Announcement.objects.all().count(), 0, "[DB] Announcement already exist !")
         l_announcement.save()
         self.assertEqual(Announcement.objects.all().count(), 1, "[DB] Announcement has not been created !")
         l_announcement = Announcement.objects.filter()[0]
-        self.assertEqual(l_announcement.stats, Statistics.objects.filter()[0], "[LOCAL] Statistics' Announcement does not exist !")
+        self.assertEqual(l_announcement.get_statistics().announcement, l_announcement, "[DB] Stats is not link to Announcement !")
 
 class AnnouncementUserFormTestCase(TestCase):
     def setUp(self):

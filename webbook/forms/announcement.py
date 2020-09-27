@@ -1,6 +1,6 @@
 from django import forms
 
-from ..models import Announcement
+from ..models import Announcement, AnnouncementStats
 
 class AnnouncementUserForm(forms.ModelForm):
     class Meta:
@@ -12,4 +12,4 @@ class AnnouncementUserForm(forms.ModelForm):
 class AnnouncementAdminForm(forms.ModelForm):
     class Meta:
         model = Announcement
-        fields = [ 'title', 'content', 'image', 'website', 'nllevel', 'owner', 'is_enable', 'is_valid', 'stats' ]
+        fields = [ 'title', 'content', 'image', 'website', 'nllevel', 'owner', 'is_enable', 'is_valid' ]
