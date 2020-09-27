@@ -1,6 +1,4 @@
 from django.test import TestCase
-from django.utils import timezone
-from django.conf import settings
 from django.core.exceptions import ValidationError
 
 from webbook.models import ActivationEmail
@@ -17,6 +15,7 @@ class ActivationEmailModelTestCase(TestCase):
         self.assertEqual(ActivationEmail.objects.all().count(), 0, "[DB] ActivationEmail already exist !")
         l_act_email.save()
         self.assertEqual(ActivationEmail.objects.all().count(), 1, "[DB] ActivationEmail has not been created !")
+        l_act_email = ActivationEmail.objects.filter()[0]
         self.assertNotEqual(l_act_email.subject, "", "[LOCAL] subject is empty !")
         self.assertNotEqual(l_act_email.message, "", "[LOCAL] message is empty !")
 

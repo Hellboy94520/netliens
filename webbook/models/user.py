@@ -1,8 +1,3 @@
-from django.db import models
-from uuid import uuid4
-from django.contrib.auth.models import AbstractUser
-from django.utils.translation import ugettext_lazy as _
-
 # -----------------------------
 # Token
 # -----------------------------
@@ -16,6 +11,14 @@ class TokenGenerator(PasswordResetTokenGenerator):
         )
 account_activation_token = TokenGenerator()
 
+from django.db import models
+from uuid import uuid4
+from django.contrib.auth.models import AbstractUser
+from django.utils.translation import ugettext_lazy as _
+
+# -----------------------------
+# Model
+# -----------------------------
 class User(AbstractUser):
     company    = models.CharField(max_length=100,
                                   default="",

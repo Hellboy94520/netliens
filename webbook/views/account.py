@@ -26,7 +26,7 @@ from django.utils.http import urlsafe_base64_decode
 @method_decorator(login_required, name='dispatch')
 class HomeView(View):
     """
-        View to update account (non important data)
+        View to update account
     """
     template_name = 'account/home.html'
 

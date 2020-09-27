@@ -1,12 +1,11 @@
 from django.test import TestCase
-from django.utils import timezone
 from django.conf import settings
 
 from webbook.models import User
 from webbook.forms import PublicUserForm, AdminUserForm
 
 # Token
-from django.utils.encoding import force_bytes, force_text
+from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from webbook.views import account_activation_token
 

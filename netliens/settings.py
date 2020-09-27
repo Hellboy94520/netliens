@@ -176,6 +176,7 @@ python3 manage.py makemessages -all : Update element in code
 python3 manage.py makemessages -l fr : Create folder for a new traduction in select language
 """
 LANGUAGE_CODE = 'en'
+#TODO: Check how to show date time function of location in app automatically
 TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_L10N = True
