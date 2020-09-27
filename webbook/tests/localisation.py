@@ -145,7 +145,7 @@ class LocalisationFormTestCase(TestCase):
         self.assertFalse(l_localisation.is_valid(), "Form is not valid !")
         self.assertEqual(len(l_localisation.errors), 1, "Unexpected errors quantity !")
         self.assertEqual(len(l_localisation['order'].errors), 1, "Unexpected errors quantity for this field !")
-        self.assertEqual(l_localisation['order'].errors[0], "A localisation with this order and parent already exist.")
+        self.assertEqual(l_localisation['order'].errors[0], "A localisation with this order and parent already exist.", "Error message not expected !")
         # Children with same parent and name as Children 1
         l_localisation = LocalisationForm(data={'name': "Children 1",
                                                 'resume': self.resume,
@@ -156,7 +156,7 @@ class LocalisationFormTestCase(TestCase):
         self.assertFalse(l_localisation.is_valid(), "Form is not valid !")
         self.assertEqual(len(l_localisation.errors), 1, "Unexpected errors quantity !")
         self.assertEqual(len(l_localisation['name'].errors), 1, "Unexpected errors quantity for this field !")
-        self.assertEqual(l_localisation['name'].errors[0], "A localisation with this name and parent already exist.")
+        self.assertEqual(l_localisation['name'].errors[0], "A localisation with this name and parent already exist.", "Error message not expected !")
         # Children with same parent, name and order as Children 1
         l_localisation = LocalisationForm(data={'name': "Children 1",
                                                 'resume': self.resume,
@@ -169,7 +169,7 @@ class LocalisationFormTestCase(TestCase):
         self.assertEqual(len(l_localisation['order'].errors), 1, "Unexpected errors quantity for this field !")
         self.assertEqual(l_localisation['order'].errors[0], "A localisation with this order and parent already exist.")
         self.assertEqual(len(l_localisation['name'].errors), 1, "Unexpected errors quantity for this field !")
-        self.assertEqual(l_localisation['name'].errors[0], "A localisation with this name and parent already exist.")
+        self.assertEqual(l_localisation['name'].errors[0], "A localisation with this name and parent already exist.", "Error message not expected !")
         # Delete parent
         l_parent.delete()
         l_localisation_1 = Localisation.objects.get(name="Children 1")
@@ -178,3 +178,16 @@ class LocalisationFormTestCase(TestCase):
         l_localisation_2 = Localisation.objects.get(name="Children 2")
         with self.assertRaises(ObjectDoesNotExist):
             l_localisation_2.parent
+
+    def test_order(self):
+        # Null value
+        l_localisation = LocalisationForm(data={'name': "Children 1",
+                                                'resume': self.resume,
+                                                'code': self.code,
+                                                'is_enable': self.is_enable,
+                                                'parent': self.parent,
+                                                'order': 0})
+        self.assertFalse(l_localisation.is_valid(), "Form is not valid !")
+        self.assertEqual(len(l_localisation.errors), 1, "Unexpected errors quantity !")
+        self.assertEqual(len(l_localisation['order'].errors), 1, "Unexpected errors quantity for this field !")
+        self.assertEqual(l_localisation['order'].errors[0], "Ensure this value is greater than or equal to 1.", "Error message not expected !")

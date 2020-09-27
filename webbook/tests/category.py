@@ -106,7 +106,7 @@ class CategoryFormTestCase(TestCase):
         self.assertFalse(l_category.is_valid(), "Form is not valid !")
         self.assertEqual(len(l_category.errors), 1, "Unexpected errors quantity !")
         self.assertEqual(len(l_category['order'].errors), 1, "Unexpected errors quantity for this field !")
-        self.assertEqual(l_category['order'].errors[0], "A category with this order and parent already exist.")
+        self.assertEqual(l_category['order'].errors[0], "A category with this order and parent already exist.", "Error message not expected !")
         # Children with same parent and name as Children 1
         l_category = CategoryForm(data={'name': "Children 1",
                                         'resume': self.resume,
@@ -116,7 +116,7 @@ class CategoryFormTestCase(TestCase):
         self.assertFalse(l_category.is_valid(), "Form is not valid !")
         self.assertEqual(len(l_category.errors), 1, "Unexpected errors quantity !")
         self.assertEqual(len(l_category['name'].errors), 1, "Unexpected errors quantity for this field !")
-        self.assertEqual(l_category['name'].errors[0], "A category with this name and parent already exist.")
+        self.assertEqual(l_category['name'].errors[0], "A category with this name and parent already exist.", "Error message not expected !")
         # Children with same parent, name and order as Children 1
         l_category = CategoryForm(data={'name': "Children 1",
                                         'resume': self.resume,
@@ -128,7 +128,7 @@ class CategoryFormTestCase(TestCase):
         self.assertEqual(len(l_category['order'].errors), 1, "Unexpected errors quantity for this field !")
         self.assertEqual(l_category['order'].errors[0], "A category with this order and parent already exist.")
         self.assertEqual(len(l_category['name'].errors), 1, "Unexpected errors quantity for this field !")
-        self.assertEqual(l_category['name'].errors[0], "A category with this name and parent already exist.")
+        self.assertEqual(l_category['name'].errors[0], "A category with this name and parent already exist.", "Error message not expected !")
         # Delete parent
         l_parent.delete()
         l_category_1 = Category.objects.get(name="Children 1")
@@ -137,3 +137,15 @@ class CategoryFormTestCase(TestCase):
         l_category_2 = Category.objects.get(name="Children 2")
         with self.assertRaises(ObjectDoesNotExist):
             l_category_2.parent
+
+    def test_order(self):
+        # Null value
+        l_category = CategoryForm(data={'name': "Children 1",
+                                        'resume': self.resume,
+                                        'is_enable': self.is_enable,
+                                        'parent': self.parent,
+                                        'order': 0})
+        self.assertFalse(l_category.is_valid(), "Form is not valid !")
+        self.assertEqual(len(l_category.errors), 1, "Unexpected errors quantity !")
+        self.assertEqual(len(l_category['order'].errors), 1, "Unexpected errors quantity for this field !")
+        self.assertEqual(l_category['order'].errors[0], "Ensure this value is greater than or equal to 1.", "Error message not expected !")
