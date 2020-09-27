@@ -136,6 +136,9 @@ class AnnouncementModelTestCase(TestCase):
         self.assertEqual(Announcement.objects.all().count(), 1, "[DB] Announcement has not been created !")
         l_announcement = Announcement.objects.filter()[0]
         self.assertEqual(l_announcement.get_statistics().announcement, l_announcement, "[DB] Stats is not link to Announcement !")
+        l_announcement.delete()
+        self.assertEqual(Announcement.objects.all().count(), 0, "[DB] Announcement has not been deleted !")
+        self.assertEqual(AnnouncementStats.objects.all().count(), 0, "[DB] AnnouncementStats has not been deleted !")
 
 class AnnouncementUserFormTestCase(TestCase):
     def setUp(self):

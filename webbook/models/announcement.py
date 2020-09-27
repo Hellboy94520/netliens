@@ -63,7 +63,7 @@ class AnnouncementStats(Statistics):
 Signals
 ------------------------------------------------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------------------------------------- """
-def annoucement_creation(instance, created, **kwargs):
+def _annoucement_creation(instance, created, **kwargs):
     """
         Creation or update stat
     """
@@ -71,4 +71,4 @@ def annoucement_creation(instance, created, **kwargs):
         l_stat = AnnouncementStats(announcement=instance)
         l_stat.save()
 
-post_save.connect(annoucement_creation, sender = Announcement)
+post_save.connect(_annoucement_creation, sender = Announcement)
