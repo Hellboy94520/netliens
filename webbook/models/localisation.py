@@ -46,6 +46,14 @@ class Localisation(models.Model):
     def get_statistics(self):
         return LocalisationStats.objects.get(localisation=self)
 
+    """ ---------------------------------------------------- """
+    def get_children_list(self):
+        children = list()
+        for child in Localisation.objects.filter(parent=self).order_by('order'):
+            children.append(child)
+            children.extend(child.get_children_list())
+        return children
+
     class Meta:
         verbose_name = _("Localisation")
 
