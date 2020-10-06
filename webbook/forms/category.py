@@ -8,23 +8,16 @@ class CategoryForm(forms.ModelForm):
         model = Category
         fields = [ 'name', 'resume', 'is_enable', 'parent', 'order' ]
 
-    # TODO:
     def __init__(self, *args, **kwargs):
         """
-            Change the order of parent ModelChoiceField
+            Update order of parent ModelChoiceField
         """
         super(CategoryForm, self).__init__(*args, **kwargs)
-        # Get required values
-        # for l_category_list in Category.objects.filter(parent=None).order_by('order'):
-        #     l_list.append(l_localisation)
-        # # Creation of new choices tab (with default value)
-        # l_choices = []
-        # l_choices.append(('', dict(self.fields['parent'].choices)['']))
-        # for l_localisation in l_list:
-        #     l_string = string.whitespace*l_localisation.level*2
-        #     l_choices.append((l_localisation.pk, f"{l_string} {l_localisation}"))
-        # self.fields['parent'].choices = l_choices
-
+        l_category_list = []
+        for l_category in Category.objects.filter(parent=None).order_by('order'):
+            l_category_list.append(l_category)
+            l_category_list.extend(l_category.get_children_list())
+        self.fields['parent'].choices = { l_category.pk : l_category for l_category in l_category_list }
 
     def clean(self):
         """

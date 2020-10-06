@@ -138,6 +138,117 @@ class CategoryFormTestCase(TestCase):
         with self.assertRaises(ObjectDoesNotExist):
             l_category_2.parent
 
+    def test_parent_list(self):
+        """
+            This test verify init of the form
+        """
+        # Parent 1
+        l_parent = CategoryForm(data={  'name': "Category Parent 1",
+                                        'resume': "Category Parent",
+                                        'is_enable': False,
+                                        'parent': None,
+                                        'order': 1})
+        self.assertTrue(l_parent.is_valid(), "Form is not valid !")
+        l_parent.save()
+        l_parent_1 = Category.objects.get(name="Category Parent 1")
+        # Parent 2
+        l_parent = CategoryForm(data={  'name': "Category Parent 2",
+                                        'resume': "Category Parent",
+                                        'is_enable': False,
+                                        'parent': None,
+                                        'order': 2})
+        self.assertTrue(l_parent.is_valid(), "Form is not valid !")
+        l_parent.save()
+        l_parent_2 = Category.objects.get(name="Category Parent 2")
+        # Children 11
+        l_children = CategoryForm(data={'name': "Category Children 11",
+                                        'resume': "Category Parent",
+                                        'is_enable': False,
+                                        'parent': l_parent_1.pk,
+                                        'order': 1})
+        self.assertTrue(l_children.is_valid(), "Form is not valid !")
+        l_children.save()
+        # Children 22
+        l_children = CategoryForm(data={'name': "Category Children 22",
+                                        'resume': "Category Parent",
+                                        'is_enable': False,
+                                        'parent': l_parent_2.pk,
+                                        'order': 2})
+        self.assertTrue(l_children.is_valid(), "Form is not valid !")
+        l_children.save()
+        # Children 12
+        l_children = CategoryForm(data={'name': "Category Children 12",
+                                        'resume': "Category Parent",
+                                        'is_enable': False,
+                                        'parent': l_parent_1.pk,
+                                        'order': 2})
+        self.assertTrue(l_children.is_valid(), "Form is not valid !")
+        l_children.save()
+        # Children 21
+        l_children = CategoryForm(data={'name': "Category Children 21",
+                                        'resume': "Category Parent",
+                                        'is_enable': False,
+                                        'parent': l_parent_2.pk,
+                                        'order': 1})
+        self.assertTrue(l_children.is_valid(), "Form is not valid !")
+        l_children.save()
+
+        self.assertEqual(len(Category.objects.all()), 6, "Form has not been save !")
+        # Children 13
+        l_children = CategoryForm(data={'name': "Category Children 13",
+                                        'resume': "Category Parent",
+                                        'is_enable': False,
+                                        'parent': l_parent_1.pk,
+                                        'order': 3})
+        self.assertTrue(l_children.is_valid(), "Form is not valid !")
+        l_children.save()
+        l_children = Category.objects.get(name="Category Children 13")
+        l_sub_children = CategoryForm(data={'name': "Category Children 133",
+                                            'resume': "Category Parent",
+                                            'is_enable': False,
+                                            'parent': l_children.pk,
+                                            'order': 3})
+        self.assertTrue(l_sub_children.is_valid(), "Form is not valid !")
+        l_sub_children.save()
+        l_sub_children = CategoryForm(data={'name': "Category Children 132",
+                                            'resume': "Category Parent",
+                                            'is_enable': False,
+                                            'parent': l_children.pk,
+                                            'order': 2})
+        self.assertTrue(l_sub_children.is_valid(), "Form is not valid !")
+        l_sub_children.save()
+        l_sub_children = CategoryForm(data={'name': "Category Children 131",
+                                            'resume': "Category Parent",
+                                            'is_enable': False,
+                                            'parent': l_children.pk,
+                                            'order': 1})
+        self.assertTrue(l_sub_children.is_valid(), "Form is not valid !")
+        l_sub_children.save()
+
+        self.assertEqual(len(Category.objects.all()), 10, "Form has not been save !")
+        l_category = CategoryForm()
+        for i, pk in enumerate(l_category.fields['parent'].choices):
+            if i==0:
+                self.assertEqual(Category.objects.get(pk=pk).name, "Category Parent 1", "Unexpected object !")
+            elif i==1:
+                self.assertEqual(Category.objects.get(pk=pk).name, "Category Children 11", "Unexpected object !")
+            elif i==2:
+                self.assertEqual(Category.objects.get(pk=pk).name, "Category Children 12", "Unexpected object !")
+            elif i==3:
+                self.assertEqual(Category.objects.get(pk=pk).name, "Category Children 13", "Unexpected object !")
+            elif i==4:
+                self.assertEqual(Category.objects.get(pk=pk).name, "Category Children 131", "Unexpected object !")
+            elif i==5:
+                self.assertEqual(Category.objects.get(pk=pk).name, "Category Children 132", "Unexpected object !")
+            elif i==6:
+                self.assertEqual(Category.objects.get(pk=pk).name, "Category Children 133", "Unexpected object !")
+            elif i==7:
+                self.assertEqual(Category.objects.get(pk=pk).name, "Category Parent 2", "Unexpected object !")
+            elif i==8:
+                self.assertEqual(Category.objects.get(pk=pk).name, "Category Children 21", "Unexpected object !")
+            elif i==9:
+                self.assertEqual(Category.objects.get(pk=pk).name, "Category Children 22", "Unexpected object !")
+
     def test_order(self):
         # Null value
         l_category = CategoryForm(data={'name': "Children 1",

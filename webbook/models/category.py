@@ -40,6 +40,13 @@ class Category(models.Model):
     def get_statistics(self):
         return CategoryStatistics.objects.get(category=self)
 
+    def get_children_list(self):
+        children = list()
+        for child in Category.objects.filter(parent=self).order_by('order'):
+            children.append(child)
+            children.extend(child.get_children_list())
+        return children
+
     class Meta:
         verbose_name = _("Category")
 
