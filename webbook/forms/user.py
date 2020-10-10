@@ -28,6 +28,7 @@ class AdminUserForm(forms.ModelForm):
     '''
     class Meta:
         model = User
+        fields = '__all__'
 
 class SignUpForm(UserCreationForm):
     class Meta:
