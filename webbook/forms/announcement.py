@@ -77,3 +77,8 @@ class AnnouncementUserForm(forms.ModelForm):
         l_announcement.is_enable = False
         l_announcement.is_valid = False
         l_announcement.save()
+
+class AnnouncementAdminForm(forms.ModelForm):
+    class Meta:
+        model = Announcement
+        fields = '__all__'

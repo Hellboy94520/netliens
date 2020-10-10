@@ -6,7 +6,7 @@ from ..models import Localisation, get_all_localisation_in_order
 class LocalisationForm(forms.ModelForm):
     class Meta:
         model = Localisation
-        fields = [ 'name', 'resume', 'code', 'is_enable', 'parent', 'order' ]
+        fields = '__all__'
 
     def __init__(self, *args, **kwargs):
         """

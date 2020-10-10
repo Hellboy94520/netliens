@@ -6,7 +6,7 @@ from ..models import Category, get_all_category_in_order
 class CategoryForm(forms.ModelForm):
     class Meta:
         model = Category
-        fields = [ 'name', 'resume', 'is_enable', 'parent', 'order' ]
+        fields = '__all__'
 
     def __init__(self, *args, **kwargs):
         """
