@@ -2,12 +2,14 @@ from django.test import TestCase
 from django.conf import settings
 
 from webbook.models import User
-from webbook.forms import PublicUserForm, AdminUserForm
+from webbook.forms import PublicUserForm#, AdminUserForm
 
 # Token
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from webbook.views import account_activation_token
+
+MAX_POSITIVE_INTEGER_FIELD_VALUE = 2147483647
 
 class UserModelTestCase(TestCase):
     def setUp(self):
@@ -18,7 +20,15 @@ class UserModelTestCase(TestCase):
         self.last_name = "Titi"
         self.is_staff = True
         self.is_active = False
-        self.is_superuser = True       
+        self.is_superuser = True
+        self.nl0 = MAX_POSITIVE_INTEGER_FIELD_VALUE
+        self.nl1 = MAX_POSITIVE_INTEGER_FIELD_VALUE
+        self.nl2 = MAX_POSITIVE_INTEGER_FIELD_VALUE
+        self.nl3 = MAX_POSITIVE_INTEGER_FIELD_VALUE
+        self.nl4 = MAX_POSITIVE_INTEGER_FIELD_VALUE
+        self.nl5 = MAX_POSITIVE_INTEGER_FIELD_VALUE
+        self.nl6 = MAX_POSITIVE_INTEGER_FIELD_VALUE
+        self.nl7 = MAX_POSITIVE_INTEGER_FIELD_VALUE
 
     def test_minimal_construction(self):
         l_user = User.objects.create(username=self.username, email=self.email, password=self.password)
@@ -32,6 +42,14 @@ class UserModelTestCase(TestCase):
         self.assertFalse(l_user.is_staff, "[LOCAL] is_staff is not False !")
         self.assertTrue(l_user.is_active, "[LOCAL] is_active is not True !")
         self.assertFalse(l_user.is_superuser, "[LOCAL] is_super_user is not False !")
+        self.assertEqual(l_user.nl0, 1)
+        self.assertEqual(l_user.nl1, 0)
+        self.assertEqual(l_user.nl2, 0)
+        self.assertEqual(l_user.nl3, 0)
+        self.assertEqual(l_user.nl4, 0)
+        self.assertEqual(l_user.nl5, 0)
+        self.assertEqual(l_user.nl6, 0)
+        self.assertEqual(l_user.nl7, 0)
 
     def test_minimal_construction_database(self):
         User.objects.create(username=self.username, email=self.email, password=self.password)
@@ -47,11 +65,34 @@ class UserModelTestCase(TestCase):
         self.assertFalse(l_user.is_staff, "[DB] is_staff is not False !")
         self.assertTrue(l_user.is_active, "[DB] is_active is not True !")
         self.assertFalse(l_user.is_superuser, "[DB] is_super_user is not False !")
+        self.assertEqual(l_user.nl0, 1)
+        self.assertEqual(l_user.nl1, 0)
+        self.assertEqual(l_user.nl2, 0)
+        self.assertEqual(l_user.nl3, 0)
+        self.assertEqual(l_user.nl4, 0)
+        self.assertEqual(l_user.nl5, 0)
+        self.assertEqual(l_user.nl6, 0)
+        self.assertEqual(l_user.nl7, 0)
+
 
     def test_constructor(self):
-        l_user = User.objects.create(username=self.username, email=self.email, password=self.password,
-                                     first_name=self.first_name, last_name=self.last_name,
-                                     is_staff=self.is_staff, is_active=self.is_active, is_superuser=self.is_superuser)
+        l_user = User.objects.create(
+            username=self.username,
+            email=self.email,
+            password=self.password,
+            first_name=self.first_name,
+            last_name=self.last_name,
+            is_staff=self.is_staff,
+            is_active=self.is_active,
+            is_superuser=self.is_superuser,
+            nl0=self.nl0,
+            nl1=self.nl1,
+            nl2=self.nl2,
+            nl3=self.nl3,
+            nl4=self.nl4,
+            nl5=self.nl5,
+            nl6=self.nl6,
+            nl7=self.nl7)
         self.assertEqual(l_user.username, self.username, "[LOCAL] username invalid !")
         self.assertEqual(l_user.email, self.email, "[LOCAL] email invalid !")
         self.assertEqual(l_user.password, self.password, "[LOCAL] password invalid !")
@@ -62,11 +103,33 @@ class UserModelTestCase(TestCase):
         self.assertTrue(l_user.is_staff, "[LOCAL] is_staff is not True !")
         self.assertFalse(l_user.is_active, "[LOCAL] is_active is not False !")
         self.assertTrue(l_user.is_superuser, "[LOCAL] is_super_user is not True !")
+        self.assertEqual(l_user.nl0, MAX_POSITIVE_INTEGER_FIELD_VALUE)
+        self.assertEqual(l_user.nl1, MAX_POSITIVE_INTEGER_FIELD_VALUE)
+        self.assertEqual(l_user.nl2, MAX_POSITIVE_INTEGER_FIELD_VALUE)
+        self.assertEqual(l_user.nl3, MAX_POSITIVE_INTEGER_FIELD_VALUE)
+        self.assertEqual(l_user.nl4, MAX_POSITIVE_INTEGER_FIELD_VALUE)
+        self.assertEqual(l_user.nl5, MAX_POSITIVE_INTEGER_FIELD_VALUE)
+        self.assertEqual(l_user.nl6, MAX_POSITIVE_INTEGER_FIELD_VALUE)
+        self.assertEqual(l_user.nl7, MAX_POSITIVE_INTEGER_FIELD_VALUE)
 
     def test_constructor_database(self):
-        User.objects.create(username=self.username, email=self.email, password=self.password,
-                              first_name=self.first_name, last_name=self.last_name,
-                              is_staff=self.is_staff, is_active=self.is_active, is_superuser=self.is_superuser)
+        User.objects.create(
+            username=self.username,
+            email=self.email,
+            password=self.password,
+            first_name=self.first_name,
+            last_name=self.last_name,
+            is_staff=self.is_staff,
+            is_active=self.is_active,
+            is_superuser=self.is_superuser,
+            nl0=self.nl0,
+            nl1=self.nl1,
+            nl2=self.nl2,
+            nl3=self.nl3,
+            nl4=self.nl4,
+            nl5=self.nl5,
+            nl6=self.nl6,
+            nl7=self.nl7)
         self.assertEqual(User.objects.all().count(), 1, "[DB] User has not been created !")
         l_user = User.objects.get(username=self.username)
         self.assertEqual(l_user.username, self.username, "[DB] username invalid !")
@@ -79,7 +142,14 @@ class UserModelTestCase(TestCase):
         self.assertTrue(l_user.is_staff, "[DB] is_staff is not True !")
         self.assertFalse(l_user.is_active, "[DB] is_active is not False !")
         self.assertTrue(l_user.is_superuser, "[DB] is_super_user is not True !")
-
+        self.assertEqual(l_user.nl0, MAX_POSITIVE_INTEGER_FIELD_VALUE)
+        self.assertEqual(l_user.nl1, MAX_POSITIVE_INTEGER_FIELD_VALUE)
+        self.assertEqual(l_user.nl2, MAX_POSITIVE_INTEGER_FIELD_VALUE)
+        self.assertEqual(l_user.nl3, MAX_POSITIVE_INTEGER_FIELD_VALUE)
+        self.assertEqual(l_user.nl4, MAX_POSITIVE_INTEGER_FIELD_VALUE)
+        self.assertEqual(l_user.nl5, MAX_POSITIVE_INTEGER_FIELD_VALUE)
+        self.assertEqual(l_user.nl6, MAX_POSITIVE_INTEGER_FIELD_VALUE)
+        self.assertEqual(l_user.nl7, MAX_POSITIVE_INTEGER_FIELD_VALUE)
 
 class PublicUserFormTestCase(TestCase):
     def setUp(self):
@@ -194,59 +264,6 @@ class PublicUserFormTestCase(TestCase):
         self.assertEqual(len(l_user['company'].errors), 1, "Expected only 1 error for 'company' field !")
         self.assertEqual(l_user['company'].errors[0], "This field is required.", "Error message not expected !")
 
-class AdminUserFormTestCase(TestCase):
-    def setUp(self):
-        self.username = "toto"
-        self.email = "toto@toto.fr"
-        self.password = "tototititutu" 
-        self.first_name = "Toto"
-        self.last_name = "Titi"
-
-    def test_userform_valid(self):
-        l_user = AdminUserForm(data={   'username': self.username,
-                                        'email': self.email,
-                                        'password': self.password,
-                                        'first_name': self.first_name,
-                                        'last_name': self.last_name,
-                                        'is_superuser': False})
-        self.assertTrue(l_user.is_valid(), "Form is not valid !")
-        self.assertEqual(User.objects.all().count(), 0, "[DB] an User already exist !")
-        l_user.save()
-        self.assertEqual(User.objects.all().count(), 1, "[DB] User has not been created after save form !")
-        l_user = User.objects.get(username=self.username)
-        self.assertEqual(l_user.username, self.username, "[DB] username invalid !")
-        self.assertEqual(l_user.email, self.email, "[DB] email invalid !")
-        self.assertEqual(l_user.password, self.password, "[DB] password invalid !")
-        self.assertEqual(l_user.first_name, self.first_name, "[DB] first_name invalid !")
-        self.assertEqual(l_user.last_name, self.last_name, "[DB] last_name invalid !")
-        self.assertEqual(l_user.groups.count(), 0, "[DB] Groups already exist !")
-        self.assertEqual(l_user.user_permissions.count(), 0, "[DB] User_Permissions already exist !")
-        self.assertTrue(l_user.is_staff, "[DB] is_staff is not True !")
-        self.assertTrue(l_user.is_active, "[DB] is_active is not True !")
-        self.assertFalse(l_user.is_superuser, "[DB] is_super_user is not False !")
-
-    def test_superuser_userform_valid(self):
-        l_user = AdminUserForm(data={   'username': self.username,
-                                        'email': self.email,
-                                        'password': self.password,
-                                        'first_name': self.first_name,
-                                        'last_name': self.last_name,
-                                        'is_superuser': True})
-        self.assertTrue(l_user.is_valid(), "Form is not valid !")
-        self.assertEqual(User.objects.all().count(), 0, "[DB] an User already exist !")
-        l_user.save()
-        self.assertEqual(User.objects.all().count(), 1, "[DB] User has not been created after save form !")
-        l_user = User.objects.get(username=self.username)
-        self.assertEqual(l_user.username, self.username, "[DB] username invalid !")
-        self.assertEqual(l_user.email, self.email, "[DB] email invalid !")
-        self.assertEqual(l_user.password, self.password, "[DB] password invalid !")
-        self.assertEqual(l_user.first_name, self.first_name, "[DB] first_name invalid !")
-        self.assertEqual(l_user.last_name, self.last_name, "[DB] last_name invalid !")
-        self.assertEqual(l_user.groups.count(), 0, "[DB] Groups already exist !")
-        self.assertEqual(l_user.user_permissions.count(), 0, "[DB] User_Permissions already exist !")
-        self.assertTrue(l_user.is_staff, "[DB] is_staff is not True !")
-        self.assertTrue(l_user.is_active, "[DB] is_active is not True !")
-        self.assertTrue(l_user.is_superuser, "[DB] is_super_user is not True !")
 
 class HomeViewTestCase(TestCase):
     def setUp(self):

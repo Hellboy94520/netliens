@@ -13,6 +13,7 @@ usage()
     echo -e "\e[1m-l \e[0m: Language"
     echo -e "\e[1m-r \e[0m: Run application"
     echo -e "\e[1m-s \e[0m: Link static and media files"
+    echo -e "\e[1m-t \e[0m: Test"
     echo -e "\e[1m-u \e[0m: Create user"
     exit 0
 }
@@ -81,7 +82,15 @@ run()
     python3 manage.py runserver 0.0.0.0:8000
 }
 
-while getopts 'abclurh' opt
+tests()
+{
+  echo -e "---------------------------------------"
+  echo -e "\e[7m Unit Tests \e[0m"
+  echo -e "---------------------------------------"
+  python3 manage.py test
+}
+
+while getopts 'abclursth' opt
 do
   case $opt in
     a) build; language; user; run;;
@@ -91,9 +100,10 @@ do
     u) user;;
     r) run;;
     s) link_static_media;;
+    t) tests;;
     h) usage;;
     \*) usage;;
-    \?) echo "\e[91mInvalid arguments\e[0m"; usage; exit 1;;
+    \?) echo -e "\e[91mInvalid arguments\e[0m"; usage; exit 1;;
   esac
 done
  

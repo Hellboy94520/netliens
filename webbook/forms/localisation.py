@@ -1,7 +1,7 @@
 from django import forms
 from django.utils.translation import ugettext_lazy as _
 
-from ..models import Localisation
+from ..models import Localisation, get_all_localisation_in_order
 
 class LocalisationForm(forms.ModelForm):
     class Meta:
@@ -13,11 +13,7 @@ class LocalisationForm(forms.ModelForm):
             Update order of parent ModelChoiceField
         """
         super(LocalisationForm, self).__init__(*args, **kwargs)
-        l_localisation_list = []
-        for l_localisation in Localisation.objects.filter(parent=None).order_by('order'):
-            l_localisation_list.append(l_localisation)
-            l_localisation_list.extend(l_localisation.get_children_list())
-        self.fields['parent'].choices = { l_localisation.pk : l_localisation for l_localisation in l_localisation_list }
+        self.fields['parent'].choices = get_all_localisation_in_order()
 
     def clean(self):
         """

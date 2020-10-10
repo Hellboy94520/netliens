@@ -3,16 +3,18 @@ from django.core.exceptions import ValidationError
 from django.utils.translation import ugettext_lazy as _
 
 class Email(models.Model):
-    subject         = models.TextField( default="",
-                                        blank=False,
-                                        null=False,
-                                        verbose_name=_("Subject"),
-                                        help_text=_("Subject of the email"))
-    message         = models.TextField( default="",
-                                        blank=False,
-                                        null=False,
-                                        verbose_name=_("Message"),
-                                        help_text=_("Message of the email"))
+    subject = models.TextField(
+        default="",
+        blank=False,
+        null=False,
+        verbose_name=_("Subject"),
+        help_text=_("Subject of the email"))
+    message = models.TextField(
+        default="",
+        blank=False,
+        null=False,
+        verbose_name=_("Message"),
+        help_text=_("Message of the email"))
 
     class Meta:
         verbose_name = _("Email")

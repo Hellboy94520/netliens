@@ -28,17 +28,6 @@ class AdminUserForm(forms.ModelForm):
     '''
     class Meta:
         model = User
-        fields = [ 'username', 'email', 'password', 'first_name', 'last_name', 'is_superuser' ]
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    def save(self, *args, **kwargs):
-        l_user = super(AdminUserForm, self).save(commit=False)
-        l_user.is_staff = True
-        l_user.is_active = True
-        l_user.save()
-        return l_user
 
 class SignUpForm(UserCreationForm):
     class Meta:

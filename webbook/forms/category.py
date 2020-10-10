@@ -1,7 +1,7 @@
 from django import forms
 from django.utils.translation import ugettext_lazy as _
 
-from ..models import Category
+from ..models import Category, get_all_category_in_order
 
 class CategoryForm(forms.ModelForm):
     class Meta:
@@ -13,11 +13,7 @@ class CategoryForm(forms.ModelForm):
             Update order of parent ModelChoiceField
         """
         super(CategoryForm, self).__init__(*args, **kwargs)
-        l_category_list = []
-        for l_category in Category.objects.filter(parent=None).order_by('order'):
-            l_category_list.append(l_category)
-            l_category_list.extend(l_category.get_children_list())
-        self.fields['parent'].choices = { l_category.pk : l_category for l_category in l_category_list }
+        self.fields['parent'].choices = get_all_category_in_order()
 
     def clean(self):
         """
