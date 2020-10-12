@@ -1,34 +1,44 @@
 {% load i18n %}
 <!DOCTYPE html>
-<html lang="en">     
 <head>
     <meta charset="UTF-8">
     {% include 'header.html' %}
 </head>
-<body>
-    <div class="w3-card" style="margin-top: 20px; margin-left: 5%; margin-right: 5%; padding-bottom: 10px;">
-        <header class="w3-container my-amber-theme-l1">
-            <h1 class="w3-center">{% trans "Log In" %}</h1>
+<style>
+/* Full-width input fields */
+input[type=text], input[type=password] {
+  width: 100%;
+  padding: 12px 20px;
+  margin: 8px 0;
+  display: inline-block;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+}
+</style>
+<body style="margin-top:60px">
+    <div class="w3-panel w3-card" style="padding:0px; max-width: 600px; width:90%; margin: auto;">
+        <header>
+            <h1 class="w3-center my-amber-theme-l1" style="margin-top: 0px; margin-bottom: 10px;">{% trans "Log In" %}</h1>
         </header>
-        <div class="w3-container w3-center" style="margin-top: 10px; margin-bottom: 10px;">
-            <form method="post">
-            {% csrf_token %}
-                {% trans "Username" as tr_username %}
-                <input type="text" name="username" placeholder="{{ tr_username }}" autofocus required id="id_username">
-                <div class="w3-hide-large w3-hide-medium"><br></div>
-                {% trans "Password" as tr_password %}
-                <input type="password" name="password" placeholder="{{ tr_password }}" autofocus required id="id_password">
-                <div class="w3-hide-large w3-hide-medium"><br></div>
-                <input name="submit" type="hidden" value="submit"/>
-                <button type="submit" >{% trans "Login" %}</button>
-                {% for error in form.field_errors %}
-                    <a style="color: red;">{{ error }}</a><br>
-                {% endfor %}
-                {% for error in form.non_field_errors %}
-                    <a style="color: red;">{{ error }}</a><br>
-                {% endfor %}
-            </form>
-            <p><a href="/account/password_reset">{% trans 'Lost password?' %}</a></p>
+            <div class="w3-container" style="margin-bottom: 10px;">
+                <form method="post">
+                {% csrf_token %}
+                    <label><b>{{ form.username.label }}</b></label><br>
+                    <input type="text" name="username" placeholder="{{ form.username.label }}" autofocus required id="id_username"><br>
+                    <label><b>{{ form.password.label }}</b></label><br>
+                    <input type="password" name="password" placeholder="{{ form.password.label }}" autofocus required id="id_password"><br>
+                    <input name="submit" type="hidden" value="submit"/>
+                    <button class="w3-button w3-block w3-card w3-black" type="submit" style="margin-top: 10px;">{% trans "Login" %}</button>
+                    <a href="/account/signup" class="w3-button w3-block w3-card w3-white" style="margin-top: 10px;">{% trans 'Sign up' %}</a>
+                    <a href="/account/password_reset" class="w3-container w3-center w3-white" style="margin-top: 10px; margin-bottom: 10px;">{% trans 'Lost password?' %}</a>
+                    {% for error in form.field_errors %}
+                        <p style="color: red;">{{ error }}</p>
+                    {% endfor %}
+                    {% for error in form.non_field_errors %}
+                        <p style="color: red;">{{ error }}</p>
+                    {% endfor %}
+                </form>
+            </div>
         </div>
     </div>
 </body>

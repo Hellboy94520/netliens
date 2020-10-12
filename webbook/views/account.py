@@ -7,9 +7,8 @@ from django.contrib.auth.decorators import login_required
 
 from django.views import View
 
-from ..models import account_activation_token
+from ..models import account_activation_token, User
 from ..forms import PublicUserForm, SignUpForm
-from ..views import User
 
 #TODO: To delete when ErrorPages will be implement when activation link is incorrect
 from django.http import HttpResponse
@@ -49,13 +48,13 @@ class SignupView(View):
     template_name = "account/signup.html"
 
     def get(self, request, *args, **kwargs):
-        p_form = SignUpForm()
+        form = SignUpForm()
         return render(request, self.template_name, locals())
     
     def post(self, request, *args, **kwargs):
-        p_form = SignUpForm(request.POST)
-        if p_form.is_valid():
-            user = p_form.save()
+        form = SignUpForm(request.POST)
+        if form.is_valid():
+            user = form.save()
             return redirect(settings.LOGIN_REDIRECT_URL)
         return render(request, self.template_name, locals())
 

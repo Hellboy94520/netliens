@@ -3,14 +3,16 @@ from django.conf.urls import url
 from django.contrib.auth import views as auth_views
 from django.conf.urls.i18n import i18n_patterns
 
-from .views import netliens, languages, account
+from .views import netliens, languages, account, admin
 
 from django.contrib.auth.decorators import permission_required
 
 
 urlpatterns = [
   # NetLiens
-  path('', netliens.home, name='home'),
+  path('', netliens.HomeView.as_view()),
+  path('category/<int:category_id>', netliens.CategoryView.as_view()),
+  path('announcement/<int:announcement_id>', netliens.AnnouncementView.as_view()),
   # Languages
   path('languages/<str:language>', languages.activation),
   # Account
@@ -19,4 +21,6 @@ urlpatterns = [
   path('account/logout/', auth_views.LogoutView.as_view()),
   path('account/signup/', account.SignupView.as_view()),
   url(r'^account/activation/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/$', account.activation, name='activate'),
+  # Admin
+  path('admin/', admin.HomeView.as_view()),
 ]

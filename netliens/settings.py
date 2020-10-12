@@ -29,7 +29,7 @@ SECRET_KEY = config['SECRET_KEY']
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -84,7 +84,9 @@ DATABASES = {
     'default': {
         'ENGINE': 'djongo',
         'NAME': "netliens",
-        'HOST': "mongodb"
+        'HOST': "mongodb",
+        # Required to avoid error with get_or_create:
+        'ENFORCE_SCHEMA': False
     }
 }
 
@@ -108,63 +110,63 @@ AUTH_PASSWORD_VALIDATORS = [
 
 
 # LOGGER
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': True,
-    'formatters': {
-        'verbose': {
-            'format': '{asctime} {levelname} {message}',
-            'style': '{'
-        },
-        'simple': {
-            'format': '{levelname} {message}',
-            'style': '{'
-        },
-    },
-    'handlers': {
-        'file_logging': {
-            'level': 'DEBUG',
-            'formatter': 'verbose',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'backupCount': 5,
-            'maxBytes': 5000000,
-            'filename': 'django-db.log'
-        },
-        'views_logging': {
-            'level': 'DEBUG',
-            'formatter': 'verbose',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'backupCount': 5,
-            'maxBytes': 5000000,
-            'filename': 'django-views.log'
-        },
-        # This one is only to avoid QuerySet logs
-        'db_logging': {
-            'level': 'INFO',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'backupCount': 5,
-            'maxBytes': 5000000,
-            'filename': 'django.log'
-        }
-    },
-    'loggers': {
-        'models': {
-            'handlers': ['file_logging'],
-            'level': 'DEBUG',
-            'propagate': True
-        },
-        'views': {
-            'handlers': ['views_logging'],
-            'level': 'DEBUG',
-            'propagate': True
-        },
-        'django.db': {
-            'handlers': ['db_logging'],
-            'level': 'INFO',
-            'propagate': False
-        }
-    }
-}
+# LOGGING = {
+#     'version': 1,
+#     'disable_existing_loggers': True,
+#     'formatters': {
+#         'verbose': {
+#             'format': '{asctime} {levelname} {message}',
+#             'style': '{'
+#         },
+#         'simple': {
+#             'format': '{levelname} {message}',
+#             'style': '{'
+#         },
+#     },
+#     'handlers': {
+#         'file_logging': {
+#             'level': 'DEBUG',
+#             'formatter': 'verbose',
+#             'class': 'logging.handlers.RotatingFileHandler',
+#             'backupCount': 5,
+#             'maxBytes': 5000000,
+#             'filename': 'django-db.log'
+#         },
+#         'views_logging': {
+#             'level': 'DEBUG',
+#             'formatter': 'verbose',
+#             'class': 'logging.handlers.RotatingFileHandler',
+#             'backupCount': 5,
+#             'maxBytes': 5000000,
+#             'filename': 'django-views.log'
+#         },
+#         # This one is only to avoid QuerySet logs
+#         'db_logging': {
+#             'level': 'INFO',
+#             'class': 'logging.handlers.RotatingFileHandler',
+#             'backupCount': 5,
+#             'maxBytes': 5000000,
+#             'filename': 'django.log'
+#         }
+#     },
+#     'loggers': {
+#         'models': {
+#             'handlers': ['file_logging'],
+#             'level': 'DEBUG',
+#             'propagate': True
+#         },
+#         'views': {
+#             'handlers': ['views_logging'],
+#             'level': 'DEBUG',
+#             'propagate': True
+#         },
+#         'django.db': {
+#             'handlers': ['db_logging'],
+#             'level': 'INFO',
+#             'propagate': False
+#         }
+#     }
+# }
 
 
 # Internationalization
@@ -200,11 +202,11 @@ LOCALE_PATHS = (
 # Static files (CSS, JavaScript)
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 STATIC_URL = "/static/"
-STATIC_ROOT = "/django_app/static"
+STATIC_ROOT = "/django_project/static"
 
 # Media files (Images)
-MEDIA_URL = 'media/'
-MEDIA_ROOT = "/django_app/media"
+MEDIA_URL = '/media/'
+MEDIA_ROOT = "/django_project/media"
 
 
 # URLS

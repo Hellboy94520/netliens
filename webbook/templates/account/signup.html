@@ -1,35 +1,51 @@
 {% load i18n %}
 <!DOCTYPE html>
-<html>
 <head>
     <meta charset="UTF-8">
     {% include 'header.html' %}
 </head>
-
-<body>
-    <div class="w3-card" style="margin-top: 20px; margin-left: 5%; margin-right: 5%; padding-bottom: 10px;">
-        <header class="w3-container my-amber-theme-l1">
-            <h1 class="w3-center">{% trans "Sign Up" %}</h1>
+<style>
+/* Full-width input fields */
+input[type=text], input[type=password], input[type=email] {
+  width: 100%;
+  padding: 12px 20px;
+  margin: 8px 0;
+  display: inline-block;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+}
+</style>
+<body style="margin-top:60px">
+    <div class="w3-panel w3-card" style="padding:0px; max-width: 600px; width:90%; margin: auto; margin-bottom: 20px;">
+        <header>
+            <h1 class="w3-center my-amber-theme-l1" style="margin-top: 0px; margin-bottom: 10px;">{% trans "Sign Up" %}</h1>
         </header>
-        <div class="w3-container w3-center" style="margin-top: 10px; margin-bottom: 10px;">
-            <form method="post">
-            {% csrf_token %}
-                {% for field in p_form %}
-                    <p>
-                        {{ field.label }}: 
-                        <span class="w3-hide-large w3-hide-medium"><br></span>
-                        {{ field }}<br>
-                        <!-- <a class="w3-text-grey w3-left" style="font-size:12px">{{ field.help_text }}</a> -->
-                        {% for error in field.errors %}
-                            <p style="color: red">{{ error }}</p>
-                        {% endfor %}
-                    </p>
-                {% endfor %}
-                {% for error in p_form.non_field_errors %}
-                    <a style="color: red;">{{ error }}</a><br>
-                {% endfor %}
-                <button type="submit">{% trans "Sign up" %}</button>
-        </form>
+            <div class="w3-container" style="margin-bottom: 10px;">
+                <form method="post">
+                {% csrf_token %}
+                    <label for="id_last_name"><b>{{ form.last_name.label }}</b></label><br>
+                    {{ form.last_name }}
+                    <label for="id_first_name"><b>{{ form.first_name.label }}</b></label><br>
+                    {{ form.first_name }}
+                    <label for="id_company"><b>{{ form.company.label }}</b></label><br>
+                    {{ form.company }}
+                    <div style="margin-top: 20px;">
+                    <label for="id_email"><b>{{ form.email.label }}</b></label><br>
+                    {{ form.email }}
+                    <label for="id_password1"><b>{{ form.password1.label }}</b></label><br>
+                    {{ form.password1 }}
+                    <label for="id_password2"><b>{{ form.password2.label }}</b></label><br>
+                    {{ form.password2 }}
+                    <input name="submit" type="hidden" value="submit"/>
+                    <button class="w3-button w3-block w3-card w3-black" type="submit" style="margin-top: 10px;">{% trans "Login" %}</button>
+                    {% for error in form.field_errors %}
+                        <p style="color: red;">{{ error }}</p>
+                    {% endfor %}
+                    {% for error in form.non_field_errors %}
+                        <p style="color: red;">{{ error }}</p>
+                    {% endfor %}
+                </form>
+            </div>
+        </div>
     </div>
 </body>
-</html>

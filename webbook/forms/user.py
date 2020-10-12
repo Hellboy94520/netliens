@@ -16,7 +16,7 @@ class PublicUserForm(forms.ModelForm):
     '''
     class Meta:
         model = User
-        fields = [ 'username', 'email', 'password', 'first_name', 'last_name', 'company' ]
+        fields = [ 'email', 'password', 'first_name', 'last_name', 'company' ]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -33,11 +33,10 @@ class AdminUserForm(forms.ModelForm):
 class SignUpForm(UserCreationForm):
     class Meta:
         model = User
-        fields = [ 'username', 'email', 'last_name', 'first_name', 'company' ]
+        fields = [ 'email', 'last_name', 'first_name', 'company' ]
 
     def __init__(self, *args, **kwargs):
         super(SignUpForm, self).__init__(*args, **kwargs)
-        self.fields['username'].widget.attrs['placeholder'] = self.fields['username'].label
         self.fields['email'].widget.attrs['placeholder'] = self.fields['email'].label
         self.fields['password1'].widget.attrs['placeholder'] = self.fields['password1'].label
         self.fields['password2'].widget.attrs['placeholder'] = self.fields['password2'].label

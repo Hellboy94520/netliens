@@ -78,11 +78,11 @@ class AnnouncementModelTestCase(TestCase):
             l_announcement.get_statistics()
 
     def test_construction_with_owner(self):
-        l_username = "toto"
-        l_user = User.objects.create_user(username=l_username, password="tototiti")
+        l_email = "toto@gmail.com"
+        l_user = User.objects.create_user(email=l_email, password="tototiti")
         self.assertEqual(User.objects.all().count(), 1, "[LOCAL] User has not been created !")
         l_announcement = Announcement(owner = l_user)
-        self.assertEqual(l_announcement.owner.username, l_username, "[LOCAL] Username is incorrect !")
+        self.assertEqual(l_announcement.owner.email, l_email, "[LOCAL] Username is incorrect !")
 
     def test_construction_with_stats(self):
         l_announcement = Announcement(  title=self.title,
@@ -118,15 +118,15 @@ class AnnouncementModelTestCase(TestCase):
         self.assertEqual(l_announcement.is_valid, self.is_valid, "[DB] Is_Valid is not False !")
 
     def test_construction_with_owner_database(self):
-        l_username = "toto"
-        l_user = User.objects.create_user(username=l_username, password="tototiti")
+        l_email = "toto"
+        l_user = User.objects.create_user(email=l_email, password="tototiti")
         self.assertEqual(User.objects.all().count(), 1, "[DB] User has not been created !")
         l_announcement = Announcement(owner = l_user)
         self.assertEqual(Announcement.objects.all().count(), 0, "[DB] Announcement already exist !")
         l_announcement.save()
         self.assertEqual(Announcement.objects.all().count(), 1, "[DB] Announcement has not been created !")
         l_announcement = Announcement.objects.filter()[0]
-        self.assertEqual(l_announcement.owner.username, l_username, "[DB] Username is incorrect !")
+        self.assertEqual(l_announcement.owner.email, l_email, "[DB] Email is incorrect !")
 
     def test_construction_with_stats_database(self):
         l_announcement = Announcement()
@@ -141,7 +141,7 @@ class AnnouncementModelTestCase(TestCase):
 
 class AnnouncementUserFormTestCase(TestCase):
     def setUp(self):
-        self.user = User.objects.create(username="toto", email="toto@gmail.com", password="tototititutu")
+        self.user = User.objects.create(email="toto@gmail.com", password="tototititutu")
         self.title = "This is a title !"
         self.content = "This is an announcement !"
         im = Image.new(mode='RGB', size=(200, 200)) # create a new image using PIL

@@ -1,0 +1,19 @@
+{% load i18n %}
+<!DOCTYPE html>
+<head>
+    <meta charset="UTF-8">
+    {% include 'header.html' %}
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+</head>
+<body style="margin-top:40px">
+    <!-- TODO -->
+    <!-- Left Menu --> 
+    <div class="w3-sidebar w3-bar-block w3-margin-left" style="width:25%">
+        <h3 href="/category/{{ self.main_category.pk }}" class="w3-amber">{{ self.category.name }}</h3>
+        {% for category in self.children_category %}
+            <a href="/category/{{ category.pk }}" class="w3-bar-item w3-button">{{ category.name }}</a>
+        {% endfor %}
+      </div>
+
+</body>
+</html>

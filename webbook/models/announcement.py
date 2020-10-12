@@ -73,6 +73,10 @@ class Announcement(models.Model):
         default=False,
         verbose_name=_("Valid"),
         help_text=_("Announcement is valid"))
+    on_homepage = models.BooleanField(
+        default=False,
+        verbose_name=_("On Homepage"),
+        help_text=_("Announcement is visible on Homepage"))
 
     """ ---------------------------------------------------- """
     def get_statistics(self):

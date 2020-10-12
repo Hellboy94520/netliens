@@ -1,7 +1,8 @@
-from django.http import HttpResponseRedirect
+from django.shortcuts import redirect
 from django.utils.translation import activate
 
 
 def activation(request, language):
     activate(language)
-    return HttpResponseRedirect(request.GET['next'])
+    # Not working with apache2
+    return redirect(request.GET['next'])

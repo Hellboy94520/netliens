@@ -1,14 +1,69 @@
 {% load i18n %}
 <!DOCTYPE html>
 <head>
-    <meta charset="UTF-8">
     {% include 'header.html' %}
 </head>
-<body>
-    {% if user.is_authenticated %}
-        <h1 style="margin-top: 20px;">{% blocktrans with username=user.get_username %}Welcome {{ username }}!{% endblocktrans %}</h1>
-    {% else %}
-        <h1>{% trans "Welcome !" %}</h1>
-    {% endif %}
+<body style="margin-top:40px">
+    <!-- HEADER: MESSAGE (MEDIUM AND LARGE) -->
+    <div>
+        <!-- Header Messages -->
+        {% if self.homepage.important_message %}
+                <div class="w3-panel w3-pale-red w3-leftbar w3-rightbar w3-border-red w3-margin-right w3-margin-left w3-display-container w3-card">
+                    <span onclick="this.parentElement.style.display='none'" class="w3-button w3-large w3-display-topright">&times;</span>
+                    <a href="/importantmessage" style="text-decoration: none">
+                        <h3>{{ self.homepage.important_title }}</h3>
+                        <p class="w3-hide-small">{{ self.homepage.important_message }}</p>
+                    </a>
+                </div>
+        {% endif %}
+        {% if self.homepage.warning_message %}
+                <div class="w3-panel w3-pale-yellow w3-leftbar w3-rightbar w3-border-yellow w3-margin-right w3-margin-left w3-display-container w3-card">
+                    <span onclick="this.parentElement.style.display='none'" class="w3-button w3-large w3-display-topright">&times;</span>
+                    <a href="/warningmessage" style="text-decoration: none">
+                        <h3>{{ self.homepage.warning_title }}</h3>
+                        <p class="w3-hide-small">{{ self.homepage.warning_message }}</p>
+                    </a>
+                </div>
+        {% endif %}
+        {% if self.homepage.information_message %}
+                <div class="w3-panel w3-white w3-leftbar w3-rightbar w3-bottombar w3-border-amber w3-margin-right w3-margin-left w3-display-container w3-card">
+                    <span onclick="this.parentElement.style.display='none'" class="w3-button w3-large w3-display-topright">&times;</span>
+                    <a href="/informationmessage" style="text-decoration: none">
+                        <h3>{{ self.homepage.information_title }}</h3>
+                        <p class="w3-hide-small">{{ self.homepage.information_message }}</p>
+                    </a>
+                </div>
+        {% endif %}
+    </div>
+    <!-- <div class="w3-row">
+            <!-- Left Menu 
+            <div class="w3-col s3">
+                <h3 class="my-amber-theme-l2">{% trans 'Category' %}</h3>
+                {% for category in self.main_category %}
+                    <a href="/category/{{ category.pk }}" class="w3-bar-item w3-button w3-padding-small">{{ category.name }}</a>
+                {% empty %}
+                    <p class="w3-padding-small">{% trans 'No Category' %}</p>
+                    <a href="/error/homepage_no_category" class="w3-margin-bottom w3-padding-small">{% trans 'Notify Us' %}</a>
+                {% endfor %}
+            </div>
+
+            <!-- Content 
+            <div class="w3-col s9 w3-container">
+                <!-- Homepage Welcome Message 
+                {% if user.is_authenticated %}
+                    <h1>{% blocktrans with username=user.get_username %}Welcome {{ username }}!{% endblocktrans %}</h1>
+                {% else %}
+                    <h1>{% trans "Welcome !" %}</h1>
+                {% endif %}
+                <h3 class="w3-center my-amber-theme-l2">{% trans 'Selection from among announcements accepted in Net-Liens' %}</h3>
+                {% for annoucement in self.main_announcement %}
+                    <a href="/announcement/{{ announcement.pk }}" class="w3-bar-item w3-button w3-padding-small">{{announcement.name }}</a>
+                {% empty %}
+                    <p >{% trans 'No Announcement' %}</p>
+                    <a href="/error/homepage_no_announcement">{% trans 'Notify Us' %}</a>
+            {% endfor %}
+            </div>
+        </div> -->
+    {% include 'footer.html' %}
 </body>
 </html>
