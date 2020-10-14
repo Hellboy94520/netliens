@@ -107,13 +107,9 @@ class User(AbstractUser):
         help_text=_("NL Level 7 Purchase Quantity"))
 
 User._meta.get_field('email')._unique = True
-User._meta.get_field('email').blank = False
-User._meta.get_field('email').null = False
-User._meta.get_field('last_name').blank = False
-User._meta.get_field('last_name').null = False
-User._meta.get_field('first_name').blank = False
-User._meta.get_field('first_name').null = False
-
+for fieldname in ['email', 'last_name', 'first_name']:
+    User._meta.get_field(fieldname).blank = False
+    User._meta.get_field(fieldname).null = False
 
 # This is just for example
 #TODO: Write permissions (valid_category, valid_localisation, valid_site, etc...)

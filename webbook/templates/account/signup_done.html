@@ -1,0 +1,20 @@
+{% load i18n %}
+<!DOCTYPE html>
+<html>
+{% load static %}
+<head>
+    <meta charset="UTF-8">
+    {% include 'header.html' %}
+    <link rel="stylesheet" type="text/css" href="{% static 'css/form.css' %}">
+</head>
+<body style="margin-top:60px">
+    <div class="w3-panel w3-card" style="padding:0px; max-width: 600px; width:90%; margin: auto; margin-bottom: 20px;">
+        <header>
+            <h1 class="w3-center my-amber-theme-l1" style="margin-top: 0px; margin-bottom: 10px;">{% trans "Signup link sent" %}</h1>
+        </header>
+        <div class="w3-container" style="margin-bottom: 10px;">
+            <label>An email has been sent to validate your account !</label>
+        </div>
+    </div>
+</body>
+</html>

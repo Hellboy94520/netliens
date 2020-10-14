@@ -1,51 +1,62 @@
 {% load i18n %}
 <!DOCTYPE html>
+<html>
+{% load static %}
 <head>
     <meta charset="UTF-8">
     {% include 'header.html' %}
+    <link rel="stylesheet" type="text/css" href="{% static 'css/form.css' %}">
 </head>
-<style>
-/* Full-width input fields */
-input[type=text], input[type=password], input[type=email] {
-  width: 100%;
-  padding: 12px 20px;
-  margin: 8px 0;
-  display: inline-block;
-  border: 1px solid #ccc;
-  box-sizing: border-box;
-}
-</style>
 <body style="margin-top:60px">
     <div class="w3-panel w3-card" style="padding:0px; max-width: 600px; width:90%; margin: auto; margin-bottom: 20px;">
         <header>
-            <h1 class="w3-center my-amber-theme-l1" style="margin-top: 0px; margin-bottom: 10px;">{% trans "Sign Up" %}</h1>
+            <h1 class="w3-center my-amber-theme-l1" style="margin-top: 0px; margin-bottom: 10px;">{{ self.title }}</h1>
         </header>
-            <div class="w3-container" style="margin-bottom: 10px;">
-                <form method="post">
-                {% csrf_token %}
-                    <label for="id_last_name"><b>{{ form.last_name.label }}</b></label><br>
-                    {{ form.last_name }}
-                    <label for="id_first_name"><b>{{ form.first_name.label }}</b></label><br>
-                    {{ form.first_name }}
-                    <label for="id_company"><b>{{ form.company.label }}</b></label><br>
-                    {{ form.company }}
-                    <div style="margin-top: 20px;">
-                    <label for="id_email"><b>{{ form.email.label }}</b></label><br>
-                    {{ form.email }}
-                    <label for="id_password1"><b>{{ form.password1.label }}</b></label><br>
-                    {{ form.password1 }}
-                    <label for="id_password2"><b>{{ form.password2.label }}</b></label><br>
-                    {{ form.password2 }}
-                    <input name="submit" type="hidden" value="submit"/>
-                    <button class="w3-button w3-block w3-card w3-black" type="submit" style="margin-top: 10px;">{% trans "Login" %}</button>
-                    {% for error in form.field_errors %}
-                        <p style="color: red;">{{ error }}</p>
-                    {% endfor %}
-                    {% for error in form.non_field_errors %}
-                        <p style="color: red;">{{ error }}</p>
-                    {% endfor %}
-                </form>
-            </div>
+        <div class="w3-container" style="margin-bottom: 10px;">
+            <form method="post">
+            {% csrf_token %}
+                <label for="id_last_name"><b>{{ form.last_name.label }}</b></label><br>
+                {{ form.last_name }}
+                {% for error in form.last_name.errors %}
+                    <p style="color: red;">{{ error }}</p>
+                {% endfor %}
+                <label for="id_first_name"><b>{{ form.first_name.label }}</b></label><br>
+                {{ form.first_name }}
+                {% for error in form.first_name.errors %}
+                    <p style="color: red;">{{ error }}</p>
+                {% endfor %}
+                <label for="id_company"><b>{{ form.company.label }}</b></label><br>
+                {{ form.company }}
+                {% for error in form.company.errors %}
+                    <p style="color: red;">{{ error }}</p>
+                {% endfor %}
+                <div style="margin-top: 20px;">
+                <label for="id_email"><b>{{ form.email.label }}</b></label><br>
+                {{ form.email }}
+                {% for error in form.email.errors %}
+                    <p style="color: red;">{{ error }}</p>
+                {% endfor %}
+                <label for="id_password1"><b>{{ form.password1.label }}</b></label><br>
+                {{ form.password1 }}
+                {% for error in form.password.errors %}
+                    <p style="color: red;">{{ error }}</p>
+                {% endfor %}
+                <p>{{ form.password1.help_text }}</p>
+                <label for="id_password2"><b>{{ form.password2.label }}</b></label><br>
+                {{ form.password2 }}
+                <input name="submit" type="hidden" value="submit"/>
+                <ul><li>{{ form.password2.help_text }}</li></ul>
+                <button class="w3-button w3-block w3-card w3-black" type="submit" style="margin-top: 20px;">{% trans "Login" %}</button>
+                {% for error in form.field_errors %}
+                    <p style="color: red;">{{ error }}</p>
+                {% endfor %}
+                {% for error in form.non_field_errors %}
+                    <p style="color: red;">{{ error }}</p>
+                {% endfor %}
+            </form>
+            <a href="/account/password_reset" class="w3-container" style="margin-top: 10px; margin-bottom: 10px;">{% trans 'Lost password?' %}</a>
+            <a href="/contact/account" class="w3-container" style="margin-top: 10px; margin-bottom: 10px;">{% trans "Any problem to sign up? Please contact us" %}</a>
         </div>
     </div>
 </body>
+</html>

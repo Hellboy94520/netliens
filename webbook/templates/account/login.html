@@ -1,20 +1,12 @@
 {% load i18n %}
 <!DOCTYPE html>
+<html>
+{% load static %}
 <head>
     <meta charset="UTF-8">
     {% include 'header.html' %}
+    <link rel="stylesheet" type="text/css" href="{% static 'css/form.css' %}">
 </head>
-<style>
-/* Full-width input fields */
-input[type=text], input[type=password] {
-  width: 100%;
-  padding: 12px 20px;
-  margin: 8px 0;
-  display: inline-block;
-  border: 1px solid #ccc;
-  box-sizing: border-box;
-}
-</style>
 <body style="margin-top:60px">
     <div class="w3-panel w3-card" style="padding:0px; max-width: 600px; width:90%; margin: auto;">
         <header>
@@ -30,7 +22,7 @@ input[type=text], input[type=password] {
                     <input name="submit" type="hidden" value="submit"/>
                     <button class="w3-button w3-block w3-card w3-black" type="submit" style="margin-top: 10px;">{% trans "Login" %}</button>
                     <a href="/account/signup" class="w3-button w3-block w3-card w3-white" style="margin-top: 10px;">{% trans 'Sign up' %}</a>
-                    <a href="/account/password_reset" class="w3-container w3-center w3-white" style="margin-top: 10px; margin-bottom: 10px;">{% trans 'Lost password?' %}</a>
+                    <a href="/account/password_reset" class="w3-container" style="margin-top: 10px; margin-bottom: 10px;">{% trans 'Lost password?' %}</a>
                     {% for error in form.field_errors %}
                         <p style="color: red;">{{ error }}</p>
                     {% endfor %}
@@ -42,3 +34,4 @@ input[type=text], input[type=password] {
         </div>
     </div>
 </body>
+</html>

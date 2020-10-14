@@ -33,7 +33,6 @@ ALLOWED_HOSTS = ['*']
 
 
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -79,7 +78,6 @@ AUTH_USER_MODEL = 'webbook.User'
 
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
-
 DATABASES = {
     'default': {
         'ENGINE': 'djongo',
@@ -92,7 +90,6 @@ DATABASES = {
 
 # Password validation
 # https://docs.djangoproject.com/en/2.2/ref/settings/#auth-password-validators
-
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -107,6 +104,17 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+# Email settings
+#TODO: To test only
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = config['EMAIL_HOST']
+EMAIL_PORT = config['EMAIL_PORT']
+EMAIL_HOST_USER = config['EMAIL_USER']
+EMAIL_HOST_PASSWORD = config['EMAIL_PASS']
+EMAIL_USE_TLS = False
+DEFAULT_FROM_EMAIL = "Netliens <noreply@netliens.com>"
 
 
 # LOGGER

@@ -1,13 +1,20 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.conf import settings
-from django.contrib.auth import login
+from django.http import Http404
 from django.utils.decorators import method_decorator
+from django.utils.translation import ugettext_lazy as _
 from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.tokens import default_token_generator
+from django.contrib.sites.shortcuts import get_current_site
+
 
 from django.views import View
+from django.views.generic import FormView, TemplateView
+from django.contrib.auth.views import PasswordResetView, PasswordResetDoneView
 
-from ..models import account_activation_token, User
+from ..models import User
 from ..forms import PublicUserForm, SignUpForm
 
 #TODO: To delete when ErrorPages will be implement when activation link is incorrect
@@ -23,7 +30,8 @@ from django.utils.http import urlsafe_base64_decode
 # View
 # -----------------------------
 @method_decorator(login_required, name='dispatch')
-class HomeView(View):
+#TODO
+class HomeView(FormView):
     """
         View to update account
     """
@@ -43,39 +51,54 @@ class HomeView(View):
 # -----------------------------
 class SignupView(View):
     """
-        Authentification view
+        View to create an account
     """
-    template_name = "account/signup.html"
+    form_class = SignUpForm
+    template_name = 'account/signup.html'
+    success_url = "/account/signup/done/"
+    email_template_name = "account/email_signup_content.html"
+    subject_template_name = "account/email_signup_subject.txt"
+    from_email = None
+    title = _('Signup')
 
     def get(self, request, *args, **kwargs):
         form = SignUpForm()
         return render(request, self.template_name, locals())
-    
+
     def post(self, request, *args, **kwargs):
         form = SignUpForm(request.POST)
         if form.is_valid():
-            user = form.save()
-            return redirect(settings.LOGIN_REDIRECT_URL)
+            current_site = get_current_site(request)
+            opts = {
+            'use_https': request.is_secure(),
+            'site_domain': current_site.domain,
+            'site_name': current_site.name,
+            'email_template_name': self.email_template_name,
+            'subject_template_name': self.subject_template_name,
+            'from_email': self.from_email
+            }
+            form.save(**opts)
+            return redirect(self.success_url)
         return render(request, self.template_name, locals())
 
 # -----------------------------
-def activation(request, uidb64, token):
+class SignupConfirmation(TemplateView):
     """
-        Access to activate an account from email received
+        View to activate account
     """
-    try:
-        uid = force_text(urlsafe_base64_decode(uidb64))
-    except:
-        return HttpResponse(status=404)
+    template_name = "account/signup_confirmation.html"
 
-    try:
-        l_user = User.objects.get(pk=uid)
-    except(TypeError, ValueError, OverflowError, User.DoesNotExist):
-        return HttpResponse(status=404)
-    else:
-        if account_activation_token.check_token(l_user, token):
-            l_user.is_active = True
-            l_user.save()
-            login(request, l_user)
-            return redirect(settings.LOGIN_REDIRECT_URL)
-    return HttpResponse(status=404)
+    def get_user(self, uidb64):
+        # urlsafe_base64_decode() decodes to bytestring
+        uid = urlsafe_base64_decode(uidb64).decode()
+        l_user = get_object_or_404(User, pk=uid)
+        return l_user
+
+    def get(self, request, *args, **kwargs):
+        assert 'uidb64' in kwargs and 'token' in kwargs, Http404()
+        l_user = self.get_user(kwargs['uidb64'])
+        if not default_token_generator.check_token(l_user, kwargs['token']):
+            raise Http404()
+        l_user.is_active = True
+        l_user.save()
+        return super(SignupConfirmation, self).get(request, *args, **kwargs)
