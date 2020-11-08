@@ -153,14 +153,12 @@ class UserModelTestCase(TestCase):
 class PublicUserFormTestCase(TestCase):
     def setUp(self):
         self.email = "toto@toto.fr"
-        self.password = "tototititutu" 
         self.first_name = "Toto"
         self.last_name = "Titi"
         self.company = "Tutu"
 
     def test_userform_valid(self):
         l_user = PublicUserForm(data={  'email': self.email,
-                                        'password': self.password,
                                         'first_name': self.first_name,
                                         'last_name': self.last_name,
                                         'company': self.company})
@@ -170,7 +168,6 @@ class PublicUserFormTestCase(TestCase):
         self.assertEqual(User.objects.all().count(), 1, "[DB] User has not been created after save form !")
         l_user = User.objects.get(email=self.email)
         self.assertEqual(l_user.email, self.email, "[DB] email invalid !")
-        self.assertEqual(l_user.password, self.password, "[DB] password invalid !")
         self.assertEqual(l_user.first_name, self.first_name, "[DB] first_name invalid !")
         self.assertEqual(l_user.last_name, self.last_name, "[DB] last_name invalid !")
         self.assertEqual(l_user.company, self.company, "[DB] company invalid !")
@@ -182,7 +179,6 @@ class PublicUserFormTestCase(TestCase):
 
     def test_userform_constructor_error_email(self):
         l_user = PublicUserForm(data={  'email': "toto",
-                                        'password': self.password,
                                         'first_name': self.first_name,
                                         'last_name': self.last_name,
                                         'company': self.company})
@@ -192,7 +188,6 @@ class PublicUserFormTestCase(TestCase):
         self.assertEqual(l_user['email'].errors[0], "Enter a valid email address.", "Error message not expected !")
 
         l_user = PublicUserForm(data={  'email': "toto@titi",
-                                        'password': self.password,
                                         'first_name': self.first_name,
                                         'last_name': self.last_name,
                                         'company': self.company})
@@ -203,7 +198,6 @@ class PublicUserFormTestCase(TestCase):
 
     def test_userform_constructor_error_email_exist(self):
         l_user = PublicUserForm(data={  'email': self.email,
-                                        'password': self.password,
                                         'first_name': self.first_name,
                                         'last_name': self.last_name,
                                         'company': self.company})
@@ -213,7 +207,6 @@ class PublicUserFormTestCase(TestCase):
         self.assertEqual(User.objects.all().count(), 1, "[DB] User has not been created after save form !")
 
         l_user = PublicUserForm(data={  'email': self.email,
-                                        'password': self.password,
                                         'first_name': self.first_name,
                                         'last_name': self.last_name,
                                         'company': self.company})
@@ -225,9 +218,7 @@ class PublicUserFormTestCase(TestCase):
     def test_userform_not_valid_only_email(self):
         l_user = PublicUserForm(data={'email': self.email})
         self.assertFalse(l_user.is_valid(), "Form is valid !")
-        self.assertEqual(len(l_user.errors), 4, "Expected only 5 errors !")
-        self.assertEqual(len(l_user['password'].errors), 1, "Expected only 1 error for 'password' field !")
-        self.assertEqual(l_user['password'].errors[0], "This field is required.", "Error message not expected !")
+        self.assertEqual(len(l_user.errors), 3, "Expected only 5 errors !")
         self.assertEqual(len(l_user['last_name'].errors), 1, "Expected only 1 error for 'last_name' field !")
         self.assertEqual(l_user['last_name'].errors[0], "This field is required.", "Error message not expected !")
         self.assertEqual(len(l_user['first_name'].errors), 1, "Expected only 1 error for 'first_name' field !")
@@ -238,9 +229,7 @@ class PublicUserFormTestCase(TestCase):
     def test_userform_not_valid_no_data(self):
         l_user = PublicUserForm(data={})
         self.assertFalse(l_user.is_valid(), "Form is valid !")
-        self.assertEqual(len(l_user.errors), 5, "Expected only 5 errors !")
-        self.assertEqual(len(l_user['password'].errors), 1, "Expected only 1 error for 'password' field !")
-        self.assertEqual(l_user['password'].errors[0], "This field is required.", "Error message not expected !")
+        self.assertEqual(len(l_user.errors), 4, "Expected only 5 errors !")
         self.assertEqual(len(l_user['email'].errors), 1, "Expected only 1 error for 'email' field !")
         self.assertEqual(l_user['email'].errors[0], "This field is required.", "Error message not expected !")
         self.assertEqual(len(l_user['last_name'].errors), 1, "Expected only 1 error for 'last_name' field !")
@@ -580,6 +569,56 @@ class LogoutViewTestCase(TestCase):
         self.assertEqual(response.url, settings.LOGIN_REDIRECT_URL, f"Redirection not exist in response '{response}'")
         self.assertIsNone(response.context, "Response has a context !")
 
+    def test_invalid(self):
+        self.assertEqual(User.objects.all().count(), 1, "[DB] UserForm has not been created after submit valid form !")
+        response = self.client.get("/account/")
+        self.assertEqual(response.status_code, 302, "No Code 302 page return")
+        self.assertEqual(response.url, "/account/login?next=/account/")
+        response = self.client.get("/account/logout/")
+        self.assertEqual(response.status_code, 302, "No Code 302 page return")
+        self.assertEqual(response.url, "/")
+
+# -----------------------------
+class PasswordChangeViewTestCase(TestCase):
+    def setUp(self):
+        self.email = "toto@gmail.com"
+        self.password = "tototititutu"
+        self.new_password = "tututititoto"
+        User.objects.create_user(email=self.email, password=self.password, is_active=True)
+
+    def test_valid(self):
+        # Authentificate User
+        self.assertEqual(User.objects.all().count(), 1, "[DB] UserForm has not been created after submit valid form !")
+        response = self.client.post(
+            "/account/login/", {    'username': self.email,
+                                    'password': self.password })
+        self.assertEqual(response.url, settings.LOGIN_REDIRECT_URL, f"Redirection not exist in response '{response}'")
+        response = self.client.get(settings.LOGIN_REDIRECT_URL)
+        self.assertTrue(response.context['user'].is_authenticated, "User is not authentificated !")
+        self.assertEqual(response.context['user'].email, self.email, "Wrong user authentificated !")
+        # Request Password change
+        response = self.client.post(
+            "/account/password_change/",
+            {   'old_password': self.password,
+                'new_password1': self.new_password,
+                'new_password2': self.new_password })
+        self.assertEqual(response.status_code, 302, "No Code 200 page return")
+        self.assertEqual(response.url, "/account/password_change/done")
+        #TODO: To implement
+        # self.assertEqual(len(mail.outbox), 1)
+
+    def test_invalid(self):
+        # Authentificate User
+        self.assertEqual(User.objects.all().count(), 1, "[DB] UserForm has not been created after submit valid form !")
+        response = self.client.get("/account/")
+        self.assertEqual(response.status_code, 302, "No Code 302 page return")
+        self.assertEqual(response.url, "/account/login?next=/account/")
+        # Request password change without account
+        response = self.client.get("/account/password_change/")
+        self.assertEqual(response.status_code, 302, "No Code 302 page return")
+        self.assertEqual(response.url, "/account/login?next=/account/password_change/")
+
+# -----------------------------
 class PasswordResetViewTestCase(TestCase):
     def setUp(self):
         self.email = "toto@gmail.com"
@@ -658,7 +697,7 @@ class PasswordResetViewTestCase(TestCase):
         l_user = User.objects.get(email=self.email)
         self.assertTrue(l_user.is_active)
 
-
+# -----------------------------
 class PasswordResetDoneViewTestCase(TestCase):
     """
         Nothing to test it is just a template

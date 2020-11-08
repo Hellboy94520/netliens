@@ -36,9 +36,15 @@ urlpatterns = [
   path('account/logout/',
     auth_views.LogoutView.as_view(),
     name="logout"),
-  ## TODO: View to change password
-  # path('account/password_change'),
-  # path('account/password_change/done'),
+  path('account/password_change/',
+    auth_views.PasswordChangeView.as_view(
+      template_name="account/password_change.html",
+      success_url="/account/password_change/done"
+    )),
+  path('account/password_change/done/',
+    auth_views.PasswordChangeDoneView.as_view(
+      template_name="account/password_change_done.html"
+    )),
   ## View to ask to reset passwork via an email
   path('account/password_reset/',
     auth_views.PasswordResetView.as_view(

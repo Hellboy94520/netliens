@@ -30,21 +30,21 @@ from django.utils.http import urlsafe_base64_decode
 # View
 # -----------------------------
 @method_decorator(login_required, name='dispatch')
-#TODO
-class HomeView(FormView):
+class HomeView(View):
     """
         View to update account
     """
     template_name = 'account/home.html'
 
     def get(self, request, *args, **kwargs):
-        p_form = PublicUserForm()
+        form = PublicUserForm(instance=request.user)
         return render(request, self.template_name, locals())
     
     def post(self, request, *args, **kwargs):
-        p_form = PublicUserForm(request.POST)
-        if p_form.is_valid():
-            user = p_form.save()
+        form = PublicUserForm(request.POST,
+                                instance=request.user)
+        if form.is_valid():
+            user = form.save()
             return redirect('/')
         return render(request, self.template_name, locals())
 

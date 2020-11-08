@@ -18,14 +18,13 @@ logger = logging.getLogger("forms")
 # -----------------------------
 # Form
 # -----------------------------
-#TODO: use UserChangeForm
 class PublicUserForm(forms.ModelForm):
     """
         This form is used by User of website to create/update an account
     """
     class Meta:
         model = User
-        fields = [ 'email', 'password', 'first_name', 'last_name', 'company' ]
+        fields = [ 'email', 'first_name', 'last_name', 'company' ]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

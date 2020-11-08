@@ -15,37 +15,20 @@
         <div class="w3-container" style="margin-bottom: 10px;">
             <form method="post">
             {% csrf_token %}
-                <label for="id_last_name"><b>{{ form.last_name.label }}</b></label><br>
-                {{ form.last_name }}
-                {% for error in form.last_name.errors %}
-                    <p style="color: red;">{{ error }}</p>
+                {% for field in form %}
+                    <label><b>{{ field.label }}</b></label><br>
+                    {{ field }}
+                    {% if field.help_text %}
+                        {% if field.name == "password2" %}
+                            <ul><li>{{ field.help_text }}</li></ul>
+                        {% else %}
+                            <p>{{ field.help_text }}</p>
+                        {% endif %}
+                    {% endif %}
+                    {% for error in field.errors %}
+                        <p style="color: red;">{{ error }}</p>
+                    {% endfor %}
                 {% endfor %}
-                <label for="id_first_name"><b>{{ form.first_name.label }}</b></label><br>
-                {{ form.first_name }}
-                {% for error in form.first_name.errors %}
-                    <p style="color: red;">{{ error }}</p>
-                {% endfor %}
-                <label for="id_company"><b>{{ form.company.label }}</b></label><br>
-                {{ form.company }}
-                {% for error in form.company.errors %}
-                    <p style="color: red;">{{ error }}</p>
-                {% endfor %}
-                <div style="margin-top: 20px;">
-                <label for="id_email"><b>{{ form.email.label }}</b></label><br>
-                {{ form.email }}
-                {% for error in form.email.errors %}
-                    <p style="color: red;">{{ error }}</p>
-                {% endfor %}
-                <label for="id_password1"><b>{{ form.password1.label }}</b></label><br>
-                {{ form.password1 }}
-                {% for error in form.password.errors %}
-                    <p style="color: red;">{{ error }}</p>
-                {% endfor %}
-                <p>{{ form.password1.help_text }}</p>
-                <label for="id_password2"><b>{{ form.password2.label }}</b></label><br>
-                {{ form.password2 }}
-                <input name="submit" type="hidden" value="submit"/>
-                <ul><li>{{ form.password2.help_text }}</li></ul>
                 <button class="w3-button w3-block w3-card w3-black" type="submit" style="margin-top: 20px;">{% trans "Login" %}</button>
                 {% for error in form.field_errors %}
                     <p style="color: red;">{{ error }}</p>

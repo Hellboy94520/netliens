@@ -15,10 +15,10 @@
             <div class="w3-container" style="margin-bottom: 10px;">
                 <form method="post">
                 {% csrf_token %}
-                    <label><b>{{ form.username.label }}</b></label><br>
-                    <input type="text" name="username" placeholder="{{ form.username.label }}" autofocus required id="id_username"><br>
-                    <label><b>{{ form.password.label }}</b></label><br>
-                    <input type="password" name="password" placeholder="{{ form.password.label }}" autofocus required id="id_password"><br>
+                    {% for field in form %}
+                        <label><b>{{ field.label }}</b></label><br>
+                        {{ field }}
+                    {% endfor %}
                     <input name="submit" type="hidden" value="submit"/>
                     <button class="w3-button w3-block w3-card w3-black" type="submit" style="margin-top: 10px;">{% trans "Login" %}</button>
                     <a href="/account/signup" class="w3-button w3-block w3-card w3-white" style="margin-top: 10px;">{% trans 'Sign up' %}</a>

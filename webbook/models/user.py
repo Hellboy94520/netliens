@@ -63,8 +63,8 @@ class User(AbstractUser):
     company    = models.CharField(
         max_length=100,
         default="",
-        verbose_name=_("Company"),
-        help_text=_("Company Name"))
+        verbose_name=_("Company"))
+        # help_text=_("Company Name"))
     nl0 = models.PositiveIntegerField(
         validators=[MinValueValidator(0)],
         default=1,
