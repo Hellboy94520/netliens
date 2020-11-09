@@ -102,3 +102,41 @@ class SignupConfirmation(TemplateView):
         l_user.is_active = True
         l_user.save()
         return super(SignupConfirmation, self).get(request, *args, **kwargs)
+
+# -----------------------------
+from django.contrib.auth.views import PasswordChangeView as DjangoPasswordChangeView
+from ..forms import PasswordChangeForm
+class PasswordChangeView(DjangoPasswordChangeView):
+    email_template_name = None
+    subject_template_name = None
+    form_class = PasswordChangeForm
+
+    def form_valid(self, form):
+        l_response = super(DjangoPasswordChangeView, self).form_valid(form)
+        opts = {
+            'email_template_name': self.email_template_name,
+            'subject_template_name': self.subject_template_name,
+            'from_email': None,
+            'to_email': form.user.email
+        }
+        form.send_email(**opts)
+        return l_response
+
+# -----------------------------
+from django.contrib.auth.views import PasswordResetConfirmView as DjangoPasswordResetConfirmView
+from ..forms import SetPasswordForm
+class PasswordResetConfirmView(DjangoPasswordResetConfirmView):
+    email_template_name = None
+    subject_template_name = None
+    form_class = SetPasswordForm
+
+    def form_valid(self, form):
+        l_response = super(DjangoPasswordResetConfirmView, self).form_valid(form)
+        opts = {
+            'email_template_name': self.email_template_name,
+            'subject_template_name': self.subject_template_name,
+            'from_email': None,
+            'to_email': form.user.email
+        }
+        form.send_email(**opts)
+        return l_response

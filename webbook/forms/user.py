@@ -15,6 +15,20 @@ from django.core.exceptions import ValidationError
 import logging
 logger = logging.getLogger("forms")
 
+def send_mail(subject_template_name,
+        email_template_name,
+        context,
+        from_email,
+        to_email):
+    """
+        Send a django.core.mail.EmailMultiAlternatives to `to_email`.
+    """
+    subject = loader.render_to_string(subject_template_name, context)
+    subject = ''.join(subject.splitlines())
+    body = loader.render_to_string(email_template_name, context)
+    email_message = EmailMultiAlternatives(subject, body, from_email, [to_email])
+    email_message.send()
+
 # -----------------------------
 # Form
 # -----------------------------
@@ -57,21 +71,6 @@ class SignUpForm(UserCreationForm):
         self.fields['first_name'].widget.attrs['placeholder'] = self.fields['first_name'].label
         self.fields['company'].widget.attrs['placeholder'] = self.fields['company'].label
 
-    def send_mail(self,
-                  subject_template_name,
-                  email_template_name,
-                  context,
-                  from_email,
-                  to_email):
-        """
-            Send a django.core.mail.EmailMultiAlternatives to `to_email`.
-        """
-        subject = loader.render_to_string(subject_template_name, context)
-        subject = ''.join(subject.splitlines())
-        body = loader.render_to_string(email_template_name, context)
-        email_message = EmailMultiAlternatives(subject, body, from_email, [to_email])
-        email_message.send()
-
     def save(self, 
              use_https=False,
              site_domain=None,
@@ -99,9 +98,43 @@ class SignUpForm(UserCreationForm):
                 'protocol': 'https' if use_https else 'http'
         }
         # - Send email
-        self.send_mail(subject_template_name,
-                       email_template_name,
-                       context,
-                       from_email,
-                       l_user.email)
+        send_mail(subject_template_name,
+                  email_template_name,
+                  context,
+                  from_email,
+                  l_user.email)
+        return True
+
+# -----------------------------
+from django.contrib.auth.forms import PasswordChangeForm as DjangoPasswordChangeForm
+class PasswordChangeForm(DjangoPasswordChangeForm):
+
+    def send_email(self,
+            email_template_name=None,
+            subject_template_name=None,
+            from_email = None,
+            to_email=None):
+        # Send email
+        send_mail(subject_template_name,
+                  email_template_name,
+                  None,
+                  from_email,
+                  to_email)
+        return True
+
+# -----------------------------
+from django.contrib.auth.forms import SetPasswordForm as DjangoSetPasswordForm
+class SetPasswordForm(DjangoSetPasswordForm):
+
+    def send_email(self,
+            email_template_name=None,
+            subject_template_name=None,
+            from_email = None,
+            to_email=None):
+        # Send email
+        send_mail(subject_template_name,
+                  email_template_name,
+                  None,
+                  from_email,
+                  to_email)
         return True

@@ -604,8 +604,7 @@ class PasswordChangeViewTestCase(TestCase):
                 'new_password2': self.new_password })
         self.assertEqual(response.status_code, 302, "No Code 200 page return")
         self.assertEqual(response.url, "/account/password_change/done")
-        #TODO: To implement
-        # self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(len(mail.outbox), 1)
 
     def test_invalid(self):
         # Authentificate User
@@ -725,6 +724,7 @@ class PasswordResetConfirmViewTestCase(TestCase):
         response = self.client.get(l_confirmation_link)
         response = self.client.post(response.url, {  'new_password1': self.password,
                                                      'new_password2': self.password })
+        self.assertEqual(len(mail.outbox), 2)
         self.assertEqual(response.url, "/account/password_reset/complete/", f"Redirection not exist in response '{response}'")
 
     def test_invalid_password(self):

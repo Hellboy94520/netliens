@@ -37,9 +37,11 @@ urlpatterns = [
     auth_views.LogoutView.as_view(),
     name="logout"),
   path('account/password_change/',
-    auth_views.PasswordChangeView.as_view(
+    account.PasswordChangeView.as_view(
       template_name="account/password_change.html",
-      success_url="/account/password_change/done"
+      success_url="/account/password_change/done",
+      email_template_name="account/email_password_change_content.html",
+      subject_template_name="account/email_password_change_subject.txt"
     )),
   path('account/password_change/done/',
     auth_views.PasswordChangeDoneView.as_view(
@@ -62,13 +64,15 @@ urlpatterns = [
     name="password_reset_done"),
   ## View from email link to reset password
   path('account/password_reset/<uidb64>/<token>/',
-    auth_views.PasswordResetConfirmView.as_view(
+    account.PasswordResetConfirmView.as_view(
       template_name="account/password_reset_confirm.html",
+      email_template_name="account/email_password_reset_confirm_content.html",
+      subject_template_name="account/email_password_reset_confirm_subject.txt",
       title=_("Password reset")),
     name="password_reset_confirm"),
   ## View to indicated password has been reset
   path('account/password_reset/complete/',
-    auth_views.PasswordResetConfirmView.as_view(
+    auth_views.PasswordResetCompleteView.as_view(
       template_name="account/password_reset_complete.html",
       title=_("Password reset complete")),
     name="password_reset_complete"),
