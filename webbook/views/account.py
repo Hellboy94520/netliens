@@ -15,7 +15,7 @@ from django.views.generic import FormView, TemplateView
 from django.contrib.auth.views import PasswordResetView, PasswordResetDoneView
 
 from ..models import User
-from ..forms import PublicUserForm, SignUpForm
+from ..forms import PublicUserForm, SignUpForm, send_mail as SendEmail
 
 #TODO: To delete when ErrorPages will be implement when activation link is incorrect
 from django.http import HttpResponse
@@ -86,7 +86,9 @@ class SignupConfirmation(TemplateView):
     """
         View to activate account
     """
-    template_name = "account/signup_confirmation.html"
+    template_name = None
+    email_template_name = None
+    subject_template_name = None
 
     def get_user(self, uidb64):
         # urlsafe_base64_decode() decodes to bytestring
@@ -95,12 +97,23 @@ class SignupConfirmation(TemplateView):
         return l_user
 
     def get(self, request, *args, **kwargs):
+        # - Activate account
         assert 'uidb64' in kwargs and 'token' in kwargs, Http404()
         l_user = self.get_user(kwargs['uidb64'])
         if not default_token_generator.check_token(l_user, kwargs['token']):
             raise Http404()
         l_user.is_active = True
         l_user.save()
+        # - Send Email
+        opts = {
+            'email_template_name': self.email_template_name,
+            'subject_template_name': self.subject_template_name,
+            'context': { 'user': l_user },
+            'from_email': None,
+            'to_email': l_user.email
+        }
+        SendEmail(**opts)
+
         return super(SignupConfirmation, self).get(request, *args, **kwargs)
 
 # -----------------------------

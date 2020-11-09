@@ -25,7 +25,11 @@ urlpatterns = [
     TemplateView.as_view(template_name="account/signup_done.html"),
     name="signup_done"),
   path('account/signup/<uidb64>/<token>/',
-    account.SignupConfirmation.as_view(),
+    account.SignupConfirmation.as_view(
+      template_name="account/signup_confirmation.html",
+      email_template_name="account/email_signup_confirmation_content.html",
+      subject_template_name="account/email_signup_confirmation_subject.txt"
+    ),
     name="signup_confirmation"),
   # --> AuthentificationView: https://docs.djangoproject.com/fr/3.1/topics/auth/default/#module-django.contrib.auth.views
   ## View to Login

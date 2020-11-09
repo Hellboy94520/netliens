@@ -491,6 +491,7 @@ class SignUpConfirmationTestCase(TestCase):
         l_confirmation_link = l_re.group(0)
         response = self.client.get(l_confirmation_link)
         self.assertEqual(response.status_code, 200, "No Code 200 page return")
+        self.assertEqual(len(mail.outbox), 2)
         self.assertEqual(User.objects.all().count(), 1, "UserForm has not been created after submit valid form !")
         l_user = User.objects.get(email=self.email)
         self.assertTrue(l_user.is_active)
