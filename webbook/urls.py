@@ -13,7 +13,7 @@ urlpatterns = [
   # NetLiens
   path('', netliens.HomeView.as_view()),
   path('category/<int:category_id>', netliens.CategoryView.as_view()),
-  path('announcement/<int:announcement_id>', netliens.AnnouncementView.as_view()),
+  path('announcement/<str:announcement_title>', netliens.AnnouncementView.as_view()),
   # Languages
   path('languages/<str:language>', languages.activation),
   # Account

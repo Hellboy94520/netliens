@@ -5,10 +5,12 @@ from django.db.models.signals import post_save
 
 from .user import User
 from .category import Category
+from .language import LanguageModel
 from .localisation import Localisation
 from .statistics import Statistics
 
 TITLE_MAX_LENGTH=50
+NAME_MAX_LENGTH=100
 NL_LEVEL_MAX=10
 
 
@@ -18,19 +20,15 @@ Models
 ------------------------------------------------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------------------------------------- """
 class Announcement(models.Model):
-    title = models.CharField(
-        max_length=TITLE_MAX_LENGTH,
+    # Updatable by User
+    name = models.CharField(
         default="",
+        unique=True,
         blank=False,
         null=False,
-        verbose_name=_("Title"),
-        help_text=_("Title of your announcement"))
-    content = models.TextField(
-        default="",
-        blank=False,
-        null=False,
-        verbose_name=_("Content"),
-        help_text=_("Content of your announcement"))
+        max_length=NAME_MAX_LENGTH,
+        verbose_name=_("Name"),
+        help_text=_("Company name (to use in reference)"))
     image = models.ImageField(upload_to = "images/",
         default=None,
         blank=True,
@@ -39,6 +37,9 @@ class Announcement(models.Model):
         help_text=_("Image of your announcement"))
     website = models.URLField(
         default="",
+        unique=True,
+        blank=False,
+        null=False,
         verbose_name=_("Website"),
         help_text=_("Your website address"))
     category = models.ForeignKey(
@@ -57,11 +58,13 @@ class Announcement(models.Model):
         null=False,
         verbose_name=_("Localisation"),
         help_text=_("Announcement Localisation"))
+    # ReadOnly
     nl = models.PositiveIntegerField(
         validators=[MaxValueValidator(NL_LEVEL_MAX)],
         default=0,
         verbose_name=_("NL Level"),
         help_text=_("NL Level of the website"))
+    # Private
     owner = models.ForeignKey(
         User, 
         on_delete=models.CASCADE)
@@ -73,10 +76,16 @@ class Announcement(models.Model):
         default=False,
         verbose_name=_("Valid"),
         help_text=_("Announcement is valid"))
-    on_homepage = models.BooleanField(
+    is_on_homepage = models.BooleanField(
         default=False,
         verbose_name=_("On Homepage"),
         help_text=_("Announcement is visible on Homepage"))
+
+    """ ---------------------------------------------------- """
+    def get_announcement_language(self, language: str):
+        return AnnouncementLanguage.objects.get(
+            announcement=self,
+            language=language)
 
     """ ---------------------------------------------------- """
     def get_statistics(self):
@@ -86,6 +95,25 @@ class Announcement(models.Model):
         verbose_name = _("Announcement")
 
 
+""" ---------------------------------------------------------------------------------------------------------------- """
+class AnnouncementLanguage(LanguageModel):
+    title = models.CharField(
+        max_length=TITLE_MAX_LENGTH,
+        blank=False,
+        null=False,
+        verbose_name=_("Title"),
+        help_text=_("Title of your announcement"))
+    content = models.TextField(
+        blank=False,
+        null=False,
+        verbose_name=_("Content"),
+        help_text=_("Content of your announcement"))
+    announcement = models.ForeignKey(
+        Announcement,
+        on_delete=models.CASCADE)
+
+
+""" ---------------------------------------------------------------------------------------------------------------- """
 class AnnouncementStats(Statistics):
     announcement = models.OneToOneField(Announcement, on_delete=models.CASCADE, primary_key=True)
 

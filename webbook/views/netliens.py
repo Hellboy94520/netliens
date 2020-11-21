@@ -12,7 +12,7 @@ class HomeView(View):
     template_name = "home.html"
     homepage, is_create = Homepage.objects.get_or_create()
     main_category = Category.objects.filter(parent=None, is_enable=True).order_by('order')
-    main_announcement = Announcement.objects.filter(is_enable=True, is_valid=True, on_homepage=True)
+    # main_announcement = Announcement.objects.filter(is_enable=True, is_valid=True, on_homepage=True)
 
     def get(self, request, *args, **kwargs):
         return render(request, self.template_name, locals())

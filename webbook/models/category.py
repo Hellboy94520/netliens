@@ -49,6 +49,8 @@ class Category(models.Model):
     # Indicated a personnalize order for category with same parents
     order = models.PositiveIntegerField(
         validators=[MinValueValidator(MINIMUM_ORDER)],
+        null=False,
+        blank=False,
         default=MINIMUM_ORDER,
         verbose_name=_("Order"),
         help_text=_("Display order"))

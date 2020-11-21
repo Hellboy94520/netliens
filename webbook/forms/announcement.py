@@ -1,31 +1,45 @@
 from django import forms
 from django.utils.translation import ugettext_lazy as _
+from django.shortcuts import get_object_or_404
 
-from ..models import Announcement, AnnouncementStats
+from ..models import LanguageAvailable
+from ..models import Announcement, AnnouncementLanguage, AnnouncementStats, TITLE_MAX_LENGTH
 from ..models import Category, get_all_category_in_order
 from ..models import Localisation, get_all_localisation_in_order
 
-def _get_combinable_category():
-    l_category_list = []
-    for l_category in Category.objects.filter(parent=None).order_by('order'):
-        l_category_list.append(l_category)
-        l_category_list.extend(l_category.get_children_list())
-    l_category_map = {}
-    for l_category in l_category_list:
-        if l_category.is_combinable:
-            l_category_map[l_category.pk] = l_category
-    return l_category_map
+class AnnouncementLanguageForm(forms.ModelForm):
+    language = forms.ChoiceField(
+        choices=( (content.value, content.value) for content in LanguageAvailable),
+        required=True,
+        initial=None,
+        label=_("Language"),
+        help_text=_("Language of content"))
 
-def _get_combinable_localisation():
-    l_localisation_list = []
-    for l_localisation in Category.objects.filter(parent=None).order_by('order'):
-        l_localisation_list.append(l_localisation)
-        l_localisation_list.extend(l_localisation.get_children_list())
-    l_localisation_map = {}
-    for l_localisation in l_localisation_list:
-        if l_localisation.is_combinable:
-            l_localisation_map[l_localisation.pk] = l_localisation
-    return l_localisation_map
+    class Meta:
+        model = AnnouncementLanguage
+        fields = [ 'title', 'content' ]
+
+    def is_valid(self, announcement: Announcement):
+        if not super(AnnouncementLanguageForm, self).is_valid():
+            return False
+        # Check if the language exist or not for an announcement
+        if AnnouncementLanguage.objects.filter(
+                language=self.cleaned_data['language'],
+                announcement=announcement
+            ).count() > 0:
+            self.add_error('language', _("This Language already exist for this announcement !"))
+            return False
+
+        self.announcement = announcement
+        return True
+        
+    def save(self, *args, **kwargs):
+        # Save 
+        l_announcement = super(AnnouncementLanguageForm, self).save(commit=False)
+        l_announcement.language = self.cleaned_data['language']
+        l_announcement.announcement = self.announcement
+        l_announcement.save()
+        return l_announcement
 
 class AnnouncementUserForm(forms.ModelForm):
     nl = forms.ChoiceField(
@@ -35,9 +49,25 @@ class AnnouncementUserForm(forms.ModelForm):
         label=_("NL"),
         help_text=_("NL Level for your annoncement"))
 
+    category = forms.ChoiceField(
+        choices=[],
+        required=True,
+        initial=None,
+        label=_("Category"),
+        help_text=_("Choose a category for your announcement")
+    )
+
+    localisation = forms.ChoiceField(
+        choices=[],
+        required=True,
+        initial=None,
+        label=_("Localisation"),
+        help_text=_("Choose a localisation for your announcement")
+    )
+
     class Meta:
         model = Announcement
-        fields = [ 'title', 'content', 'image', 'website', 'category', 'localisation' ]
+        fields = [ 'name', 'image', 'website' ]
 
     def __init__(self, user, *args, **kwargs):
         """
@@ -66,17 +96,27 @@ class AnnouncementUserForm(forms.ModelForm):
             l_choices.extend([(7, '7')])
         self.fields['nl'].choices = l_choices
         # Category
-        self.fields['category'].queryset = Category.objects.filter(pk__in=get_all_category_in_order(is_enable=True).keys())
+        l_choices=[]
+        for l_pk in get_all_category_in_order(is_enable=True):
+            l_choices.extend([(l_pk, Category.objects.get(pk=l_pk))])
+        self.fields['category'].choices = l_choices
         # Localisation
-        self.fields['localisation'].queryset = Localisation.objects.filter(pk__in=get_all_localisation_in_order(is_enable=True).keys())
+        l_choices=[]
+        for l_pk in get_all_localisation_in_order(is_enable=True):
+            l_choices.extend([(l_pk, Localisation.objects.get(pk=l_pk))])
+        self.fields['localisation'].choices = l_choices
 
     def save(self, *args, **kwargs):
         l_announcement = super(AnnouncementUserForm, self).save(commit=False)
-        l_announcement.owner = self.owner
+        l_announcement.category = get_object_or_404(Category, pk=self.cleaned_data['category'])
+        l_announcement.localisation = get_object_or_404(Localisation, pk=self.cleaned_data['localisation'])
         l_announcement.nl = self.cleaned_data['nl']
+        l_announcement.url = self.cleaned_data['website']
+        l_announcement.owner = self.owner
         l_announcement.is_enable = False
         l_announcement.is_valid = False
         l_announcement.save()
+        return l_announcement
 
 class AnnouncementAdminForm(forms.ModelForm):
     class Meta:
