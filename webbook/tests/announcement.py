@@ -1,15 +1,17 @@
 from django.test import TestCase
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.http import Http404
+from django.conf import settings
 
 # Library to create and use an image
 from PIL import Image
 from io import BytesIO # Python 2: from StringIO import StringIO
 from django.core.files.uploadedfile import InMemoryUploadedFile
 
-from webbook.models import LanguageAvailable, AnnouncementLanguage, Announcement, AnnouncementStats, TITLE_MAX_LENGTH, NAME_MAX_LENGTH
+from webbook.models import LanguageAvailable, AnnouncementLanguage, Announcement, AnnouncementStats, TITLE_MAX_LENGTH, URL_MAX_LENGTH
+from webbook.views.account import AnnouncementCreationView
 from webbook.models import User, Category, Localisation
-from webbook.forms import AnnouncementLanguageForm, AnnouncementUserForm
+from webbook.forms import AnnouncementUserSettingForm, AnnouncementUserDataForm
 
 class AnnouncementModelTestCase(TestCase):
     """ 
@@ -19,7 +21,7 @@ class AnnouncementModelTestCase(TestCase):
     """
     def setUp(self):
         # Variable for Announcement Model
-        self.name = "toto"
+        self.url = "toto"
         im = Image.new(mode='RGB', size=(200, 200)) # create a new image using PIL
         im_io = BytesIO() # a BytesIO object for saving image
         im.save(im_io, 'JPEG') # save the image to im_io
@@ -49,7 +51,7 @@ class AnnouncementModelTestCase(TestCase):
 
     def test_default_construction(self):
         l_announcement = Announcement()
-        self.assertEqual(l_announcement.name, "")
+        self.assertEqual(l_announcement.url, "")
         self.assertEqual(l_announcement.image.name, None)
         self.assertEqual(l_announcement.website, "")
         with self.assertRaises(ObjectDoesNotExist):
@@ -68,7 +70,7 @@ class AnnouncementModelTestCase(TestCase):
 
     def test_construction(self):
         l_announcement = Announcement(
-            name = self.name,
+            url = self.url,
             image = self.image,
             website = self.website,
             category = self.category,
@@ -79,7 +81,7 @@ class AnnouncementModelTestCase(TestCase):
             is_valid = self.is_valid,
             is_on_homepage = self.is_on_homepage
         )
-        self.assertEqual(l_announcement.name, self.name)
+        self.assertEqual(l_announcement.url, self.url)
         self.assertEqual(l_announcement.image.name, self.image_name)
         self.assertEqual(l_announcement.website, self.website)
         self.assertEqual(l_announcement.category, self.category)
@@ -99,7 +101,7 @@ class AnnouncementModelTestCase(TestCase):
         l_announcement.save()
         self.assertEqual(Announcement.objects.all().count(), 1, "[DB] Announcement has not been created !")
         l_announcement = Announcement.objects.filter()[0]
-        self.assertEqual(l_announcement.name, "")
+        self.assertEqual(l_announcement.url, "")
         self.assertEqual(l_announcement.image.name, "")
         self.assertEqual(l_announcement.website, "")
         with self.assertRaises(ObjectDoesNotExist):
@@ -116,7 +118,7 @@ class AnnouncementModelTestCase(TestCase):
 
     def test_construction_database(self):
         l_announcement = Announcement(
-            name = self.name,
+            url = self.url,
             image = self.image,
             website = self.website,
             category = self.category,
@@ -131,7 +133,7 @@ class AnnouncementModelTestCase(TestCase):
         l_announcement.save()
         self.assertEqual(Announcement.objects.all().count(), 1, "[DB] Announcement has not been created !")
         l_announcement = Announcement.objects.filter()[0]
-        self.assertEqual(l_announcement.name, self.name)
+        self.assertEqual(l_announcement.url, self.url)
         self.assertIsNotNone(l_announcement.image.name)
         self.assertEqual(l_announcement.website, self.website)
         self.assertEqual(l_announcement.category, self.category)
@@ -146,7 +148,7 @@ class AnnouncementModelTestCase(TestCase):
 
     def test_construction_database_with_one_language(self):
         l_announcement = Announcement(
-            name = self.name,
+            url = self.url,
             image = self.image,
             website = self.website,
             category = self.category,
@@ -165,7 +167,7 @@ class AnnouncementModelTestCase(TestCase):
         self.announcement_language_en.save()
         self.assertEqual(AnnouncementLanguage.objects.all().count(), 1, "[DB] AnnouncementLanguage has not been created !")
         l_announcement = Announcement.objects.filter()[0]
-        self.assertEqual(l_announcement.name, self.name)
+        self.assertEqual(l_announcement.url, self.url)
         self.assertIsNotNone(l_announcement.image.name)
         self.assertEqual(l_announcement.website, self.website)
         self.assertEqual(l_announcement.category, self.category)
@@ -180,7 +182,7 @@ class AnnouncementModelTestCase(TestCase):
 
     def test_construction_database_with_two_languages(self):
         l_announcement = Announcement(
-            name = self.name,
+            url = self.url,
             image = self.image,
             website = self.website,
             category = self.category,
@@ -202,7 +204,7 @@ class AnnouncementModelTestCase(TestCase):
         self.announcement_language_fr.save()
         self.assertEqual(AnnouncementLanguage.objects.all().count(), 2, "[DB] AnnouncementLanguage has not been created !")
         l_announcement = Announcement.objects.filter()[0]
-        self.assertEqual(l_announcement.name, self.name)
+        self.assertEqual(l_announcement.url, self.url)
         self.assertIsNotNone(l_announcement.image.name)
         self.assertEqual(l_announcement.website, self.website)
         self.assertEqual(l_announcement.category, self.category)
@@ -216,14 +218,14 @@ class AnnouncementModelTestCase(TestCase):
 
 
 
-class AnnouncementUserFormTestCase(TestCase):
+class AnnouncementUserSettingFormTestCase(TestCase):
     """ 
         -----------------------------------------
-        AnnouncementUserForm tests
+        AnnouncementUserSettingFormTestCase tests
         -----------------------------------------
     """
     def setUp(self):
-        self.name = "toto"
+        self.url = "toto"
         im = Image.new(mode='RGB', size=(200, 200)) # create a new image using PIL
         im_io = BytesIO() # a BytesIO object for saving image
         im.save(im_io, 'JPEG') # save the image to im_io
@@ -246,20 +248,20 @@ class AnnouncementUserFormTestCase(TestCase):
         self.localisation = Localisation.objects.create(name="Localisation", resume="This is a localisation", order=1, is_enable=True)
 
     def test_valid(self):
-        l_announcement = AnnouncementUserForm(
+        l_announcement = AnnouncementUserSettingForm(
             user=self.owner,
-            data={'name': self.name,
+            data={'url': self.url,
                 'website': self.website,
-                'nl': 0,
+                'nl': self.nl,
                 'category': self.category.pk,
-                'localisation': self.localisation.pk},
+                'localisation': self.localisation.pk,},
             files={'image': self.image})
         self.assertTrue(l_announcement.is_valid(), f"Form is not valid ! {l_announcement.errors}")
         self.assertEqual(Announcement.objects.all().count(), 0, "[DB] an Announcement already exist !")
         l_announcement.save()
         self.assertEqual(Announcement.objects.all().count(), 1, "[DB] Announcement has not been created after save form !")
         l_announcement = Announcement.objects.filter()[0]
-        self.assertEqual(l_announcement.name, self.name)
+        self.assertEqual(l_announcement.url, self.url)
         self.assertIsNotNone(l_announcement.image)
         self.assertEqual(l_announcement.website, self.website)
         self.assertEqual(l_announcement.category, self.category)
@@ -270,11 +272,11 @@ class AnnouncementUserFormTestCase(TestCase):
         self.assertEqual(l_announcement.is_valid, self.is_valid)
         self.assertEqual(l_announcement.is_on_homepage, self.is_on_homepage)
 
-    def test_invalid_name(self):
-        # Name empty
-        l_announcement = AnnouncementUserForm(
+    def test_invalid_url(self):
+        # Url empty
+        l_announcement = AnnouncementUserSettingForm(
             user=self.owner,
-            data={'name': "",
+            data={'url': "",
                 'website': self.website,
                 'nl': self.nl,
                 'category': self.category.pk,
@@ -282,13 +284,13 @@ class AnnouncementUserFormTestCase(TestCase):
             files={'image': self.image})
         self.assertFalse(l_announcement.is_valid(), "Form is valid !")
         self.assertEqual(len(l_announcement.errors), 1, "Expected only 1 error !")
-        self.assertEqual(len(l_announcement['name'].errors), 1, "Expected only 1 error for this field !")
-        self.assertEqual(l_announcement['name'].errors[0], "This field is required.", "Error message not expected !")
+        self.assertEqual(len(l_announcement['url'].errors), 1, "Expected only 1 error for this field !")
+        self.assertEqual(l_announcement['url'].errors[0], "This field is required.", "Error message not expected !")
 
         # Max length
-        l_announcement = AnnouncementUserForm(
+        l_announcement = AnnouncementUserSettingForm(
             user=self.owner,
-            data={'name': "s" * (NAME_MAX_LENGTH+1),
+            data={'url': "s" * (URL_MAX_LENGTH+1),
                 'website': self.website,
                 'nl': self.nl,
                 'category': self.category.pk,
@@ -296,14 +298,28 @@ class AnnouncementUserFormTestCase(TestCase):
             files={'image': self.image})
         self.assertFalse(l_announcement.is_valid(), "Form is valid !")
         self.assertEqual(len(l_announcement.errors), 1, "Expected only 1 error !")
-        self.assertEqual(len(l_announcement['name'].errors), 1, "Expected only 1 error for this field !")
-        self.assertEqual(l_announcement['name'].errors[0], f"Ensure this value has at most {NAME_MAX_LENGTH} characters (it has {NAME_MAX_LENGTH+1}).", "Error message not expected !")
+        self.assertEqual(len(l_announcement['url'].errors), 1, "Expected only 1 error for this field !")
+        self.assertEqual(l_announcement['url'].errors[0], f"Ensure this value has at most {URL_MAX_LENGTH} characters (it has {URL_MAX_LENGTH+1}).", "Error message not expected !")
 
-    def test_name_unique(self):
-        self.owner.nl1 = 1
-        l_announcement = AnnouncementUserForm(
+        # Invalid character
+        l_announcement = AnnouncementUserSettingForm(
             user=self.owner,
-            data={'name': self.name,
+            data={'url': "toto!",
+                'website': self.website,
+                'nl': self.nl,
+                'category': self.category.pk,
+                'localisation': self.localisation.pk},
+            files={'image': self.image})
+        self.assertFalse(l_announcement.is_valid(), "Form is valid !")
+        self.assertEqual(len(l_announcement.errors), 1, "Expected only 1 error !")
+        self.assertEqual(len(l_announcement['url'].errors), 1, "Expected only 1 error for this field !")
+        self.assertEqual(l_announcement['url'].errors[0], f"Only alphanumeric characters are allowed.", "Error message not expected !")
+
+    def test_url_unique(self):
+        self.owner.nl1 = 1
+        l_announcement = AnnouncementUserSettingForm(
+            user=self.owner,
+            data={'url': self.url,
                 'website': self.website,
                 'nl': 0,
                 'category': self.category.pk,
@@ -312,23 +328,23 @@ class AnnouncementUserFormTestCase(TestCase):
         self.assertEqual(Announcement.objects.all().count(), 0, "[DB] an Announcement already exist !")
         l_announcement.save()
         self.assertEqual(Announcement.objects.all().count(), 1, "[DB] Announcement has not been created after save form !")
-        l_announcement = AnnouncementUserForm(
+        l_announcement = AnnouncementUserSettingForm(
             user=self.owner,
-            data={'name': self.name,
+            data={'url': self.url,
                 'website': f"{self.website}.com",
                 'nl': 1,
                 'category': self.category.pk,
                 'localisation': self.localisation.pk})
-        self.assertFalse(l_announcement.is_valid(), "Form is valid !")
+        self.assertFalse(l_announcement.is_valid(), f"Form is valid ! {l_announcement.errors}")
         self.assertEqual(len(l_announcement.errors), 1, f"Expected only 1 error ! {l_announcement.errors}")
-        self.assertEqual(len(l_announcement['name'].errors), 1, "Expected only 1 error for this field !")
-        self.assertEqual(l_announcement['name'].errors[0], f"Announcement with this Name already exists.", "Error message not expected !")
+        self.assertEqual(len(l_announcement['url'].errors), 1, "Expected only 1 error for this field !")
+        self.assertEqual(l_announcement['url'].errors[0], f"Announcement with this Url already exists.", "Error message not expected !")
 
     def test_invalid_website(self):     
         # Website empty
-        l_announcement = AnnouncementUserForm(
+        l_announcement = AnnouncementUserSettingForm(
             user=self.owner,
-            data={'name': self.name,
+            data={'url': self.url,
                 'nl': self.nl,
                 'category': self.category.pk,
                 'localisation': self.localisation.pk})
@@ -339,9 +355,9 @@ class AnnouncementUserFormTestCase(TestCase):
         
         # Website incorrect format
         self.owner.nl1 = 1
-        l_announcement = AnnouncementUserForm(
+        l_announcement = AnnouncementUserSettingForm(
             user=self.owner,
-            data={'name': self.name,
+            data={'url': self.url,
                 'website': "toto",
                 'nl': 1,
                 'category': self.category.pk,
@@ -353,9 +369,9 @@ class AnnouncementUserFormTestCase(TestCase):
         self.assertEqual(l_announcement['website'].errors[0], "Enter a valid URL.", "Error message not expected !")
         
         # Website incomplete format (default is http)
-        l_announcement = AnnouncementUserForm(
+        l_announcement = AnnouncementUserSettingForm(
             user=self.owner,
-            data={'name': self.name,
+            data={'url': self.url,
                 'website': "toto.fr",
                 'nl': self.nl,
                 'category': self.category.pk,
@@ -370,9 +386,9 @@ class AnnouncementUserFormTestCase(TestCase):
 
     def test_website_already_exist(self):
         self.owner.nl1 = 1
-        l_announcement = AnnouncementUserForm(
+        l_announcement = AnnouncementUserSettingForm(
             user=self.owner,
-            data={'name': self.name,
+            data={'url': self.url,
                 'website': self.website,
                 'nl': self.nl,
                 'category': self.category.pk,
@@ -382,9 +398,9 @@ class AnnouncementUserFormTestCase(TestCase):
         self.assertEqual(Announcement.objects.all().count(), 0, "[DB] an Announcement already exist !")
         l_announcement.save()
         self.assertEqual(Announcement.objects.all().count(), 1, "[DB] Announcement has not been created after save form !")
-        l_announcement = AnnouncementUserForm(
+        l_announcement = AnnouncementUserSettingForm(
             user=self.owner,
-            data={'name': f"{self.name}_1",
+            data={'url': f"{self.url}1",
                 'website': self.website,
                 'nl': 1,
                 'category': self.category.pk,
@@ -397,9 +413,9 @@ class AnnouncementUserFormTestCase(TestCase):
 
     def test_nl0(self):
         # test with only NL0 available (default)
-        l_announcement = AnnouncementUserForm(
+        l_announcement = AnnouncementUserSettingForm(
             user=self.owner,
-            data={'name': self.name,
+            data={'url': self.url,
                 'website': self.website,
                 'nl': 0,
                 'category': self.category.pk,
@@ -419,9 +435,9 @@ class AnnouncementUserFormTestCase(TestCase):
 
         # Test with no NLX available
         self.assertEqual(Announcement.objects.all().count(), 1)
-        l_announcement = AnnouncementUserForm(
+        l_announcement = AnnouncementUserSettingForm(
             user=self.owner,
-            data={'name': f"{self.name}_1",
+            data={'url': f"{self.url}1",
                 'website': f"{self.website}.com",
                 'nl': 0,
                 'category': self.category.pk,
@@ -443,9 +459,9 @@ class AnnouncementUserFormTestCase(TestCase):
     def test_nl1(self):
         # Test with only NL0 and NL1 available
         self.owner.nl1 = 1
-        l_announcement = AnnouncementUserForm(
+        l_announcement = AnnouncementUserSettingForm(
             user=self.owner,
-            data={'name': self.name,
+            data={'url': self.url,
                 'website': self.website,
                 'nl': 1,
                 'category': self.category.pk,
@@ -465,9 +481,9 @@ class AnnouncementUserFormTestCase(TestCase):
 
         # Test with no NL1 available
         self.assertEqual(Announcement.objects.all().count(), 1)
-        l_announcement = AnnouncementUserForm(
+        l_announcement = AnnouncementUserSettingForm(
             user=self.owner,
-            data={'name': f"{self.name}_1",
+            data={'url': f"{self.url}1",
                 'website': f"{self.website}.com",
                 'nl': 1,
                 'category': self.category.pk,
@@ -495,9 +511,9 @@ class AnnouncementUserFormTestCase(TestCase):
         self.owner.nl5 = 1
         self.owner.nl6 = 1
         self.owner.nl7 = 1
-        l_announcement = AnnouncementUserForm(
+        l_announcement = AnnouncementUserSettingForm(
             user=self.owner,
-            data={'name': self.name,
+            data={'url': self.url,
                 'website': self.website,
                 'nl': 4,
                 'category': self.category.pk,
@@ -517,9 +533,9 @@ class AnnouncementUserFormTestCase(TestCase):
 
         # Test with all NL available
         self.assertEqual(Announcement.objects.all().count(), 1)
-        l_announcement = AnnouncementUserForm(
+        l_announcement = AnnouncementUserSettingForm(
             user=self.owner,
-            data={'name': f"{self.name}_1",
+            data={'url': f"{self.url}1",
                 'website': f"{self.website}.com",
                 'nl': 4,
                 'category': self.category.pk,
@@ -538,9 +554,9 @@ class AnnouncementUserFormTestCase(TestCase):
 
         # Test without NL4 available
         self.assertEqual(Announcement.objects.all().count(), 2)
-        l_announcement = AnnouncementUserForm(
+        l_announcement = AnnouncementUserSettingForm(
             user=self.owner,
-            data={'name': f"{self.name}_2",
+            data={'url': f"{self.url}2",
                 'website': f"{self.website}.net",
                 'nl': 4,
                 'category': self.category.pk,
@@ -568,9 +584,9 @@ class AnnouncementUserFormTestCase(TestCase):
         Category.objects.create(name="Category-Children 1 Enable", resume="This is sub-toto category", is_enable=True, parent=l_toto)
         Category.objects.create(name="Category-Children 2 Disabled", resume="This is sub-toto category", is_enable=False, parent=l_toto)
         self.assertEqual(Category.objects.all().count(), 5)
-        l_announcement = AnnouncementUserForm(
+        l_announcement = AnnouncementUserSettingForm(
             user=self.owner,
-            data={'name': self.name,
+            data={'url': self.url,
                 'website': self.website,
                 'nl': self.nl,
                 'category': self.category.pk,
@@ -603,9 +619,9 @@ class AnnouncementUserFormTestCase(TestCase):
         Category.objects.create(name="Category-Children 2", order=2, resume="This is sub-toto category", is_enable=True, parent=l_category_1)
         self.assertEqual(Category.objects.all().count(), 7)
 
-        l_announcement = AnnouncementUserForm(
+        l_announcement = AnnouncementUserSettingForm(
             user=self.owner,
-            data={'name': self.name,
+            data={'url': self.url,
                 'website': self.website,
                 'nl': self.nl,
                 'category': self.category.pk,
@@ -623,9 +639,9 @@ class AnnouncementUserFormTestCase(TestCase):
 
 
     def test_category_not_exist(self):
-        l_announcement = AnnouncementUserForm(
+        l_announcement = AnnouncementUserSettingForm(
             user=self.owner,
-            data={'name': self.name,
+            data={'url': self.url,
                 'website': self.website,
                 'nl': self.nl,
                 'category': 2,
@@ -637,9 +653,9 @@ class AnnouncementUserFormTestCase(TestCase):
 
 
     def test_category_deleted_between_valid_and_save(self):
-        l_announcement = AnnouncementUserForm(
+        l_announcement = AnnouncementUserSettingForm(
             user=self.owner,
-            data={'name': self.name,
+            data={'url': self.url,
                 'website': self.website,
                 'nl': self.nl,
                 'category': self.category.pk,
@@ -670,9 +686,9 @@ class AnnouncementUserFormTestCase(TestCase):
         Localisation.objects.create(name="Localisation-Children 2", order=2, resume="This is sub-toto localisation", is_enable=True, parent=l_localisation_1)
         self.assertEqual(Localisation.objects.all().count(), 7)
 
-        l_announcement = AnnouncementUserForm(
+        l_announcement = AnnouncementUserSettingForm(
             user=self.owner,
-            data={'name': self.name,
+            data={'url': self.url,
                 'website': self.website,
                 'nl': 3,
                 'category': self.category.pk,
@@ -690,9 +706,9 @@ class AnnouncementUserFormTestCase(TestCase):
 
 
     def test_localisation_not_exist(self):
-        l_announcement = AnnouncementUserForm(
+        l_announcement = AnnouncementUserSettingForm(
             user=self.owner,
-            data={'name': self.name,
+            data={'url': self.url,
                 'website': self.website,
                 'nl': self.nl,
                 'category': self.category.pk,
@@ -704,9 +720,9 @@ class AnnouncementUserFormTestCase(TestCase):
 
 
     def test_localisation_deleted_between_valid_and_save(self):
-        l_announcement = AnnouncementUserForm(
+        l_announcement = AnnouncementUserSettingForm(
             user=self.owner,
-            data={'name': self.name,
+            data={'url': self.url,
                 'website': self.website,
                 'nl': self.nl,
                 'category': self.category.pk,
@@ -787,10 +803,10 @@ class AnnouncementLanguageModelTestCase(TestCase):
 
 
 
-class AnnouncementLanguageFormTestCase(TestCase):
+class AnnouncementUserDataFormTestCase(TestCase):
     """ 
         -----------------------------------------
-        AnnouncementLanguageForm tests
+        AnnouncementUserDataFormTestCase tests
         -----------------------------------------
     """
     def setUp(self):
@@ -806,7 +822,7 @@ class AnnouncementLanguageFormTestCase(TestCase):
 
 
     def test_valid_en(self):
-        l_announcement = AnnouncementLanguageForm(
+        l_announcement = AnnouncementUserDataForm(
             data={'title': self.title_en,
                 'content': self.content_en,
                 'language': self.language_en
@@ -823,7 +839,7 @@ class AnnouncementLanguageFormTestCase(TestCase):
 
 
     def test_valid_fr(self):
-        l_announcement = AnnouncementLanguageForm(
+        l_announcement = AnnouncementUserDataForm(
             data={'title': self.title_fr,
                 'content': self.content_fr,
                 'language': self.language_fr
@@ -842,7 +858,7 @@ class AnnouncementLanguageFormTestCase(TestCase):
     def test_title(self):
         self.assertEqual(AnnouncementLanguage.objects.all().count(), 0, "[DB] an AnnouncementLanguage already exist !")
         # Empty Title
-        l_announcement = AnnouncementLanguageForm(
+        l_announcement = AnnouncementUserDataForm(
             data={'title': "",
                 'content': self.content_fr,
                 'language': self.language_fr
@@ -855,7 +871,7 @@ class AnnouncementLanguageFormTestCase(TestCase):
         self.assertEqual(l_announcement['title'].errors[0], "This field is required.", "Error message not expected !")
 
         # Title too large
-        l_announcement = AnnouncementLanguageForm(
+        l_announcement = AnnouncementUserDataForm(
             data={'title': "s" * (TITLE_MAX_LENGTH+1),
                 'content': self.content_en,
                 'language': self.language_en
@@ -870,7 +886,7 @@ class AnnouncementLanguageFormTestCase(TestCase):
     def test_content(self):
         self.assertEqual(AnnouncementLanguage.objects.all().count(), 0, "[DB] an AnnouncementLanguage already exist !")
         # Empty Title
-        l_announcement = AnnouncementLanguageForm(
+        l_announcement = AnnouncementUserDataForm(
             data={'title': self.title_fr,
                 'content': "",
                 'language': self.language_fr
@@ -886,7 +902,7 @@ class AnnouncementLanguageFormTestCase(TestCase):
     def test_language(self):
         self.assertEqual(AnnouncementLanguage.objects.all().count(), 0, "[DB] an AnnouncementLanguage already exist !")
         # Empty Language
-        l_announcement = AnnouncementLanguageForm(
+        l_announcement = AnnouncementUserDataForm(
             data={'title': self.title_fr,
                 'content': self.content_fr,
                 'language': ""
@@ -900,7 +916,7 @@ class AnnouncementLanguageFormTestCase(TestCase):
 
         # Invalid Language value
         l_language = "ZZ"
-        l_announcement = AnnouncementLanguageForm(
+        l_announcement = AnnouncementUserDataForm(
             data={'title': self.title_fr,
                 'content': self.content_fr,
                 'language': l_language
@@ -916,7 +932,7 @@ class AnnouncementLanguageFormTestCase(TestCase):
     def test_language_already_exist(self):
         self.assertEqual(AnnouncementLanguage.objects.all().count(), 0, "[DB] an AnnouncementLanguage already exist !")
         # Generate an English Language valid
-        l_announcement = AnnouncementLanguageForm(
+        l_announcement = AnnouncementUserDataForm(
             data={'title': self.title_en,
                 'content': self.content_en,
                 'language': self.language_en
@@ -927,7 +943,7 @@ class AnnouncementLanguageFormTestCase(TestCase):
         l_announcement.save()
         self.assertEqual(AnnouncementLanguage.objects.all().count(), 1, "[DB] AnnouncementLanguage has not been created after save form !")
         # English Language already exist
-        l_announcement = AnnouncementLanguageForm(
+        l_announcement = AnnouncementUserDataForm(
             data={'title': self.title_en,
                 'content': self.content_en,
                 'language': self.language_en
@@ -939,3 +955,239 @@ class AnnouncementLanguageFormTestCase(TestCase):
         self.assertEqual(len(l_announcement['language'].errors), 1, "Expected only 1 error for 'language' field !")
         self.assertEqual(l_announcement['language'].errors[0], f"This Language already exist for this announcement !")
 
+
+
+class AnnouncementCreationView(TestCase):
+    """ 
+        -----------------------------------------
+        AnnouncementCreationView tests
+        -----------------------------------------
+    """
+    def setUp(self):
+        self.email = "toto@gmail.com"
+        self.password = "tititututoto"
+
+        self.title_en = "This is a title !"
+        self.content_en = "This is announcement !"
+        self.language_en = LanguageAvailable.EN.value
+
+        self.title_fr = "C'est un titre !"
+        self.content_fr = "C'est une annonce !"
+        self.language_fr = LanguageAvailable.FR.value
+
+        self.url = "toto"
+        im = Image.new(mode='RGB', size=(200, 200)) # create a new image using PIL
+        im_io = BytesIO() # a BytesIO object for saving image
+        im.save(im_io, 'JPEG') # save the image to im_io
+        im_io.seek(0) # seek to the beginning
+        self.image_name="random-name.jpg"
+        self.image = InMemoryUploadedFile(
+            im_io, None, self.image_name, 'image/jpeg', len(im_io.getvalue()), None)
+        self.website = "http://www.toto.fr"
+        self.category = Category.objects.create(name="Category", resume="This is a category", is_enable=True)
+        self.localisation = Localisation.objects.create(name="Localisation", resume="This is a localisation", is_enable=True)
+        self.nl = 0
+        self.owner = User.objects.create_user(email=self.email, password=self.password, is_active=True)
+        self.is_enable = True
+        self.is_valid = True
+        self.is_on_homepage = True
+
+
+    def test_valid_only_english(self):
+        self.assertEqual(User.objects.all().count(), 1, "Model has not been created after submit valid form !")
+        self.assertEqual(Category.objects.all().count(), 1, "Model has not been created after submit valid form !")
+        self.assertEqual(Localisation.objects.all().count(), 1, "Model has not been created after submit valid form !")
+
+        # LoginView
+        response = self.client.post(
+            "/account/login/", 
+            { 'username': self.email,
+              'password': self.password 
+            }
+        )
+        self.assertEqual(response.url, settings.LOGIN_REDIRECT_URL, f"Redirection not exist in response '{response}'")
+
+        # Authentificate the user
+        response = self.client.get(settings.LOGIN_REDIRECT_URL)
+        self.assertTrue(response.context['user'].is_authenticated, "User is not authentificated !")
+        self.assertEqual(response.context['user'].email, self.email, "Wrong user authentificated !")
+
+        # Create announcement settings
+        response = self.client.post(
+            "/account/announcement/creation/",
+            { 'url': self.url,
+              'website': self.website,
+              'nl': self.nl,
+              'category': self.category.pk,
+              'localisation': self.localisation.pk,
+            },
+        )
+        self.assertEqual(response.url, f"/account/announcement/creation/{self.url}/data/", f"Response not expected : {response}")
+        self.assertEqual(Announcement.objects.all().count(), 1)
+
+        # Create announcement data in english
+        response = self.client.post(
+            f"/account/announcement/creation/{self.url}/data/",
+            { 'title': self.title_en,
+              'content': self.content_en,
+              'language': self.language_en
+            },
+        )
+        self.assertEqual(response.url, "/account/announcement/", f"Response not expected : {response}")
+        self.assertEqual(Announcement.objects.all().count(), 1)
+        self.assertEqual(AnnouncementLanguage.objects.all().count(), 1)
+
+
+    def test_valid_only_french(self):
+        self.assertEqual(User.objects.all().count(), 1, "Model has not been created after submit valid form !")
+        self.assertEqual(Category.objects.all().count(), 1, "Model has not been created after submit valid form !")
+        self.assertEqual(Localisation.objects.all().count(), 1, "Model has not been created after submit valid form !")
+
+        # LoginView
+        response = self.client.post(
+            "/account/login/", 
+            { 'username': self.email,
+              'password': self.password 
+            }
+        )
+        self.assertEqual(response.url, settings.LOGIN_REDIRECT_URL, f"Redirection not exist in response '{response}'")
+
+        # Authentificate the user
+        response = self.client.get(settings.LOGIN_REDIRECT_URL)
+        self.assertTrue(response.context['user'].is_authenticated, "User is not authentificated !")
+        self.assertEqual(response.context['user'].email, self.email, "Wrong user authentificated !")
+
+        # Create announcement settings
+        response = self.client.post(
+            "/account/announcement/creation/",
+            { 'url': self.url,
+              'website': self.website,
+              'nl': self.nl,
+              'category': self.category.pk,
+              'localisation': self.localisation.pk,
+            },
+        )
+        self.assertEqual(response.url, f"/account/announcement/creation/{self.url}/data/", f"Response not expected : {response}")
+        self.assertEqual(Announcement.objects.all().count(), 1)
+
+        # Create announcement data in english
+        response = self.client.post(
+            f"/account/announcement/creation/{self.url}/data/",
+            { 'title': self.title_fr,
+              'content': self.content_fr,
+              'language': self.language_fr
+            },
+        )
+        self.assertEqual(response.url, "/account/announcement/", f"Response not expected : {response}")
+        self.assertEqual(Announcement.objects.all().count(), 1)
+        self.assertEqual(AnnouncementLanguage.objects.all().count(), 1)
+
+
+    def test_valid_english_and_french(self):
+        self.assertEqual(User.objects.all().count(), 1, "Model has not been created after submit valid form !")
+        self.assertEqual(Category.objects.all().count(), 1, "Model has not been created after submit valid form !")
+        self.assertEqual(Localisation.objects.all().count(), 1, "Model has not been created after submit valid form !")
+
+        # LoginView
+        response = self.client.post(
+            "/account/login/", 
+            { 'username': self.email,
+              'password': self.password 
+            }
+        )
+        self.assertEqual(response.url, settings.LOGIN_REDIRECT_URL, f"Redirection not exist in response '{response}'")
+
+        # Authentificate the user
+        response = self.client.get(settings.LOGIN_REDIRECT_URL)
+        self.assertTrue(response.context['user'].is_authenticated, "User is not authentificated !")
+        self.assertEqual(response.context['user'].email, self.email, "Wrong user authentificated !")
+
+        # Create announcement settings
+        response = self.client.post(
+            "/account/announcement/creation/",
+            { 'url': self.url,
+              'website': self.website,
+              'nl': self.nl,
+              'category': self.category.pk,
+              'localisation': self.localisation.pk,
+            },
+        )
+        self.assertEqual(response.url, f"/account/announcement/creation/{self.url}/data/", f"Response not expected : {response}")
+        self.assertEqual(Announcement.objects.all().count(), 1)
+
+        # Create announcement data in english
+        response = self.client.post(
+            f"/account/announcement/creation/{self.url}/data/",
+            { 'title': self.title_en,
+              'content': self.content_en,
+              'language': self.language_en
+            },
+        )
+        self.assertEqual(response.url, "/account/announcement/", f"Response not expected : {response}")
+        self.assertEqual(Announcement.objects.all().count(), 1)
+        self.assertEqual(AnnouncementLanguage.objects.all().count(), 1)
+
+        # Create announcement data in french
+        response = self.client.post(
+            f"/account/announcement/creation/{self.url}/data/",
+            { 'title': self.title_fr,
+              'content': self.content_fr,
+              'language': self.language_fr
+            },
+        )
+        self.assertEqual(response.url, "/account/announcement/", f"Response not expected : {response}")
+        self.assertEqual(Announcement.objects.all().count(), 1)
+        self.assertEqual(AnnouncementLanguage.objects.all().count(), 2)
+
+
+    def test_invalid_no_user_login(self):
+        self.assertEqual(User.objects.all().count(), 1, "Model has not been created after submit valid form !")
+        self.assertEqual(Category.objects.all().count(), 1, "Model has not been created after submit valid form !")
+        self.assertEqual(Localisation.objects.all().count(), 1, "Model has not been created after submit valid form !")
+
+        # Check if no authentification the user
+        response = self.client.get("account/announcement/")
+        with self.assertRaises(KeyError):
+            response.context['user']
+
+        # Try to create announcement settings
+        response = self.client.get("/account/announcement/creation/")
+        self.assertEqual(response.url, f"{settings.LOGIN_URL}?next=/account/announcement/creation/", f"Invalid '{response}'")
+
+
+    def test_invalid_no_nl_available(self):
+        self.assertEqual(User.objects.all().count(), 1, "Model has not been created after submit valid form !")
+        self.assertEqual(Category.objects.all().count(), 1, "Model has not been created after submit valid form !")
+        self.assertEqual(Localisation.objects.all().count(), 1, "Model has not been created after submit valid form !")
+
+        # LoginView
+        response = self.client.post(
+            "/account/login/", 
+            { 'username': self.email,
+              'password': self.password 
+            }
+        )
+        self.assertEqual(response.url, settings.LOGIN_REDIRECT_URL, f"Redirection not exist in response '{response}'")
+
+        # Authentificate the user
+        response = self.client.get(settings.LOGIN_REDIRECT_URL)
+        self.assertTrue(response.context['user'].is_authenticated, "User is not authentificated !")
+        self.assertEqual(response.context['user'].email, self.email, "Wrong user authentificated !")
+
+        # Create a valid announcement settings
+        response = self.client.post(
+            "/account/announcement/creation/",
+            { 'url': self.url,
+              'website': self.website,
+              'nl': self.nl,
+              'category': self.category.pk,
+              'localisation': self.localisation.pk,
+            },
+        )
+        self.assertEqual(response.url, f"/account/announcement/creation/{self.url}/data/", f"Response not expected : {response}")
+        self.assertEqual(Announcement.objects.all().count(), 1)
+
+        # Try to create another announcement
+        # response = self.client.get("/account/announcement/creation/")
+        # self.assertEqual(response.url, f"/account/announcement/purchase/", f"Response not expected : {response}")
+        # self.assertEqual(Announcement.objects.all().count(), 1)

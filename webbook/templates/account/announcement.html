@@ -1,0 +1,35 @@
+{% load i18n %}
+<!DOCTYPE html>
+<html>
+{% load static %}
+<head>
+    <meta charset="UTF-8">
+    {% include 'header.html' %}
+    <link rel="stylesheet" type="text/css" href="{% static 'css/form.css' %}">
+</head>
+<body style="margin-top:60px">
+    <table class="w3-table w3-bordered">
+        <tr>
+            <th>Level</th>
+            <th>Remaining</th>
+            <th>Total</th>
+            <th></th>
+            <th></th>
+        </tr>
+        {% for level, remaining, quantity in nl_status %}
+            <tr>
+                <td>NL{{ level }}</td>
+                <td>{{ remaining }}</td>
+                <td>{{ quantity }}</td>
+                {% if remaining > 0 %}
+                    <td><a href="/account/announcement/creation">{% trans "Create announcement" %}</a></td>
+                {% else %}
+                    {% if level != 0 %}
+                        <td><a href="/account/payment">{% trans "Purchase NL" %}{{ level }}</a></td>
+                    {% endif %}
+                {% endif %}
+            </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>

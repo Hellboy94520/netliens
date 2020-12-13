@@ -7,7 +7,7 @@ from ..models import Announcement, AnnouncementLanguage, AnnouncementStats, TITL
 from ..models import Category, get_all_category_in_order
 from ..models import Localisation, get_all_localisation_in_order
 
-class AnnouncementLanguageForm(forms.ModelForm):
+class AnnouncementUserDataForm(forms.ModelForm):
     language = forms.ChoiceField(
         choices=( (content.value, content.value) for content in LanguageAvailable),
         required=True,
@@ -20,7 +20,7 @@ class AnnouncementLanguageForm(forms.ModelForm):
         fields = [ 'title', 'content' ]
 
     def is_valid(self, announcement: Announcement):
-        if not super(AnnouncementLanguageForm, self).is_valid():
+        if not super(AnnouncementUserDataForm, self).is_valid():
             return False
         # Check if the language exist or not for an announcement
         if AnnouncementLanguage.objects.filter(
@@ -35,13 +35,13 @@ class AnnouncementLanguageForm(forms.ModelForm):
         
     def save(self, *args, **kwargs):
         # Save 
-        l_announcement = super(AnnouncementLanguageForm, self).save(commit=False)
+        l_announcement = super(AnnouncementUserDataForm, self).save(commit=False)
         l_announcement.language = self.cleaned_data['language']
         l_announcement.announcement = self.announcement
         l_announcement.save()
         return l_announcement
 
-class AnnouncementUserForm(forms.ModelForm):
+class AnnouncementUserSettingForm(forms.ModelForm):
     nl = forms.ChoiceField(
         choices=[],
         required=True,
@@ -67,32 +67,32 @@ class AnnouncementUserForm(forms.ModelForm):
 
     class Meta:
         model = Announcement
-        fields = [ 'name', 'image', 'website' ]
+        fields = [ 'url', 'image', 'website' ]
 
-    def __init__(self, user, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         """
             Update nl function of User
         """
-        super(AnnouncementUserForm, self).__init__(*args, **kwargs)
         # Owner
-        self.owner = user
+        self.owner = kwargs.pop('user', None)
+        super(AnnouncementUserSettingForm, self).__init__(*args, **kwargs)
         # NL
         l_choices=[]
-        if (user.nl0 - Announcement.objects.filter(owner=user, nl=0).count()) > 0:
+        if (self.owner.nl0 - Announcement.objects.filter(owner=self.owner, nl=0).count()) > 0:
             l_choices.extend([(0, '0')])
-        if (user.nl1 - Announcement.objects.filter(owner=user, nl=1).count()) > 0:
+        if (self.owner.nl1 - Announcement.objects.filter(owner=self.owner, nl=1).count()) > 0:
             l_choices.extend([(1, '1')])
-        if (user.nl2 - Announcement.objects.filter(owner=user, nl=2).count()) > 0:
+        if (self.owner.nl2 - Announcement.objects.filter(owner=self.owner, nl=2).count()) > 0:
             l_choices.extend([(2, '2')])
-        if (user.nl3 - Announcement.objects.filter(owner=user, nl=3).count()) > 0:
+        if (self.owner.nl3 - Announcement.objects.filter(owner=self.owner, nl=3).count()) > 0:
             l_choices.extend([(3, '3')])
-        if (user.nl4 - Announcement.objects.filter(owner=user, nl=4).count()) > 0:
+        if (self.owner.nl4 - Announcement.objects.filter(owner=self.owner, nl=4).count()) > 0:
             l_choices.extend([(4, '4')])
-        if (user.nl5 - Announcement.objects.filter(owner=user, nl=5).count()) > 0:
+        if (self.owner.nl5 - Announcement.objects.filter(owner=self.owner, nl=5).count()) > 0:
             l_choices.extend([(5, '5')])
-        if (user.nl6 - Announcement.objects.filter(owner=user, nl=6).count()) > 0:
+        if (self.owner.nl6 - Announcement.objects.filter(owner=self.owner, nl=6).count()) > 0:
             l_choices.extend([(6, '6')])
-        if (user.nl7 - Announcement.objects.filter(owner=user, nl=7).count()) > 0:
+        if (self.owner.nl7 - Announcement.objects.filter(owner=self.owner, nl=7).count()) > 0:
             l_choices.extend([(7, '7')])
         self.fields['nl'].choices = l_choices
         # Category
@@ -107,12 +107,12 @@ class AnnouncementUserForm(forms.ModelForm):
         self.fields['localisation'].choices = l_choices
 
     def save(self, *args, **kwargs):
-        l_announcement = super(AnnouncementUserForm, self).save(commit=False)
+        l_announcement = super(AnnouncementUserSettingForm, self).save(commit=False)
         l_announcement.category = get_object_or_404(Category, pk=self.cleaned_data['category'])
         l_announcement.localisation = get_object_or_404(Localisation, pk=self.cleaned_data['localisation'])
         l_announcement.nl = self.cleaned_data['nl']
-        l_announcement.url = self.cleaned_data['website']
         l_announcement.owner = self.owner
+        #TODO: Remove on NL
         l_announcement.is_enable = False
         l_announcement.is_valid = False
         l_announcement.save()

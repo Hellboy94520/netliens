@@ -1,0 +1,46 @@
+{% load i18n %}
+<!DOCTYPE html>
+<html>
+{% load static %}
+<meta charset="UTF-8">
+<head>
+	<title>Net-Liens</title>
+	<!-- This one is very important for mobile !-->
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+	<link rel="stylesheet" type="text/css" href="{% static 'css/header.css' %}">
+	<link rel="stylesheet" type="text/css" href="{% static 'css/my-amber-theme.css' %}">
+</head>
+
+<body style="margin-top:60px">
+    <div class="w3-row" style="padding-bottom: 20px;">
+        <a class="w3-quarter w3-center w3-button w3-border w3-border-black" style="border-left: 10px;" href="/account/update">
+          <div class="fa fa-user-circle fa-3x w3-center" style="padding-left: 10px; padding-right: 10px; padding-top: 5px; padding-bottom: 5px;"></div>
+          <p>{% trans "Update your account" %}</p>
+        </a>
+        <a class="w3-quarter w3-center w3-button w3-border w3-border-black" style="border-left: 10px;" href="/account/announcement">
+            <div class="fa fa-bullhorn fa-3x" style="padding-left: 10px; padding-right: 10px; padding-top: 5px; padding-bottom: 5px;"></div>
+            <p>{% trans "Manage your announcement" %}</p>
+        </a>
+        <a class="w3-quarter w3-center w3-button w3-border w3-border-black" style="border-left: 10px;" href="/account/payment">
+            <div class="fa fa-sticky-note fa-3x" style="padding-left: 10px; padding-right: 10px; padding-top: 5px; padding-bottom: 5px;"></div>
+            <p>{% trans "History of your payment" %}</p>
+        </a>
+        <a class="w3-quarter w3-center w3-button w3-border w3-border-black" style="border-left: 10px;" href="/account/payment">
+            <div class="fa fa-euro fa-3x" style="padding-left: 10px; padding-right: 10px; padding-top: 5px; padding-bottom: 5px;"></div>
+            <p>{% trans "Purchase NL" %}</p>
+        </a>
+    </div>
+    <div class="w3-row" style="padding-bottom: 20px;">
+        <a class="w3-quarter w3-center w3-button w3-border w3-border-black" style="border-left: 10px;" href="/account/update">
+            <div class="fa fa-book fa-3x w3-center" style="padding-left: 10px; padding-right: 10px; padding-top: 5px; padding-bottom: 5px;"></div>
+            <p>{% trans "Tutorial" %}</p>
+        </a>
+        <a class="w3-quarter w3-center w3-button w3-border w3-border-black" style="border-left: 10px;" href="/account/update">
+            <div class="fa fa-envelope fa-3x w3-center" style="padding-left: 10px; padding-right: 10px; padding-top: 5px; padding-bottom: 5px;"></div>
+            <p>{% trans "Contact Us" %}</p>
+          </a>
+      </div>
+</body>

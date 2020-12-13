@@ -1,6 +1,6 @@
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
-from django.core.validators import MaxValueValidator, MinValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator, RegexValidator
 from django.db.models.signals import post_save
 
 from .user import User
@@ -9,8 +9,10 @@ from .language import LanguageModel
 from .localisation import Localisation
 from .statistics import Statistics
 
+alphanumeric = RegexValidator(r'^[0-9a-zA-Z]*$', _("Only alphanumeric characters are allowed."))
+
 TITLE_MAX_LENGTH=50
-NAME_MAX_LENGTH=100
+URL_MAX_LENGTH=100
 NL_LEVEL_MAX=10
 
 
@@ -21,14 +23,15 @@ Models
 -------------------------------------------------------------------------------------------------------------------- """
 class Announcement(models.Model):
     # Updatable by User
-    name = models.CharField(
+    url = models.CharField(
         default="",
         unique=True,
         blank=False,
         null=False,
-        max_length=NAME_MAX_LENGTH,
-        verbose_name=_("Name"),
-        help_text=_("Company name (to use in reference)"))
+        max_length=URL_MAX_LENGTH,
+        verbose_name=_("Url"),
+        help_text=_("Choose an url as following for the referencing: www.net-liens.com/announcement/<url>"),
+        validators=[alphanumeric])
     image = models.ImageField(upload_to = "images/",
         default=None,
         blank=True,

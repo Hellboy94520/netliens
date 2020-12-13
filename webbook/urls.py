@@ -13,11 +13,13 @@ urlpatterns = [
   # NetLiens
   path('', netliens.HomeView.as_view()),
   path('category/<int:category_id>', netliens.CategoryView.as_view()),
-  path('announcement/<str:announcement_title>', netliens.AnnouncementView.as_view()),
+  path('announcement/<str:announcement_url>', netliens.AnnouncementView.as_view()),
   # Languages
   path('languages/<str:language>', languages.activation),
   # Account
-  path('account/', account.HomeView.as_view()),
+  path('account/', 
+    account.HomeView.as_view(template_name="account/home.html"),
+    name="account"),
   path('account/signup/',
     account.SignupView.as_view(),
     name="signup"),
@@ -80,6 +82,27 @@ urlpatterns = [
       template_name="account/password_reset_complete.html",
       title=_("Password reset complete")),
     name="password_reset_complete"),
+  ## View to update account
+  path('account/update/', account.UpdateView.as_view(template_name="account/update.html"),
+    name="account_update"),
+  ## View to management announcement
+  path('account/announcement/', account.AnnouncementView.as_view(template_name="account/announcement.html"),
+    name="account_announcement"),
+  path('account/announcement/creation/', account.AnnouncementCreationView.as_view(
+      template_name="account/announcement_creation.html",
+      success_url="/account/announcement/creation/<str:announcement_url>/data/"),
+    name="account_announcement_creation"),
+  path('account/announcement/creation/<str:announcement_url>/data/', account.AnnouncementCreationDataView.as_view(
+      template_name="account/accouncement_creation_data.html",
+      success_url="/account/announcement/"),
+    name="account_announcement_creation_data"),
+  # path('account/announcement/update/<str:announcement_url>/', account.AnnouncementUpdateView.as_view(
+  #     template_name="account/announcement_update.html",
+  #     success_url=""),
+  #   name="account_announcement_update"),
+  path('account/announcement/purchase/', account.AnnouncementPurchaseView.as_view(
+      template_name="account/announcement_purchase.html")),
+
   # Admin
   path('admin/', admin.HomeView.as_view()),
 ]
