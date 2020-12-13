@@ -8,6 +8,7 @@ from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.tokens import default_token_generator
 from django.contrib.sites.shortcuts import get_current_site
+from django.conf import settings
 
 
 from django.views import View
@@ -17,14 +18,52 @@ from django.contrib.auth.views import PasswordResetView, PasswordResetDoneView
 from ..models import User, Announcement, Category, Localisation
 from ..forms import PublicUserForm, SignUpForm, send_mail as SendEmail
 
-#TODO: To delete when ErrorPages will be implement when activation link is incorrect
-from django.http import HttpResponse
-
 # -----------------------------
 # Token
 # -----------------------------
 from django.utils.encoding import force_bytes, force_text
 from django.utils.http import urlsafe_base64_decode
+
+
+# -----------------------------
+# Decorator
+# -----------------------------
+def user_has_nl(function):
+    def wrap(request, *args, **kwargs):
+        if (request.user.nl0 - Announcement.objects.filter(owner=request.user, nl=0).count()) > 0 or \
+        (request.user.nl1 - Announcement.objects.filter(owner=request.user, nl=1).count()) > 0 or \
+        (request.user.nl2 - Announcement.objects.filter(owner=request.user, nl=2).count()) > 0 or \
+        (request.user.nl3 - Announcement.objects.filter(owner=request.user, nl=3).count()) > 0 or \
+        (request.user.nl4 - Announcement.objects.filter(owner=request.user, nl=4).count()) > 0 or \
+        (request.user.nl5 - Announcement.objects.filter(owner=request.user, nl=5).count()) > 0 or \
+        (request.user.nl6 - Announcement.objects.filter(owner=request.user, nl=6).count()) > 0 or \
+        (request.user.nl7 - Announcement.objects.filter(owner=request.user, nl=7).count()) > 0:
+            return function(request, *args, **kwargs)
+        else:
+            return redirect('/account/announcement/purchase/')
+    wrap.__doc__ = function.__doc__
+    return wrap
+
+
+def no_user_required(function):
+    def wrap(request, *args, **kwargs):
+        if request.user:
+            return function(request, *args, **kwargs)
+        else:
+            return redirect('/account/')
+    wrap.__doc__ = function.__doc__
+    return wrap
+
+def owner_required(function):
+    def wrap(request, *args, **kwargs):
+        l_annoucement = get_object_or_404(Announcement, url=kwargs['announcement_url'])
+        if l_annoucement.owner == request.user:
+            return function(request, *args, **kwargs)
+        else:
+            raise Http404()
+    wrap.__doc__ = function.__doc__
+    return wrap
+
 
 # -----------------------------
 # View
@@ -35,7 +74,9 @@ class HomeView(TemplateView):
         View to manage account
     """
 
+
 # -----------------------------
+@method_decorator(no_user_required, name='dispatch')
 class SignupView(View):
     """
         View to create an account
@@ -143,6 +184,7 @@ class PasswordResetConfirmView(DjangoPasswordResetConfirmView):
         form.send_email(**opts)
         return l_response
 
+
 # -----------------------------
 @method_decorator(login_required, name='dispatch')
 class UpdateView(TemplateView):
@@ -164,6 +206,7 @@ class UpdateView(TemplateView):
             user = form.save()
             return redirect('/')
         return render(request, self.template_name, locals())
+
 
 # -----------------------------
 @method_decorator(login_required, name='dispatch')
@@ -190,6 +233,7 @@ class AnnouncementView(TemplateView):
 # -----------------------------
 from ..forms import AnnouncementUserSettingForm
 @method_decorator(login_required, name='dispatch')
+@method_decorator(user_has_nl, name='dispatch')
 class AnnouncementCreationView(FormView):
     """
         View to create an announcement
@@ -206,33 +250,32 @@ class AnnouncementCreationView(FormView):
         self.success_url = self.success_url.replace("<str:announcement_url>", announcement.url)
         return super(AnnouncementCreationView, self).form_valid(form)
 
-    # Check if NL available. If not, return to purchase
-    def get(self, request, *args, **kwargs):
-        if not self.request.user.has_nl:
-            print(AnnouncementPurchaseView)
-            #return redirect(AnnouncementPurchase.get_urlconf(), locals())
-        return super(AnnouncementCreationView, self).get(request, args, kwargs)
-
 
 # -----------------------------
 from ..forms import AnnouncementUserDataForm
 @method_decorator(login_required, name='dispatch')
-class AnnouncementCreationDataView(FormView):
+@method_decorator(owner_required, name='dispatch')
+class AnnouncementDataView(FormView):
     """
         View to create an announcement with it data
     """
     form_class = AnnouncementUserDataForm
 
+    def get(self, request, *args, **kwargs):
+        print("get !!")
+        return super(AnnouncementDataView, self).get(request, args, kwargs)
+
     def post(self, request, *args, **kwargs):
+        l_announcement = get_object_or_404(Announcement, url=kwargs['announcement_url'])
         form = self.get_form()
-        if form.is_valid(get_object_or_404(Announcement, url=kwargs['announcement_url'])):
+        if form.is_valid(l_announcement):
             return self.form_valid(form)
         else:
             return self.form_invalid(form)
 
     def form_valid(self, form):
         l_announcement = form.save()
-        return super(AnnouncementCreationDataView, self).form_valid(form)
+        return super(AnnouncementDataView, self).form_valid(form)
 
 # -----------------------------
 # from ..forms import AnnouncementUserDataForm
@@ -254,8 +297,11 @@ class AnnouncementCreationDataView(FormView):
     #     kwargs['user'] = self.request.user
     #     return kwargs
 
+# -----------------------------
+@method_decorator(login_required, name='dispatch')
 class AnnouncementPurchaseView(TemplateView):
     """
         View to buy NL
     """
     pass
+

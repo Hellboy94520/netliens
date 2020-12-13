@@ -90,10 +90,10 @@ urlpatterns = [
     name="account_announcement"),
   path('account/announcement/creation/', account.AnnouncementCreationView.as_view(
       template_name="account/announcement_creation.html",
-      success_url="/account/announcement/creation/<str:announcement_url>/data/"),
+      success_url="/account/announcement/<str:announcement_url>/"),
     name="account_announcement_creation"),
-  path('account/announcement/creation/<str:announcement_url>/data/', account.AnnouncementCreationDataView.as_view(
-      template_name="account/accouncement_creation_data.html",
+  path('account/announcement/<str:announcement_url>/', account.AnnouncementDataView.as_view(
+      template_name="account/accouncement_data.html",
       success_url="/account/announcement/"),
     name="account_announcement_creation_data"),
   # path('account/announcement/update/<str:announcement_url>/', account.AnnouncementUpdateView.as_view(

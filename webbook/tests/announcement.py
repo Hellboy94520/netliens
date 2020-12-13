@@ -965,6 +965,7 @@ class AnnouncementCreationView(TestCase):
     """
     def setUp(self):
         self.email = "toto@gmail.com"
+        self.email_2 = "titi.toto@gmail.com"
         self.password = "tititututoto"
 
         self.title_en = "This is a title !"
@@ -988,13 +989,17 @@ class AnnouncementCreationView(TestCase):
         self.localisation = Localisation.objects.create(name="Localisation", resume="This is a localisation", is_enable=True)
         self.nl = 0
         self.owner = User.objects.create_user(email=self.email, password=self.password, is_active=True)
+        self.owner2 = User.objects.create_user(email=self.email_2, password=self.password, is_active=True)
         self.is_enable = True
         self.is_valid = True
         self.is_on_homepage = True
 
 
     def test_valid_only_english(self):
-        self.assertEqual(User.objects.all().count(), 1, "Model has not been created after submit valid form !")
+        """
+            Test valid with English language
+        """
+        self.assertEqual(User.objects.all().count(), 2, "Model has not been created after submit valid form !")
         self.assertEqual(Category.objects.all().count(), 1, "Model has not been created after submit valid form !")
         self.assertEqual(Localisation.objects.all().count(), 1, "Model has not been created after submit valid form !")
 
@@ -1022,12 +1027,12 @@ class AnnouncementCreationView(TestCase):
               'localisation': self.localisation.pk,
             },
         )
-        self.assertEqual(response.url, f"/account/announcement/creation/{self.url}/data/", f"Response not expected : {response}")
+        self.assertEqual(response.url, f"/account/announcement/{self.url}/", f"Response not expected : {response}")
         self.assertEqual(Announcement.objects.all().count(), 1)
 
         # Create announcement data in english
         response = self.client.post(
-            f"/account/announcement/creation/{self.url}/data/",
+            f"/account/announcement/{self.url}/",
             { 'title': self.title_en,
               'content': self.content_en,
               'language': self.language_en
@@ -1039,7 +1044,10 @@ class AnnouncementCreationView(TestCase):
 
 
     def test_valid_only_french(self):
-        self.assertEqual(User.objects.all().count(), 1, "Model has not been created after submit valid form !")
+        """
+            Test valid with French language
+        """
+        self.assertEqual(User.objects.all().count(), 2, "Model has not been created after submit valid form !")
         self.assertEqual(Category.objects.all().count(), 1, "Model has not been created after submit valid form !")
         self.assertEqual(Localisation.objects.all().count(), 1, "Model has not been created after submit valid form !")
 
@@ -1067,12 +1075,12 @@ class AnnouncementCreationView(TestCase):
               'localisation': self.localisation.pk,
             },
         )
-        self.assertEqual(response.url, f"/account/announcement/creation/{self.url}/data/", f"Response not expected : {response}")
+        self.assertEqual(response.url, f"/account/announcement/{self.url}/", f"Response not expected : {response}")
         self.assertEqual(Announcement.objects.all().count(), 1)
 
         # Create announcement data in english
         response = self.client.post(
-            f"/account/announcement/creation/{self.url}/data/",
+            f"/account/announcement/{self.url}/",
             { 'title': self.title_fr,
               'content': self.content_fr,
               'language': self.language_fr
@@ -1084,7 +1092,10 @@ class AnnouncementCreationView(TestCase):
 
 
     def test_valid_english_and_french(self):
-        self.assertEqual(User.objects.all().count(), 1, "Model has not been created after submit valid form !")
+        """
+            Test valid with English and French languages
+        """
+        self.assertEqual(User.objects.all().count(), 2, "Model has not been created after submit valid form !")
         self.assertEqual(Category.objects.all().count(), 1, "Model has not been created after submit valid form !")
         self.assertEqual(Localisation.objects.all().count(), 1, "Model has not been created after submit valid form !")
 
@@ -1112,12 +1123,12 @@ class AnnouncementCreationView(TestCase):
               'localisation': self.localisation.pk,
             },
         )
-        self.assertEqual(response.url, f"/account/announcement/creation/{self.url}/data/", f"Response not expected : {response}")
+        self.assertEqual(response.url, f"/account/announcement/{self.url}/", f"Response not expected : {response}")
         self.assertEqual(Announcement.objects.all().count(), 1)
 
         # Create announcement data in english
         response = self.client.post(
-            f"/account/announcement/creation/{self.url}/data/",
+            f"/account/announcement/{self.url}/",
             { 'title': self.title_en,
               'content': self.content_en,
               'language': self.language_en
@@ -1129,7 +1140,7 @@ class AnnouncementCreationView(TestCase):
 
         # Create announcement data in french
         response = self.client.post(
-            f"/account/announcement/creation/{self.url}/data/",
+            f"/account/announcement/{self.url}/",
             { 'title': self.title_fr,
               'content': self.content_fr,
               'language': self.language_fr
@@ -1141,22 +1152,93 @@ class AnnouncementCreationView(TestCase):
 
 
     def test_invalid_no_user_login(self):
-        self.assertEqual(User.objects.all().count(), 1, "Model has not been created after submit valid form !")
+        """
+            Try to create an announcement anonymously
+        """
+        self.assertEqual(User.objects.all().count(), 2, "Model has not been created after submit valid form !")
         self.assertEqual(Category.objects.all().count(), 1, "Model has not been created after submit valid form !")
         self.assertEqual(Localisation.objects.all().count(), 1, "Model has not been created after submit valid form !")
 
-        # Check if no authentification the user
-        response = self.client.get("account/announcement/")
-        with self.assertRaises(KeyError):
-            response.context['user']
-
-        # Try to create announcement settings
+        # Try to create announcement settings without login
         response = self.client.get("/account/announcement/creation/")
-        self.assertEqual(response.url, f"{settings.LOGIN_URL}?next=/account/announcement/creation/", f"Invalid '{response}'")
+        self.assertEqual(response.url, f"{settings.LOGIN_URL}?next=/account/announcement/creation/", f"Response not expected : {response}")
+
+
+    def test_invalid_user(self):
+        """
+            Try to add  a data to an announcement with another user
+        """
+        self.assertEqual(User.objects.all().count(), 2, "Model has not been created after submit valid form !")
+        self.assertEqual(Category.objects.all().count(), 1, "Model has not been created after submit valid form !")
+        self.assertEqual(Localisation.objects.all().count(), 1, "Model has not been created after submit valid form !")
+
+        # LoginView (with first user)
+        response = self.client.post(
+            "/account/login/", 
+            { 'username': self.email,
+              'password': self.password 
+            }
+        )
+        self.assertEqual(response.url, settings.LOGIN_REDIRECT_URL, f"Redirection not exist in response '{response}'")
+
+        # Authentificate the user (with first user)
+        response = self.client.get(settings.LOGIN_REDIRECT_URL)
+        self.assertTrue(response.context['user'].is_authenticated, "User is not authentificated !")
+        self.assertEqual(response.context['user'].email, self.email, "Wrong user authentificated !")
+
+        # Create announcement settings (with first user)
+        response = self.client.post(
+            "/account/announcement/creation/",
+            { 'url': self.url,
+              'website': self.website,
+              'nl': self.nl,
+              'category': self.category.pk,
+              'localisation': self.localisation.pk,
+            },
+        )
+        self.assertEqual(response.url, f"/account/announcement/{self.url}/", f"Response not expected : {response}")
+        self.assertEqual(Announcement.objects.all().count(), 1)
+
+        # Logout (with first user)
+        response = self.client.get("/account/logout/")
+        self.assertEqual(response.url, settings.LOGIN_REDIRECT_URL, f"Redirection not exist in response '{response}'")
+
+        # LoginView (with second user)
+        response = self.client.post(
+            "/account/login/", 
+            { 'username': self.email_2,
+              'password': self.password 
+            }
+        )
+        self.assertEqual(response.url, settings.LOGIN_REDIRECT_URL, f"Redirection not exist in response '{response}'")
+
+        # Authentificate the user (with second user)
+        response = self.client.get(settings.LOGIN_REDIRECT_URL)
+        self.assertTrue(response.context['user'].is_authenticated, "User is not authentificated !")
+        self.assertEqual(response.context['user'].email, self.email_2, "Wrong user authentificated !")
+
+        # Try to reach via get
+        response = self.client.get(f"/account/announcement/{self.url}/")
+        self.assertEqual(response.status_code, 404)
+
+        # Try to reach via set
+        response = self.client.post(
+            f"/account/announcement/{self.url}/",
+            { 'url': self.url,
+              'website': self.website,
+              'nl': self.nl,
+              'category': self.category.pk,
+              'localisation': self.localisation.pk,
+            },
+        )
+        self.assertEqual(response.status_code, 404)
 
 
     def test_invalid_no_nl_available(self):
-        self.assertEqual(User.objects.all().count(), 1, "Model has not been created after submit valid form !")
+        """
+            Try to create an announcement without nl available
+        """
+        self.assertEqual(User.objects.all().count(), 2, "Model has not been created after submit valid form !")
         self.assertEqual(Category.objects.all().count(), 1, "Model has not been created after submit valid form !")
         self.assertEqual(Localisation.objects.all().count(), 1, "Model has not been created after submit valid form !")
 
@@ -1184,10 +1266,10 @@ class AnnouncementCreationView(TestCase):
               'localisation': self.localisation.pk,
             },
         )
-        self.assertEqual(response.url, f"/account/announcement/creation/{self.url}/data/", f"Response not expected : {response}")
+        self.assertEqual(response.url, f"/account/announcement/{self.url}/", f"Response not expected : {response}")
         self.assertEqual(Announcement.objects.all().count(), 1)
 
         # Try to create another announcement
-        # response = self.client.get("/account/announcement/creation/")
-        # self.assertEqual(response.url, f"/account/announcement/purchase/", f"Response not expected : {response}")
-        # self.assertEqual(Announcement.objects.all().count(), 1)
+        response = self.client.get("/account/announcement/creation/")
+        self.assertEqual(response.url, f"/account/announcement/purchase/", f"Response not expected : {response}")
+        self.assertEqual(Announcement.objects.all().count(), 1)

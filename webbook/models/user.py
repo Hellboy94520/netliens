@@ -60,13 +60,6 @@ class User(AbstractUser):
     REQUIRED_FIELDS = [ 'last_name', 'first_name']
     objects = UserManager()
 
-    def has_nl(self):
-        if self.nl0 > 0 or self.nl1 > 0 or self.nl2 > 0 or \
-            self.nl3 > 0 or self.nl4 > 0 or self.nl5 > 0 or \
-            self.nl6 > 0 or self.nl7 > 0:
-            return True
-        return False
-
     company    = models.CharField(
         max_length=100,
         default="",
