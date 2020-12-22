@@ -1,13 +1,14 @@
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from django.core.validators import MinValueValidator
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, pre_delete
 
 TITLE_MAX_LENGTH=50
 MINIMUM_ORDER=1
 MAX_CODE_LENGTH=5
 
 from .statistics import Statistics
+from .language import LanguageModel
 
 def get_all_localisation_in_order(**kwargs):
     l_localisation_list = []
@@ -17,24 +18,12 @@ def get_all_localisation_in_order(**kwargs):
     return { l_localisation.pk : l_localisation for l_localisation in l_localisation_list }
 
 class Localisation(models.Model):
-    name = models.CharField(
-        max_length=TITLE_MAX_LENGTH,
-        default="",
-        blank=False,
-        null=False,
-        verbose_name=_("Name"),
-        help_text=_("Name of the localisation"))
-    resume = models.TextField(
-        default="",
-        blank=True,
-        null=True,
-        verbose_name=_("Resume"),
-        help_text=_("Resume of the localisation"))
     code    = models.CharField(
         max_length=MAX_CODE_LENGTH,
         verbose_name="Code",
         blank=False,
         null=False,
+        unique=True,
         help_text=_("Localisation code"))
     is_enable = models.BooleanField(
         default=False,
@@ -76,6 +65,25 @@ class Localisation(models.Model):
         verbose_name = _("Localisation")
 
 
+""" ---------------------------------------------------------------------------------------------------------------- """
+class LocalisationData(LanguageModel):
+    name = models.CharField(
+        max_length=TITLE_MAX_LENGTH,
+        blank=False,
+        null=False,
+        verbose_name=_("Name"),
+        help_text=_("Name of your localisation"))
+    resume = models.TextField(
+        blank=False,
+        null=False,
+        verbose_name=_("Resume"),
+        help_text=_("Resume of your localisation"))
+    localisation = models.ForeignKey(
+        Localisation,
+        on_delete=models.CASCADE)
+
+
+""" ---------------------------------------------------------------------------------------------------------------- """
 class LocalisationStats(Statistics):
     localisation = models.OneToOneField(Localisation, on_delete=models.CASCADE, primary_key=True)
 
@@ -94,3 +102,13 @@ def _localisation_creation(instance, created, **kwargs):
         l_stat.save()
 
 post_save.connect(_localisation_creation, sender = Localisation)
+
+def _localisation_deletion(instance, **kwargs):
+    """
+        Deletion of Localisation need to change it children parent settings
+    """
+    for children in Localisation.objects.filter(parent=instance):
+        children.parent = instance.parent
+        children.save()
+
+pre_delete.connect(_localisation_deletion, sender = Localisation)

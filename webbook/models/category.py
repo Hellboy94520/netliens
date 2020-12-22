@@ -66,13 +66,13 @@ class CategoryData(LanguageModel):
         max_length=TITLE_MAX_LENGTH,
         blank=False,
         null=False,
-        verbose_name=_("Title"),
-        help_text=_("Title of your category"))
+        verbose_name=_("Name"),
+        help_text=_("Name of the category"))
     resume = models.TextField(
         blank=False,
         null=False,
-        verbose_name=_("Content"),
-        help_text=_("Content of your category"))
+        verbose_name=_("Resume"),
+        help_text=_("Resume of the category"))
     category = models.ForeignKey(
         Category,
         on_delete=models.CASCADE)

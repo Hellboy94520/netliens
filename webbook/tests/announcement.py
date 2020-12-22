@@ -31,7 +31,7 @@ class AnnouncementModelTestCase(TestCase):
             im_io, None, self.image_name, 'image/jpeg', len(im_io.getvalue()), None)
         self.website = "www.toto.fr"
         self.category = Category.objects.create(is_enable=True)
-        self.localisation = Localisation.objects.create(name="Localisation", resume="This is a localisation", is_enable=True)
+        self.localisation = Localisation.objects.create(code="ABC", is_enable=True)
         self.nl = 5
         self.owner = User.objects.create(email="toto@gmail.com", password="tititututoto")
         self.is_enable = True
@@ -272,7 +272,7 @@ class AnnouncementUserSettingFormTestCase(TestCase):
         self.is_valid = False
         self.is_on_homepage = False
         self.category = Category.objects.create(order=1, is_enable=True)
-        self.localisation = Localisation.objects.create(name="Localisation", resume="This is a localisation", order=1, is_enable=True)
+        self.localisation = Localisation.objects.create(code="ABC", order=1, is_enable=True)
 
     def test_valid(self):
         l_announcement = AnnouncementUserSettingForm(
@@ -703,12 +703,12 @@ class AnnouncementUserSettingFormTestCase(TestCase):
                     Localisation-Children 1
                     Localisation-Children 2
         """
-        l_localisation_1 = Localisation.objects.create(name="Localisation 1", order=2, resume="This is toto localisation", is_enable=True)
-        l_localisation_2 = Localisation.objects.create(name="Localisation 2", order=3, resume="This is toto localisation", is_enable=True)
-        Localisation.objects.create(name="Localisation-Children 2", order=2, resume="This is sub-toto localisation", is_enable=True, parent=l_localisation_2)
-        Localisation.objects.create(name="Localisation-Children 1", order=1, resume="This is sub-toto localisation", is_enable=True, parent=l_localisation_2)
-        Localisation.objects.create(name="Localisation-Children 1", order=1, resume="This is sub-toto localisation", is_enable=True, parent=l_localisation_1)
-        Localisation.objects.create(name="Localisation-Children 2", order=2, resume="This is sub-toto localisation", is_enable=True, parent=l_localisation_1)
+        l_localisation_1 = Localisation.objects.create(code="ABCA", order=2, is_enable=True)
+        l_localisation_2 = Localisation.objects.create(code="ABCB", order=3, is_enable=True)
+        l_localisation_22 = Localisation.objects.create(code="ABCC", order=2, is_enable=True, parent=l_localisation_2)
+        l_localisation_21 = Localisation.objects.create(code="ABCD", order=1, is_enable=True, parent=l_localisation_2)
+        l_localisation_11 = Localisation.objects.create(code="ABCE", order=1, is_enable=True, parent=l_localisation_1)
+        l_localisation_12 = Localisation.objects.create(code="ABCF", order=2, is_enable=True, parent=l_localisation_1)
         self.assertEqual(Localisation.objects.all().count(), 7)
 
         l_announcement = AnnouncementUserSettingForm(
@@ -721,13 +721,13 @@ class AnnouncementUserSettingFormTestCase(TestCase):
         self.assertEqual(len(l_announcement.fields['category'].choices), 1)
         self.assertEqual(len(l_announcement.fields['localisation'].choices), 7)
         l_localisation_choices = l_announcement.fields['localisation'].choices
-        self.assertEqual(l_localisation_choices[0][1].name, "Localisation")
-        self.assertEqual(l_localisation_choices[1][1].name, "Localisation 1")
-        self.assertEqual(l_localisation_choices[2][1].name, "Localisation-Children 1")
-        self.assertEqual(l_localisation_choices[3][1].name, "Localisation-Children 2")
-        self.assertEqual(l_localisation_choices[4][1].name, "Localisation 2")
-        self.assertEqual(l_localisation_choices[5][1].name, "Localisation-Children 1")
-        self.assertEqual(l_localisation_choices[6][1].name, "Localisation-Children 2")
+        self.assertEqual(l_localisation_choices[0][1], self.localisation)
+        self.assertEqual(l_localisation_choices[1][1], l_localisation_1)
+        self.assertEqual(l_localisation_choices[2][1], l_localisation_11)
+        self.assertEqual(l_localisation_choices[3][1], l_localisation_12)
+        self.assertEqual(l_localisation_choices[4][1], l_localisation_2)
+        self.assertEqual(l_localisation_choices[5][1], l_localisation_21)
+        self.assertEqual(l_localisation_choices[6][1], l_localisation_22)
 
 
     def test_localisation_not_exist(self):
@@ -1028,7 +1028,7 @@ class AnnouncementCreationView(TestCase):
             im_io, None, self.image_name, 'image/jpeg', len(im_io.getvalue()), None)
         self.website = "http://www.toto.fr"
         self.category = Category.objects.create(is_enable=True)
-        self.localisation = Localisation.objects.create(name="Localisation", resume="This is a localisation", is_enable=True)
+        self.localisation = Localisation.objects.create(code="ABC", is_enable=True)
         self.nl = 0
         self.owner = User.objects.create_user(email=self.email, password=self.password, is_active=True)
         self.owner2 = User.objects.create_user(email=self.email_2, password=self.password, is_active=True)
