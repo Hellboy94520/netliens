@@ -112,7 +112,6 @@ class AnnouncementUserSettingForm(forms.ModelForm):
         l_announcement.localisation = get_object_or_404(Localisation, pk=self.cleaned_data['localisation'])
         l_announcement.nl = self.cleaned_data['nl']
         l_announcement.owner = self.owner
-        #TODO: Remove on NL
         l_announcement.is_enable = False
         l_announcement.is_valid = False
         l_announcement.save()

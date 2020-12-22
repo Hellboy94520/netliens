@@ -1,12 +1,13 @@
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from django.core.validators import MinValueValidator
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, pre_delete
 
 TITLE_MAX_LENGTH=50
 MINIMUM_ORDER=1
 
 from .statistics import Statistics
+from .language import LanguageModel
 
 def get_all_category_in_order(**kwargs):
     l_category_list = []
@@ -15,29 +16,17 @@ def get_all_category_in_order(**kwargs):
         l_category_list.extend(l_category.get_children_list(**kwargs))
     return { l_category.pk : l_category for l_category in l_category_list }
 
+
+""" --------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
+Models
+------------------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------- """
 class Category(models.Model):
-    name = models.CharField(
-        max_length=TITLE_MAX_LENGTH,
-        default="",
-        blank=False,
-        null=False,
-        verbose_name=_("Name"),
-        help_text=_("Name of the category"))
-    resume = models.TextField(
-        default="",
-        blank=True,
-        null=True,
-        verbose_name=_("Resume"),
-        help_text=_("Resume of the category"))
     is_enable = models.BooleanField(
         default=False,
         verbose_name=_("Enable"),
         help_text=_("Category is enabled"))
-    # This variable is used by HTML for disabled option choice for User
-    is_linkeable = models.BooleanField(
-        default=False,
-        verbose_name=_("Linkable"),
-        help_text=_("Category can be link to an Announcement"))
     parent = models.ForeignKey(
         'Category',
         default=None,
@@ -71,6 +60,25 @@ class Category(models.Model):
         verbose_name = _("Category")
 
 
+""" ---------------------------------------------------------------------------------------------------------------- """
+class CategoryData(LanguageModel):
+    name = models.CharField(
+        max_length=TITLE_MAX_LENGTH,
+        blank=False,
+        null=False,
+        verbose_name=_("Title"),
+        help_text=_("Title of your category"))
+    resume = models.TextField(
+        blank=False,
+        null=False,
+        verbose_name=_("Content"),
+        help_text=_("Content of your category"))
+    category = models.ForeignKey(
+        Category,
+        on_delete=models.CASCADE)
+
+
+""" ---------------------------------------------------------------------------------------------------------------- """
 class CategoryStats(Statistics):
     category = models.OneToOneField(Category, on_delete=models.CASCADE, primary_key=True)
 
@@ -89,3 +97,13 @@ def _category_creation(instance, created, **kwargs):
         l_stat.save()
 
 post_save.connect(_category_creation, sender = Category)
+
+def _category_deletion(instance, **kwargs):
+    """
+        Deletion of Category need to change it children parent settings
+    """
+    for children in Category.objects.filter(parent=instance):
+        children.parent = instance.parent
+        children.save()
+
+pre_delete.connect(_category_deletion, sender = Category)

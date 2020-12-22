@@ -30,7 +30,7 @@ class AnnouncementModelTestCase(TestCase):
         self.image = InMemoryUploadedFile(
             im_io, None, self.image_name, 'image/jpeg', len(im_io.getvalue()), None)
         self.website = "www.toto.fr"
-        self.category = Category.objects.create(name="Category", resume="This is a category", is_enable=True)
+        self.category = Category.objects.create(is_enable=True)
         self.localisation = Localisation.objects.create(name="Localisation", resume="This is a localisation", is_enable=True)
         self.nl = 5
         self.owner = User.objects.create(email="toto@gmail.com", password="tititututoto")
@@ -217,6 +217,33 @@ class AnnouncementModelTestCase(TestCase):
         self.assertEqual(AnnouncementStats.objects.all().count(), 1, "[DB] AnnouncementStats has not been created in same time as Announcement!")
 
 
+    def test_category_inherit_in_announcement(self):
+        # Create Children category
+        category_children = Category.objects.create(parent=self.category, is_enable=True)
+        self.assertEqual(Category.objects.all().count(), 2)
+
+        # Create Announcement and check data
+        l_object = Announcement.objects.create(
+            url = self.url,
+            image = self.image,
+            website = self.website,
+            category = category_children,
+            localisation = self.localisation,
+            nl = self.nl,
+            owner = self.owner,
+            is_enable = self.is_enable,
+            is_valid = self.is_valid,
+            is_on_homepage = self.is_on_homepage
+        )
+        self.assertEqual(Announcement.objects.all().count(), 1)
+        self.assertEqual(l_object.category, category_children)
+
+        # Delete Category associated to this announcement
+        category_children.delete()
+
+        # Update Announcement and check new category
+        l_object = Announcement.objects.get(pk=l_object.pk)
+        self.assertEqual(l_object.category, self.category)
 
 class AnnouncementUserSettingFormTestCase(TestCase):
     """ 
@@ -244,7 +271,7 @@ class AnnouncementUserSettingFormTestCase(TestCase):
         self.is_enable = False
         self.is_valid = False
         self.is_on_homepage = False
-        self.category = Category.objects.create(name="Category", resume="This is a category", order=1, is_enable=True)
+        self.category = Category.objects.create(order=1, is_enable=True)
         self.localisation = Localisation.objects.create(name="Localisation", resume="This is a localisation", order=1, is_enable=True)
 
     def test_valid(self):
@@ -579,10 +606,10 @@ class AnnouncementUserSettingFormTestCase(TestCase):
         """
             Test if category disabled are not display
         """
-        Category.objects.create(name="Category Disabled", resume="This is toto category", is_enable=False)
-        l_toto = Category.objects.create(name="Category Enable", resume="This is toto category", is_enable=True)
-        Category.objects.create(name="Category-Children 1 Enable", resume="This is sub-toto category", is_enable=True, parent=l_toto)
-        Category.objects.create(name="Category-Children 2 Disabled", resume="This is sub-toto category", is_enable=False, parent=l_toto)
+        l_category_disabled = Category.objects.create(is_enable=False, order=2)
+        l_category_enabled = Category.objects.create(is_enable=True, order=3)
+        l_category_11 = Category.objects.create(is_enable=True, parent=l_category_enabled, order=1)
+        l_category_12 = Category.objects.create(is_enable=False, parent=l_category_enabled, order=2)
         self.assertEqual(Category.objects.all().count(), 5)
         l_announcement = AnnouncementUserSettingForm(
             user=self.owner,
@@ -597,8 +624,6 @@ class AnnouncementUserSettingFormTestCase(TestCase):
         category_children_enable = False
         for l_key, l_category in l_announcement.fields['category'].choices:
             self.assertTrue(l_category.is_enable, "Category is not enable !")
-            if l_category.name not in (self.category.name, "Category Enable", "Category-Children 1 Enable"):
-                self.assertTrue(False, "Category name does not expected !")
 
     def test_category_order(self):
         """
@@ -611,12 +636,12 @@ class AnnouncementUserSettingFormTestCase(TestCase):
                     Category-Children 1
                     Category-Children 2
         """
-        l_category_1 = Category.objects.create(name="Category 1", order=2, resume="This is toto category", is_enable=True)
-        l_category_2 = Category.objects.create(name="Category 2", order=3, resume="This is toto category", is_enable=True)
-        Category.objects.create(name="Category-Children 2", order=2, resume="This is sub-toto category", is_enable=True, parent=l_category_2)
-        Category.objects.create(name="Category-Children 1", order=1, resume="This is sub-toto category", is_enable=True, parent=l_category_2)
-        Category.objects.create(name="Category-Children 1", order=1, resume="This is sub-toto category", is_enable=True, parent=l_category_1)
-        Category.objects.create(name="Category-Children 2", order=2, resume="This is sub-toto category", is_enable=True, parent=l_category_1)
+        l_category_1 = Category.objects.create(order=2, is_enable=True)
+        l_category_2 = Category.objects.create(order=3, is_enable=True)
+        l_category_22 = Category.objects.create(order=2, is_enable=True, parent=l_category_2)
+        l_category_21 = Category.objects.create(order=1, is_enable=True, parent=l_category_2)
+        l_category_11 = Category.objects.create(order=1, is_enable=True, parent=l_category_1)
+        l_category_12 = Category.objects.create(order=2, is_enable=True, parent=l_category_1)
         self.assertEqual(Category.objects.all().count(), 7)
 
         l_announcement = AnnouncementUserSettingForm(
@@ -629,13 +654,13 @@ class AnnouncementUserSettingFormTestCase(TestCase):
         self.assertEqual(len(l_announcement.fields['category'].choices), 7)
         self.assertEqual(len(l_announcement.fields['localisation'].choices), 1)
         l_category_choices = l_announcement.fields['category'].choices
-        self.assertEqual(l_category_choices[0][1].name, "Category")
-        self.assertEqual(l_category_choices[1][1].name, "Category 1")
-        self.assertEqual(l_category_choices[2][1].name, "Category-Children 1")
-        self.assertEqual(l_category_choices[3][1].name, "Category-Children 2")
-        self.assertEqual(l_category_choices[4][1].name, "Category 2")
-        self.assertEqual(l_category_choices[5][1].name, "Category-Children 1")
-        self.assertEqual(l_category_choices[6][1].name, "Category-Children 2")
+        self.assertEqual(l_category_choices[0][1], self.category)
+        self.assertEqual(l_category_choices[1][1], l_category_1)
+        self.assertEqual(l_category_choices[2][1], l_category_11)
+        self.assertEqual(l_category_choices[3][1], l_category_12)
+        self.assertEqual(l_category_choices[4][1], l_category_2)
+        self.assertEqual(l_category_choices[5][1], l_category_21)
+        self.assertEqual(l_category_choices[6][1], l_category_22)
 
 
     def test_category_not_exist(self):
@@ -800,6 +825,23 @@ class AnnouncementLanguageModelTestCase(TestCase):
         self.assertEqual(l_announcement_language.content, self.content_en)
         self.assertEqual(l_announcement_language.language, self.language_en)
         self.assertEqual(l_announcement_language.announcement, self.announcement)
+
+
+    def test_announcement_delete(self):
+        # Create AnnouncementLanguage associated to Category
+        l_object = AnnouncementLanguage.objects.create(
+            title = self.title_en,
+            content = self.content_en,
+            language = self.language_en,
+            announcement = self.announcement
+        )
+        self.assertEqual(AnnouncementLanguage.objects.all().count(), 1)
+        self.assertEqual(Announcement.objects.all().count(), 1)
+
+        # Delete Category which delete CategoryData
+        self.announcement.delete()
+        self.assertEqual(Announcement.objects.all().count(), 0)
+        self.assertEqual(AnnouncementLanguage.objects.all().count(), 0)
 
 
 
@@ -985,7 +1027,7 @@ class AnnouncementCreationView(TestCase):
         self.image = InMemoryUploadedFile(
             im_io, None, self.image_name, 'image/jpeg', len(im_io.getvalue()), None)
         self.website = "http://www.toto.fr"
-        self.category = Category.objects.create(name="Category", resume="This is a category", is_enable=True)
+        self.category = Category.objects.create(is_enable=True)
         self.localisation = Localisation.objects.create(name="Localisation", resume="This is a localisation", is_enable=True)
         self.nl = 0
         self.owner = User.objects.create_user(email=self.email, password=self.password, is_active=True)

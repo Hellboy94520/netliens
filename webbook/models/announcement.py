@@ -1,7 +1,7 @@
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from django.core.validators import MaxValueValidator, MinValueValidator, RegexValidator
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, pre_delete
 
 from .user import User
 from .category import Category
@@ -135,3 +135,14 @@ def _annoucement_creation(instance, created, **kwargs):
         l_stat.save()
 
 post_save.connect(_annoucement_creation, sender = Announcement)
+
+
+def _category_deletion(instance, **kwargs):
+    """
+        Deletion of a category
+    """
+    for announcement in Announcement.objects.filter(category=instance):
+        announcement.category = instance.parent
+        announcement.save()
+
+pre_delete.connect(_category_deletion, sender = Category)
