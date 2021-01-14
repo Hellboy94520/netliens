@@ -1,7 +1,7 @@
 from django import forms
 from django.utils.translation import ugettext_lazy as _
 
-from ..models import Category, CategoryData, get_all_category_in_order
+from ..models import Category, CategoryData, CategoryStats, get_all_category_in_order
 from ..models import LanguageAvailable
 
 """ ---------------------------------------------------------------------------------------------------------------- """
@@ -32,6 +32,19 @@ class CategoryForm(forms.ModelForm):
             return False
 
         return True
+
+    def save(self, *args, **kwargs):
+        l_category = super(CategoryForm, self).save(commit=True)
+        l_stat = CategoryStats(
+            category=l_category,
+            user_creation=kwargs['user'])
+        # In case Category creation enabled the Category too
+        if l_category.is_enable:
+            l_stat.date_validation = l_stat.date_creation
+            l_stat.user_validation = l_stat.user_creation
+        l_stat.save()
+        return l_category
+
 
 """ ---------------------------------------------------------------------------------------------------------------- """
 class CategoryDataForm(forms.ModelForm):

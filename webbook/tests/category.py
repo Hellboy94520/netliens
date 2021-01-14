@@ -5,7 +5,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from webbook.models import Category, CategoryData, MINIMUM_ORDER, TITLE_MAX_LENGTH
 from webbook.forms import CategoryForm, CategoryDataForm
 
-from webbook.models import LanguageAvailable
+from webbook.models import LanguageAvailable, User
 
 class CategoryFormTestCase(TestCase):
     """ 
@@ -13,25 +13,59 @@ class CategoryFormTestCase(TestCase):
         CategoryFormTestCase tests
         -----------------------------------------
     """
-
     def setUp(self):
+        self.default_is_enable = False
         self.is_enable = True
         self.parent = None
         self.order = 1
+        self.user = User.objects.create(email='toto', password='titi')
 
 
-    def test_valid(self):
-        l_form = CategoryForm(data={'is_enable': self.is_enable,
-                                    'parent': self.parent,
-                                    'order': self.order})
+    def test_user_valid(self):
+        l_form = CategoryForm(
+            data={
+                'parent': self.parent,
+                'order': self.order})
         self.assertTrue(l_form.is_valid(), f"Form is not valid ! {l_form.errors}")
         self.assertEqual(Category.objects.all().count(), 0, "An object already exist !")
-        l_form.save()
+        l_form.save(user=self.user)
+        # Check Category
         self.assertEqual(Category.objects.all().count(), 1, "Object has not been save !")
         l_category = Category.objects.filter()[0]
-        self.assertEqual(l_category.is_enable, self.is_enable, "Unexpected value !")
+        self.assertEqual(l_category.is_enable, self.default_is_enable)
+        self.assertIsNone(l_category.parent)
+        self.assertEqual(l_category.order, self.order)
+        # Check CategoryStat
+        l_category_stat = l_category.get_statistics()
+        self.assertIsNotNone(l_category_stat, "Stats does not exist !")
+        self.assertIsNotNone(l_category_stat.date_creation)
+        self.assertEqual(l_category_stat.user_creation, self.user)
+        self.assertIsNone(l_category_stat.date_validation)
+        self.assertIsNone(l_category_stat.user_validation)
+
+
+    def test_admin_valid(self):
+        l_form = CategoryForm(
+            data={
+                'is_enable': self.is_enable,
+                'parent': self.parent,
+                'order': self.order})
+        self.assertTrue(l_form.is_valid(), f"Form is not valid ! {l_form.errors}")
+        self.assertEqual(Category.objects.all().count(), 0, "An object already exist !")
+        l_form.save(user=self.user)
+        # Check Category
+        self.assertEqual(Category.objects.all().count(), 1, "Object has not been save !")
+        l_category = Category.objects.filter()[0]
+        self.assertEqual(l_category.is_enable, self.is_enable)
         self.assertIsNone(l_category.parent, "Unexpected value !")
         self.assertEqual(l_category.order, self.order, "Unexpected value !")
+        # Check CategoryStat
+        l_category_stat = l_category.get_statistics()
+        self.assertIsNotNone(l_category_stat, "Stats does not exist !")
+        self.assertIsNotNone(l_category_stat.date_creation)
+        self.assertEqual(l_category_stat.user_creation, self.user)
+        self.assertIsNotNone(l_category_stat.date_validation)
+        self.assertEqual(l_category_stat.user_validation, self.user)
 
 
     def test_invalid_order(self):
@@ -49,7 +83,7 @@ class CategoryFormTestCase(TestCase):
         l_form = CategoryForm(data={'order': MINIMUM_ORDER})
         self.assertTrue(l_form.is_valid(), f"Form is not valid ! {l_form.errors}")
         self.assertEqual(Category.objects.all().count(), 0, "An object already exist !")
-        l_form.save()
+        l_form.save(user=self.user)
 
         # Create second category with same order value (error)
         l_form = CategoryForm(data={'order': MINIMUM_ORDER})
@@ -64,14 +98,14 @@ class CategoryFormTestCase(TestCase):
         l_form = CategoryForm(data={'order': MINIMUM_ORDER})
         self.assertTrue(l_form.is_valid(), f"Form is not valid ! {l_form.errors}")
         self.assertEqual(Category.objects.all().count(), 0)
-        l_category_parent = l_form.save()
+        l_category_parent = l_form.save(user=self.user)
         self.assertEqual(Category.objects.all().count(), 1)
 
         # Create first children
         l_form = CategoryForm(data={'order': MINIMUM_ORDER,
                                     'parent': l_category_parent.pk})
         self.assertTrue(l_form.is_valid(), f"Form is not valid ! {l_form.errors}")
-        l_form.save()
+        l_form.save(user=self.user)
         self.assertEqual(Category.objects.all().count(), 2)
 
         # Create second children with same order value (error)
@@ -88,21 +122,21 @@ class CategoryFormTestCase(TestCase):
         l_form = CategoryForm(data={'order': MINIMUM_ORDER})
         self.assertTrue(l_form.is_valid(), f"Form is not valid ! {l_form.errors}")
         self.assertEqual(Category.objects.all().count(), 0)
-        l_category_parent = l_form.save()
+        l_category_parent = l_form.save(user=self.user)
         self.assertEqual(Category.objects.all().count(), 1)
 
         # Create first children
         l_form = CategoryForm(data={'order': MINIMUM_ORDER,
                                     'parent': l_category_parent.pk})
         self.assertTrue(l_form.is_valid(), f"Form is not valid ! {l_form.errors}")
-        l_form.save()
+        l_form.save(user=self.user)
         self.assertEqual(Category.objects.all().count(), 2)
 
         # Create second children
         l_form = CategoryForm(data={'order': MINIMUM_ORDER+1,
                                     'parent': l_category_parent.pk})
         self.assertTrue(l_form.is_valid(), f"Form is not valid ! {l_form.errors}")
-        l_form.save()
+        l_form.save(user=self.user)
         self.assertEqual(Category.objects.all().count(), 3)
 
 
@@ -114,28 +148,28 @@ class CategoryFormTestCase(TestCase):
         l_form = CategoryForm(data={'order': MINIMUM_ORDER})
         self.assertTrue(l_form.is_valid(), f"Form is not valid ! {l_form.errors}")
         self.assertEqual(Category.objects.all().count(), 0)
-        l_category_parent = l_form.save()
+        l_category_parent = l_form.save(user=self.user)
         self.assertEqual(Category.objects.all().count(), 1)
 
         # Create Mid Parent
         l_form = CategoryForm(data={'order': MINIMUM_ORDER,
                                     'parent': l_category_parent.pk})
         self.assertTrue(l_form.is_valid(), f"Form is not valid ! {l_form.errors}")
-        l_mid_parent = l_form.save()
+        l_mid_parent = l_form.save(user=self.user)
         self.assertEqual(Category.objects.all().count(), 2)
 
         # Create Children 1
         l_form = CategoryForm(data={'order': MINIMUM_ORDER,
                                     'parent': l_mid_parent.pk})
         self.assertTrue(l_form.is_valid(), f"Form is not valid ! {l_form.errors}")
-        l_children_1 = l_form.save()
+        l_children_1 = l_form.save(user=self.user)
         self.assertEqual(Category.objects.all().count(), 3)
 
         # Create Children 2
         l_form = CategoryForm(data={'order': MINIMUM_ORDER+1,
                                     'parent': l_mid_parent.pk})
         self.assertTrue(l_form.is_valid(), f"Form is not valid ! {l_form.errors}")
-        l_children_2 = l_form.save()
+        l_children_2 = l_form.save(user=self.user)
         self.assertEqual(Category.objects.all().count(), 4)
 
         # Delete Mid Parent
@@ -158,21 +192,21 @@ class CategoryFormTestCase(TestCase):
         l_form = CategoryForm(data={'order': MINIMUM_ORDER})
         self.assertTrue(l_form.is_valid(), f"Form is not valid ! {l_form.errors}")
         self.assertEqual(Category.objects.all().count(), 0)
-        l_category_parent = l_form.save()
+        l_category_parent = l_form.save(user=self.user)
         self.assertEqual(Category.objects.all().count(), 1)
 
         # Create Children 1
         l_form = CategoryForm(data={'order': MINIMUM_ORDER,
                                     'parent': l_category_parent.pk})
         self.assertTrue(l_form.is_valid(), f"Form is not valid ! {l_form.errors}")
-        l_children_1 = l_form.save()
+        l_children_1 = l_form.save(user=self.user)
         self.assertEqual(Category.objects.all().count(), 2)
 
         # Create Children 2
         l_form = CategoryForm(data={'order': MINIMUM_ORDER+1,
                                     'parent': l_category_parent.pk})
         self.assertTrue(l_form.is_valid(), f"Form is not valid ! {l_form.errors}")
-        l_children_2 = l_form.save()
+        l_children_2 = l_form.save(user=self.user)
         self.assertEqual(Category.objects.all().count(), 3)
 
         # Delete Parent
@@ -201,7 +235,7 @@ class CategoryFormTestCase(TestCase):
             }
         )
         self.assertTrue(l_form.is_valid(), "Form is not valid !")
-        l_category_1 = l_form.save()
+        l_category_1 = l_form.save(user=self.user)
 
         # Create Parent 2
         l_form = CategoryForm(
@@ -211,7 +245,7 @@ class CategoryFormTestCase(TestCase):
             }
         )
         self.assertTrue(l_form.is_valid(), "Form is not valid !")
-        l_category_2 = l_form.save()
+        l_category_2 = l_form.save(user=self.user)
 
         # Create Children 13
         l_form = CategoryForm(
@@ -221,7 +255,7 @@ class CategoryFormTestCase(TestCase):
             }
         )
         self.assertTrue(l_form.is_valid(), "Form is not valid !")
-        l_category_13 = l_form.save()
+        l_category_13 = l_form.save(user=self.user)
 
         # Create Children 11
         l_form = CategoryForm(
@@ -231,7 +265,7 @@ class CategoryFormTestCase(TestCase):
             }
         )
         self.assertTrue(l_form.is_valid(), "Form is not valid !")
-        l_category_11 = l_form.save()
+        l_category_11 = l_form.save(user=self.user)
 
         # Create Children 22
         l_form = CategoryForm(
@@ -241,7 +275,7 @@ class CategoryFormTestCase(TestCase):
             }
         )
         self.assertTrue(l_form.is_valid(), "Form is not valid !")
-        l_category_22 = l_form.save()
+        l_category_22 = l_form.save(user=self.user)
 
         # Create Children 12
         l_form = CategoryForm(
@@ -251,7 +285,7 @@ class CategoryFormTestCase(TestCase):
             }
         )
         self.assertTrue(l_form.is_valid(), "Form is not valid !")
-        l_category_12 = l_form.save()
+        l_category_12 = l_form.save(user=self.user)
 
         # Create Children 21
         l_form = CategoryForm(
@@ -261,7 +295,7 @@ class CategoryFormTestCase(TestCase):
             }
         )
         self.assertTrue(l_form.is_valid(), "Form is not valid !")
-        l_category_21 = l_form.save()
+        l_category_21 = l_form.save(user=self.user)
 
         # Create Children 122
         l_form = CategoryForm(
@@ -271,7 +305,7 @@ class CategoryFormTestCase(TestCase):
             }
         )
         self.assertTrue(l_form.is_valid(), "Form is not valid !")
-        l_category_122 = l_form.save()
+        l_category_122 = l_form.save(user=self.user)
 
         # Create Children 121
         l_form = CategoryForm(
@@ -281,7 +315,7 @@ class CategoryFormTestCase(TestCase):
             }
         )
         self.assertTrue(l_form.is_valid(), "Form is not valid !")
-        l_category_121 = l_form.save()
+        l_category_121 = l_form.save(user=self.user)
 
         # Check if all required Category has been created
         self.assertEqual(len(Category.objects.all()), 9, "Form has not been save !")

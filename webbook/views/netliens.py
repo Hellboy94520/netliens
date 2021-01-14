@@ -11,17 +11,22 @@ class HomeView(View):
         Authentification view
     """
     template_name = "home.html"
-    homepage, is_create = Homepage.objects.get_or_create()
-    category_main = Category.get_categoryWithData(
-        language=translation.get_language(),
-        order='order',
-        parent=None, is_enable=True)
-    # main_announcement = Announcement.objects.filter(is_enable=True, is_valid=True, on_homepage=True)
+
+    def get_objects(self):
+        self.homepage = Homepage.objects.get_or_create()
+        self.category_main = Category.get_categoryWithData(
+            language=translation.get_language(),
+            order='order',
+            parent=None, 
+            is_enable=True)
+        self.main_announcement = Announcement.objects.filter(is_enable=True, is_valid=True, is_on_homepage=True)
 
     def get(self, request, *args, **kwargs):
+        self.get_objects()
         return render(request, self.template_name, locals())
 
     def post(self, request, *args, **kwargs):
+        self.get_objects()
         return render(request, self.template_name, locals())
 
 class CategoryView(View):

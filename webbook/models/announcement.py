@@ -1,7 +1,7 @@
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from django.core.validators import MaxValueValidator, MinValueValidator, RegexValidator
-from django.db.models.signals import post_save, pre_delete
+from django.db.models.signals import pre_delete
 
 from .user import User
 from .category import Category
@@ -48,17 +48,11 @@ class Announcement(models.Model):
     category = models.ForeignKey(
         Category,
         on_delete=models.DO_NOTHING,
-        default=None,
-        blank=False,
-        null=False,
         verbose_name=_("Category"),
         help_text=_("Announcement Category"))
     localisation = models.ForeignKey(
         Localisation,
         on_delete=models.DO_NOTHING,
-        default=None,
-        blank=False,
-        null=False,
         verbose_name=_("Localisation"),
         help_text=_("Announcement Localisation"))
     # ReadOnly
@@ -69,7 +63,7 @@ class Announcement(models.Model):
         help_text=_("NL Level of the website"))
     # Private
     owner = models.ForeignKey(
-        User, 
+        User,
         on_delete=models.CASCADE)
     is_enable = models.BooleanField(
         default=False,
@@ -126,17 +120,6 @@ class AnnouncementStats(Statistics):
 Signals
 ------------------------------------------------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------------------------------------- """
-def _annoucement_creation(instance, created, **kwargs):
-    """
-        Creation or update stat
-    """
-    if created:
-        l_stat = AnnouncementStats(announcement=instance)
-        l_stat.save()
-
-post_save.connect(_annoucement_creation, sender = Announcement)
-
-
 def _category_deletion(instance, **kwargs):
     """
         Deletion of a category

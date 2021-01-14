@@ -32,9 +32,9 @@ class AnnouncementUserDataForm(forms.ModelForm):
 
         self.announcement = announcement
         return True
-        
+
     def save(self, *args, **kwargs):
-        # Save 
+        # Save
         l_announcement = super(AnnouncementUserDataForm, self).save(commit=False)
         l_announcement.language = self.cleaned_data['language']
         l_announcement.announcement = self.announcement
@@ -115,6 +115,10 @@ class AnnouncementUserSettingForm(forms.ModelForm):
         l_announcement.is_enable = False
         l_announcement.is_valid = False
         l_announcement.save()
+        AnnouncementStats(
+            announcement=l_announcement,
+            user_creation=kwargs['user']
+        ).save()
         return l_announcement
 
 class AnnouncementAdminForm(forms.ModelForm):

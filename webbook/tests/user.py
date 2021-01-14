@@ -74,7 +74,6 @@ class UserModelTestCase(TestCase):
         self.assertEqual(l_user.nl6, 0)
         self.assertEqual(l_user.nl7, 0)
 
-
     def test_constructor(self):
         l_user = User.objects.create(
             email=self.email,
@@ -350,7 +349,7 @@ class SignUpFormTestCase(TestCase):
         self.assertFalse(l_form.is_valid(), "Form is valid !")
         self.assertEqual(len(l_form.errors), 1, "Expected only 1 errors !")
         self.assertEqual(len(l_form['password2'].errors), 1, "Expected only 1 error for this field !")
-        self.assertEqual(l_form['password2'].errors[0], "The two password fields didn't match.", "Error message not expected !")
+        self.assertEqual(l_form['password2'].errors[0], "The two password fields didn’t match.", "Error message not expected !")
         self.assertEqual(len(mail.outbox), 0, "Email has been sent !" )
 
     def test_invalid_last_name(self):

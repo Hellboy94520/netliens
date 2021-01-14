@@ -211,7 +211,7 @@ class UpdateView(TemplateView):
     def get(self, request, *args, **kwargs):
         form = PublicUserForm(instance=request.user)
         return render(request, self.template_name, locals())
-    
+
     def post(self, request, *args, **kwargs):
         form = PublicUserForm(
             request.POST,
@@ -261,7 +261,7 @@ class AnnouncementCreationView(FormView):
         return kwargs
 
     def form_valid(self, form):
-        announcement = form.save()
+        announcement = form.save(user=self.request.user)
         self.success_url = self.success_url.replace("<str:announcement_url>", announcement.url)
         return super(AnnouncementCreationView, self).form_valid(form)
 

@@ -1,14 +1,16 @@
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from django.core.validators import MinValueValidator
-from django.db.models.signals import post_save, pre_delete
+from django.db.models.signals import pre_delete
 
 TITLE_MAX_LENGTH=50
 MINIMUM_ORDER=1
 MAX_CODE_LENGTH=5
 
 from .statistics import Statistics
-from .language import LanguageModel
+from .language import LanguageModel, LanguageAvailable
+
+from enum import Enum
 
 def get_all_localisation_in_order(**kwargs):
     l_localisation_list = []
@@ -17,14 +19,21 @@ def get_all_localisation_in_order(**kwargs):
         l_localisation_list.extend(l_localisation.get_children_list(**kwargs))
     return { l_localisation.pk : l_localisation for l_localisation in l_localisation_list }
 
+
 class Localisation(models.Model):
+    # Code Iso3 if provided
     code    = models.CharField(
         max_length=MAX_CODE_LENGTH,
-        verbose_name="Code",
+        verbose_name=_("Code"),
         blank=False,
         null=False,
-        unique=True,
         help_text=_("Localisation code"))
+    # First column provide by Insee File
+    insee = models.PositiveIntegerField(
+        validators=[MinValueValidator(MINIMUM_ORDER)],
+        default=MINIMUM_ORDER,
+        verbose_name=_("Order"),
+        help_text=_("Display order"))
     is_enable = models.BooleanField(
         default=False,
         verbose_name=_("Enable"),
@@ -48,6 +57,17 @@ class Localisation(models.Model):
         default=MINIMUM_ORDER,
         verbose_name=_("Order"),
         help_text=_("Display order"))
+
+    """ ---------------------------------------------------- """
+    def get_localisationWithData(language: LanguageAvailable, order:str, **kwargs):
+        objectMap = {}
+        for localisation in Localisation.objects.filter(**kwargs).order_by(order):
+            objectMap[localisation] = localisation.get_data(language=language)
+        return objectMap
+
+    """ ---------------------------------------------------- """
+    def get_data(self, language: LanguageAvailable = LanguageAvailable.EN.value):
+        return LocalisationData.objects.get(localisation=self, language=language)
 
     """ ---------------------------------------------------- """
     def get_statistics(self):
@@ -93,16 +113,6 @@ class LocalisationStats(Statistics):
 Signals
 ------------------------------------------------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------------------------------------- """
-def _localisation_creation(instance, created, **kwargs):
-    """
-        Creation or update stat
-    """
-    if created:
-        l_stat = LocalisationStats(localisation=instance)
-        l_stat.save()
-
-post_save.connect(_localisation_creation, sender = Localisation)
-
 def _localisation_deletion(instance, **kwargs):
     """
         Deletion of Localisation need to change it children parent settings

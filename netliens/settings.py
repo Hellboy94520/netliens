@@ -39,8 +39,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'webbook',
-    'django_extensions'
+    'django_extensions',
+    'webbook'
 ]
 
 MIDDLEWARE = [
@@ -78,14 +78,16 @@ WSGI_APPLICATION = 'netliens.wsgi.application'
 AUTH_USER_MODEL = 'webbook.User'
 
 # Database
-# https://docs.djangoproject.com/en/2.2/ref/settings/#databases
+# https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 DATABASES = {
     'default': {
-        'ENGINE': 'djongo',
-        'NAME': "netliens",
-        'HOST': "mongodb",
-        # Required to avoid error with get_or_create:
-        'ENFORCE_SCHEMA': False
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'netliens',
+        'USER': config['DB_USERNAME'],
+        'PASSWORD': config['DB_PASSWORD'],
+        'HOST': config['DB_HOST'],
+        'PORT': config['DB_PORT'],
+        'AUTH_SOURCE': 'admin'
     }
 }
 
@@ -109,7 +111,6 @@ AUTH_PASSWORD_VALIDATORS = [
 # Email settings
 #TODO: To test only
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = config['EMAIL_HOST']
 EMAIL_PORT = config['EMAIL_PORT']
 EMAIL_HOST_USER = config['EMAIL_USER']

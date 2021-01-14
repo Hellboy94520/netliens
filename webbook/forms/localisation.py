@@ -1,7 +1,7 @@
 from django import forms
 from django.utils.translation import ugettext_lazy as _
 
-from ..models import Localisation, LocalisationData, get_all_localisation_in_order
+from ..models import Localisation, LocalisationData, LocalisationStats, get_all_localisation_in_order
 from ..models import LanguageAvailable
 
 class LocalisationForm(forms.ModelForm):
@@ -31,6 +31,19 @@ class LocalisationForm(forms.ModelForm):
             return False
 
         return True
+
+    def save(self, *args, **kwargs):
+        l_localisation = super(LocalisationForm, self).save(commit=True)
+        l_stat = LocalisationStats(
+            localisation=l_localisation,
+            user_creation=kwargs['user'])
+        # In case Localisation creation enabled the Localisation too
+        if l_localisation.is_enable:
+            l_stat.date_validation = l_stat.date_creation
+            l_stat.user_validation = l_stat.user_creation
+        l_stat.save()
+        return l_localisation
+
 
 """ ---------------------------------------------------------------------------------------------------------------- """
 class LocalisationDataForm(forms.ModelForm):

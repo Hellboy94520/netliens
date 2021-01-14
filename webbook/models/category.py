@@ -1,7 +1,8 @@
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from django.core.validators import MinValueValidator
-from django.db.models.signals import post_save, pre_delete
+from django.db.models.signals import pre_delete
+from django.core.exceptions import ObjectDoesNotExist
 
 TITLE_MAX_LENGTH=50
 MINIMUM_ORDER=1
@@ -44,19 +45,26 @@ class Category(models.Model):
         verbose_name=_("Order"),
         help_text=_("Display order"))
 
+    """ ---------------------------------------------------- """
     def get_categoryWithData(language: LanguageAvailable, order:str, **kwargs):
-        categoryMap = {}
+        objectMap = {}
         for category in Category.objects.filter(**kwargs).order_by(order):
-            categoryMap[category] = category.get_data(language=language)
-        return categoryMap
+            objectMap[category] = category.get_data(language=language)
+        return objectMap
 
     """ ---------------------------------------------------- """
     def get_data(self, language: LanguageAvailable = LanguageAvailable.EN.value):
-        return CategoryData.objects.get(category=self, language=language)
+        try:
+            return CategoryData.objects.get(category=self, language=language)
+        except ObjectDoesNotExist:
+            return None
+        except MultipleObjectsReturned:
+            #TODO: Send an email, case must not be possible
+            return None
 
     """ ---------------------------------------------------- """
     def get_statistics(self):
-        return CategoryStatistics.objects.get(category=self)
+        return CategoryStats.objects.get(category=self)
 
     """ ---------------------------------------------------- """
     def get_children_list(self, **kwargs):
@@ -98,16 +106,6 @@ class CategoryStats(Statistics):
 Signals
 ------------------------------------------------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------------------------------------- """
-def _category_creation(instance, created, **kwargs):
-    """
-        Creation or update stat
-    """
-    if created:
-        l_stat = CategoryStats(category=instance)
-        l_stat.save()
-
-post_save.connect(_category_creation, sender = Category)
-
 def _category_deletion(instance, **kwargs):
     """
         Deletion of Category need to change it children parent settings

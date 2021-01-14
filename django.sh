@@ -3,6 +3,7 @@
 # PATH
 project_path=$PWD
 app_path=$project_path/webbook
+python_path='python3.6'
 
 usage()
 {
@@ -31,8 +32,8 @@ build()
     echo -e "\e[7m BUILD DATABASE \e[0m"
     echo -e "---------------------------------------"
     # Build files to database
-    python3 manage.py makemigrations
-    [ $? -eq 0 ] && python3 manage.py migrate && \
+    ${python_path} manage.py makemigrations
+    [ $? -eq 0 ] && ${python_path} manage.py migrate && \
     echo -e "Migrations files created \e[92m[OK]\e[0m"
     [ $? -ne 0 ] && echo -e "Migrations files created\e[91m [ERROR]\e[0m" && exit 1
 }
@@ -44,9 +45,17 @@ build()
 #     echo -e "---------------------------------------"
 #     echo -e "\e[7m COLLECT STATIC AND MEDIA \e[0m"
 #     echo -e "---------------------------------------"
-#     python3 manage.py collectstatic && \
+#     ${python_path} manage.py collectstatic && \
 #     echo -e "Collect static and media files \e[92m[OK]\e[0m"
 # }
+
+importSql()
+{
+    echo -e "---------------------------------------"
+    echo -e "\e[7m IMPORT SQL \e[0m"
+    echo -e "---------------------------------------"
+    ${python_path} manage.py runscript webbook.scripts.sqlimport -v3
+}
 
 link_static_media()
 {
@@ -59,9 +68,9 @@ language()
   echo -e "---------------------------------------"
   echo -e "\e[7m BUILD LANGUAGE \e[0m"
   echo -e "---------------------------------------"
-  python3 manage.py makemessages -all && \
+  ${python_path} manage.py makemessages -all && \
   echo -e "Update translation files \e[92m[OK]\e[0m"
-  python3 manage.py compilemessages && \
+  ${python_path} manage.py compilemessages && \
   echo -e "Create translation files \e[92m[OK]\e[0m"
 }
 
@@ -70,8 +79,7 @@ user()
     echo -e "---------------------------------------"
     echo -e "\e[7m CREATE SUPER USER \e[0m"
     echo -e "---------------------------------------"
-    export PYTHONIOENCODING="UTF-8" && \
-    python3 manage.py createsuperuser
+    ${python_path} manage.py createsuperuser
 }
 
 run()
@@ -79,7 +87,7 @@ run()
     echo -e "---------------------------------------"
     echo -e "\e[7m RUN SERVER \e[0m"
     echo -e "---------------------------------------"
-    python3 manage.py runserver 0.0.0.0:8000
+    ${python_path} manage.py runserver 0.0.0.0:8000
 }
 
 tests()
@@ -87,15 +95,16 @@ tests()
   echo -e "---------------------------------------"
   echo -e "\e[7m Unit Tests \e[0m"
   echo -e "---------------------------------------"
-  python3 manage.py test
+  ${python_path} manage.py test
 }
 
-while getopts 'abclursth' opt
+while getopts 'abcilursth' opt
 do
   case $opt in
     a) build; language; user; run;;
     b) build;;
     # c) collectstatic;;
+    i) importSql;;
     l) language;;
     u) user;;
     r) run;;

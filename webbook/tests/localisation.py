@@ -5,42 +5,81 @@ from django.core.exceptions import ObjectDoesNotExist
 from webbook.models import Localisation, LocalisationData, MINIMUM_ORDER, TITLE_MAX_LENGTH, MAX_CODE_LENGTH
 from webbook.forms import LocalisationForm
 
+from webbook.models import User
+
 class LocalisationFormTestCase(TestCase):
     """ 
         -----------------------------------------
         LocalisationFormTestCase tests
         -----------------------------------------
     """
-
     def setUp(self):
+        self.default_is_enable = False
         self.code = "ABCD"
-        self.is_enable = False
+        self.insee = 10
+        self.is_enable = True
         self.parent = None
         self.order = 1
+        self.user = User.objects.create(email='toto', password='titi')
 
 
-    def test_valid(self):
+    def test_user_valid(self):
         l_localisation = LocalisationForm(
             data={'code': self.code,
-                'is_enable': self.is_enable,
+                'insee': self.insee,
                 'parent': self.parent,
-                'order': self.order
-            }
-        )
+                'order': self.order})
         self.assertTrue(l_localisation.is_valid(), "Form is not valid !")
         self.assertEqual(Localisation.objects.all().count(), 0, "An object already exist !")
-        l_localisation.save()
+        l_localisation.save(user=self.user)
+        # Check Localisation
         self.assertEqual(Localisation.objects.all().count(), 1, "Object has not been save !")
         l_localisation = Localisation.objects.filter()[0]
         self.assertEqual(l_localisation.code, self.code, "Unexpected value !")
+        self.assertEqual(l_localisation.insee, self.insee, "Unexpected value !")
+        self.assertEqual(l_localisation.is_enable, self.default_is_enable, "Unexpected value !")
+        self.assertIsNone(l_localisation.parent, "Unexpected value !")
+        self.assertEqual(l_localisation.order, self.order, "Unexpected value !")
+        # Check LocalisationStats
+        l_localisation_stat = l_localisation.get_statistics()
+        self.assertIsNotNone(l_localisation_stat, "Stats does not exist !")
+        self.assertIsNotNone(l_localisation_stat.date_creation)
+        self.assertEqual(l_localisation_stat.user_creation, self.user)
+        self.assertIsNone(l_localisation_stat.date_validation)
+        self.assertIsNone(l_localisation_stat.user_validation)
+
+
+    def test_user_valid(self):
+        l_localisation = LocalisationForm(
+            data={'code': self.code,
+                'insee': self.insee,
+                'is_enable': self.is_enable,
+                'parent': self.parent,
+                'order': self.order})
+        self.assertTrue(l_localisation.is_valid(), "Form is not valid !")
+        self.assertEqual(Localisation.objects.all().count(), 0, "An object already exist !")
+        l_localisation.save(user=self.user)
+        # Check Localisation
+        self.assertEqual(Localisation.objects.all().count(), 1, "Object has not been save !")
+        l_localisation = Localisation.objects.filter()[0]
+        self.assertEqual(l_localisation.code, self.code, "Unexpected value !")
+        self.assertEqual(l_localisation.insee, self.insee, "Unexpected value !")
         self.assertEqual(l_localisation.is_enable, self.is_enable, "Unexpected value !")
         self.assertIsNone(l_localisation.parent, "Unexpected value !")
         self.assertEqual(l_localisation.order, self.order, "Unexpected value !")
+        # Check LocalisationStats
+        l_localisation_stat = l_localisation.get_statistics()
+        self.assertIsNotNone(l_localisation_stat, "Stats does not exist !")
+        self.assertIsNotNone(l_localisation_stat.date_creation)
+        self.assertEqual(l_localisation_stat.user_creation, self.user)
+        self.assertIsNotNone(l_localisation_stat.date_validation)
+        self.assertEqual(l_localisation_stat.user_validation, self.user)
 
 
     def test_invalid_order(self):
         l_form = LocalisationForm(
             data={'code': self.code,
+                'insee': self.insee,
                 'is_enable': self.is_enable,
                 'parent': self.parent,
                 'order': MINIMUM_ORDER-1
@@ -54,13 +93,13 @@ class LocalisationFormTestCase(TestCase):
 
     def test_unique_order(self):
         # Create first localisation
-        l_form = LocalisationForm(data={'order': MINIMUM_ORDER, 'code': self.code})
+        l_form = LocalisationForm(data={'order': MINIMUM_ORDER, 'code': self.code, 'insee': self.insee})
         self.assertTrue(l_form.is_valid(), f"Form is not valid ! {l_form.errors}")
         self.assertEqual(Localisation.objects.all().count(), 0, "An object already exist !")
-        l_form.save()
+        l_form.save(user=self.user)
 
         # Create second localisation with same order value (error)
-        l_form = LocalisationForm(data={'order': MINIMUM_ORDER, 'code': f"{self.code}A"})
+        l_form = LocalisationForm(data={'order': MINIMUM_ORDER, 'code': f"{self.code}A", 'insee': self.insee})
         self.assertFalse(l_form.is_valid(), f"Form is valid !")
         self.assertEqual(len(l_form.errors), 1, "Unexpected errors quantity !")
         self.assertEqual(len(l_form['order'].errors), 1, "Unexpected errors quantity for this field !")
@@ -70,16 +109,18 @@ class LocalisationFormTestCase(TestCase):
     def test_invalid_code(self):
         # Empty Code
         l_form = LocalisationForm(data={'code': "",
+                                                'insee': self.insee,
                                                 'is_enable': self.is_enable,
                                                 'parent': self.parent,
                                                 'order': self.order})
         self.assertFalse(l_form.is_valid(), "Form is not valid !")
-        self.assertEqual(len(l_form.errors), 1, "Expected only 1 error !")
+        self.assertEqual(len(l_form.errors), 1, f"Expected only 1 error ! {l_form.errors}")
         self.assertEqual(len(l_form['code'].errors), 1, "Expected only 1 error for this field !")
         self.assertEqual(l_form['code'].errors[0], "This field is required.", "Error message not expected !")
 
         # Code too long
         l_form = LocalisationForm(data={'code': "1" * (MAX_CODE_LENGTH+1),
+                                                'insee': self.insee,
                                                 'is_enable': self.is_enable,
                                                 'parent': self.parent,
                                                 'order': self.order})
@@ -88,52 +129,32 @@ class LocalisationFormTestCase(TestCase):
         self.assertEqual(len(l_form['code'].errors), 1, "Expected only 1 error for this field !")
         self.assertEqual(l_form['code'].errors[0], f"Ensure this value has at most {MAX_CODE_LENGTH} characters (it has {MAX_CODE_LENGTH+1}).", "Error message not expected !")
 
-
-    def test_unique_code(self):
-        # Create first valid localisation
-        l_form = LocalisationForm(data={'code': self.code,
-                                                'is_enable': self.is_enable,
-                                                'parent': self.parent,
-                                                'order': self.order})
-        self.assertTrue(l_form.is_valid(), f"Form is not valid ! {l_form.errors}")
-        self.assertEqual(Localisation.objects.all().count(), 0, "An object already exist !")
-        l_form.save()
-
-        # Create second localisation with same code as previous
-        l_form = LocalisationForm(data={'code': self.code,
-                                                'is_enable': self.is_enable,
-                                                'parent': self.parent,
-                                                'order': self.order})
-        self.assertFalse(l_form.is_valid(), "Form is not valid !")
-        self.assertEqual(len(l_form.errors), 1, "Expected only 1 error !")
-        self.assertEqual(len(l_form['code'].errors), 1, "Expected only 1 error for this field !")
-        self.assertEqual(l_form['code'].errors[0], f"Localisation with this Code already exists.")
-
-
     def test_unique_order_with_children(self):
         # Create Parent localisation
         l_form = LocalisationForm(
-            data={'order': MINIMUM_ORDER, 'code': self.code})
+            data={'order': MINIMUM_ORDER, 'code': self.code, 'insee': self.insee})
         self.assertTrue(l_form.is_valid(), f"Form is not valid ! {l_form.errors}")
         self.assertEqual(Localisation.objects.all().count(), 0)
-        l_localisation_parent = l_form.save()
+        l_localisation_parent = l_form.save(user=self.user)
         self.assertEqual(Localisation.objects.all().count(), 1)
 
         # Create first children
         l_form = LocalisationForm(
             data={'order': MINIMUM_ORDER,
                 'code': f"{self.code}A",
+                'insee': self.insee,
                 'parent': l_localisation_parent.pk
             }
         )
         self.assertTrue(l_form.is_valid(), f"Form is not valid ! {l_form.errors}")
-        l_form.save()
+        l_form.save(user=self.user)
         self.assertEqual(Localisation.objects.all().count(), 2)
 
         # Create second children with same order value (error)
         l_form = LocalisationForm(
             data={'order': MINIMUM_ORDER,
                 'code': f"{self.code}B",
+                'insee': self.insee,
                 'parent': l_localisation_parent.pk
             }
         )
@@ -145,32 +166,34 @@ class LocalisationFormTestCase(TestCase):
     def test_parent(self):
         # Create Parent localisation
         l_form = LocalisationForm(
-            data={'order': MINIMUM_ORDER, 'code': self.code})
+            data={'order': MINIMUM_ORDER, 'code': self.code, 'insee': self.insee})
         self.assertTrue(l_form.is_valid(), f"Form is not valid ! {l_form.errors}")
         self.assertEqual(Localisation.objects.all().count(), 0)
-        l_localisation_parent = l_form.save()
+        l_localisation_parent = l_form.save(user=self.user)
         self.assertEqual(Localisation.objects.all().count(), 1)
 
         # Create first children
         l_form = LocalisationForm(
             data={'order': MINIMUM_ORDER,
                 'code': f"{self.code}A",
+                'insee': self.insee,
                 'parent': l_localisation_parent.pk
             }
         )
         self.assertTrue(l_form.is_valid(), f"Form is not valid ! {l_form.errors}")
-        l_form.save()
+        l_form.save(user=self.user)
         self.assertEqual(Localisation.objects.all().count(), 2)
 
         # Create second children
         l_form = LocalisationForm(
             data={'order': MINIMUM_ORDER+1,
                 'code': f"{self.code}B",
+                'insee': self.insee,
                 'parent': l_localisation_parent.pk
             }
         )
         self.assertTrue(l_form.is_valid(), f"Form is not valid ! {l_form.errors}")
-        l_form.save()
+        l_form.save(user=self.user)
         self.assertEqual(Localisation.objects.all().count(), 3)
 
 
@@ -181,43 +204,46 @@ class LocalisationFormTestCase(TestCase):
         """
         # Create Top Parent
         l_form = LocalisationForm(
-            data={'order': MINIMUM_ORDER, 'code': self.code})
+            data={'order': MINIMUM_ORDER, 'code': self.code, 'insee': self.insee})
         self.assertTrue(l_form.is_valid(), f"Form is not valid ! {l_form.errors}")
         self.assertEqual(Localisation.objects.all().count(), 0)
-        l_localisation_parent = l_form.save()
+        l_localisation_parent = l_form.save(user=self.user)
         self.assertEqual(Localisation.objects.all().count(), 1)
 
         # Create Mid Parent
         l_form = LocalisationForm(
             data={'order': MINIMUM_ORDER,
                 'code': f"{self.code}A",
+                'insee': self.insee,
                 'parent': l_localisation_parent.pk
             }
         )
         self.assertTrue(l_form.is_valid(), f"Form is not valid ! {l_form.errors}")
-        l_localisation_mid_parent = l_form.save()
+        l_localisation_mid_parent = l_form.save(user=self.user)
         self.assertEqual(Localisation.objects.all().count(), 2)
 
         # Create Children 1
         l_form = LocalisationForm(
             data={'order': MINIMUM_ORDER,
                 'code': f"{self.code}B",
+                'insee': self.insee,
                 'parent': l_localisation_mid_parent.pk
             }
         )
         self.assertTrue(l_form.is_valid(), f"Form is not valid ! {l_form.errors}")
-        l_localisation_children_1 = l_form.save()
+        l_localisation_children_1 = l_form.save(user=self.user)
         self.assertEqual(Localisation.objects.all().count(), 3)
 
         # Create Children 2
         l_form = LocalisationForm(
             data={'order': MINIMUM_ORDER+1,
                 'code': f"{self.code}C",
+                'insee': self.insee,
                 'parent': l_localisation_mid_parent.pk
             }
         )
         self.assertTrue(l_form.is_valid(), f"Form is not valid ! {l_form.errors}")
-        l_localisation_children_2 = l_form.save()
+        l_localisation_children_2 = l_form.save(user=self.user)
         self.assertEqual(Localisation.objects.all().count(), 4)
 
         # Delete Mid Parent
@@ -239,32 +265,34 @@ class LocalisationFormTestCase(TestCase):
         """
         # Create Top Parent
         l_form = LocalisationForm(
-            data={'order': MINIMUM_ORDER, 'code': self.code})
+            data={'order': MINIMUM_ORDER, 'code': self.code, 'insee': self.insee})
         self.assertTrue(l_form.is_valid(), f"Form is not valid ! {l_form.errors}")
         self.assertEqual(Localisation.objects.all().count(), 0)
-        l_localisation_parent = l_form.save()
+        l_localisation_parent = l_form.save(user=self.user)
         self.assertEqual(Localisation.objects.all().count(), 1)
 
         # Create Children 1
         l_form = LocalisationForm(
             data={'order': MINIMUM_ORDER,
                 'code': f"{self.code}A",
+                'insee': self.insee,
                 'parent': l_localisation_parent.pk
             }
         )
         self.assertTrue(l_form.is_valid(), f"Form is not valid ! {l_form.errors}")
-        l_localisation_children_1 = l_form.save()
+        l_localisation_children_1 = l_form.save(user=self.user)
         self.assertEqual(Localisation.objects.all().count(), 2)
 
         # Create Children 2
         l_form = LocalisationForm(
             data={'order': MINIMUM_ORDER+1,
                 'code': f"{self.code}B",
+                'insee': self.insee,
                 'parent': l_localisation_parent.pk
             }
         )
         self.assertTrue(l_form.is_valid(), f"Form is not valid ! {l_form.errors}")
-        l_localisation_children_2 = l_form.save()
+        l_localisation_children_2 = l_form.save(user=self.user)
         self.assertEqual(Localisation.objects.all().count(), 3)
 
         # Delete Parent
@@ -288,101 +316,110 @@ class LocalisationFormTestCase(TestCase):
         # Create Parent 1
         l_form = LocalisationForm(
             data={'code': self.code,
+                'insee': self.insee,
                 'is_enable': False,
                 'parent': None,
                 'order': MINIMUM_ORDER
             }
         )
         self.assertTrue(l_form.is_valid(), "Form is not valid !")
-        l_localisation_1 = l_form.save()
+        l_localisation_1 = l_form.save(user=self.user)
 
         # Create Parent 2
         l_form = LocalisationForm(
             data={'code': f"{self.code}A",
+                'insee': self.insee,
                 'is_enable': False,
                 'parent': None,
                 'order': MINIMUM_ORDER+1
             }
         )
         self.assertTrue(l_form.is_valid(), "Form is not valid !")
-        l_localisation_2 = l_form.save()
+        l_localisation_2 = l_form.save(user=self.user)
 
         # Create Children 13
         l_form = LocalisationForm(
             data={'code': f"{self.code}B",
+                'insee': self.insee,
                 'is_enable': False,
                 'parent': l_localisation_1.pk,
                 'order': MINIMUM_ORDER+2
             }
         )
         self.assertTrue(l_form.is_valid(), "Form is not valid !")
-        l_localisation_13 = l_form.save()
+        l_localisation_13 = l_form.save(user=self.user)
 
         # Create Children 11
         l_form = LocalisationForm(
             data={'code': f"{self.code}C",
+                'insee': self.insee,
                 'is_enable': False,
                 'parent': l_localisation_1.pk,
                 'order': MINIMUM_ORDER
             }
         )
         self.assertTrue(l_form.is_valid(), "Form is not valid !")
-        l_localisation_11 = l_form.save()
+        l_localisation_11 = l_form.save(user=self.user)
 
         # Create Children 22
         l_form = LocalisationForm(
             data={'code': f"{self.code}D",
+                'insee': self.insee,
                 'is_enable': False,
                 'parent': l_localisation_2.pk,
                 'order': MINIMUM_ORDER+1
             }
         )
         self.assertTrue(l_form.is_valid(), "Form is not valid !")
-        l_localisation_22 = l_form.save()
+        l_localisation_22 = l_form.save(user=self.user)
 
         # Create Children 12
         l_form = LocalisationForm(
             data={'code': f"{self.code}E",
+                'insee': self.insee,
                 'is_enable': False,
                 'parent': l_localisation_1.pk,
                 'order': MINIMUM_ORDER+1
             }
         )
         self.assertTrue(l_form.is_valid(), "Form is not valid !")
-        l_localisation_12 = l_form.save()
+        l_localisation_12 = l_form.save(user=self.user)
 
         # Create Children 21
         l_form = LocalisationForm(
             data={'code': f"{self.code}F",
+                'insee': self.insee,
                 'is_enable': False,
                 'parent': l_localisation_2.pk,
                 'order': MINIMUM_ORDER
             }
         )
         self.assertTrue(l_form.is_valid(), "Form is not valid !")
-        l_localisation_21 = l_form.save()
+        l_localisation_21 = l_form.save(user=self.user)
 
         # Create Children 122
         l_form = LocalisationForm(
             data={'code': f"{self.code}G",
+                'insee': self.insee,
                 'is_enable': False,
                 'parent': l_localisation_12.pk,
                 'order': MINIMUM_ORDER+1
             }
         )
         self.assertTrue(l_form.is_valid(), "Form is not valid !")
-        l_localisation_122 = l_form.save()
+        l_localisation_122 = l_form.save(user=self.user)
 
         # Create Children 121
         l_form = LocalisationForm(
             data={'code': f"{self.code}H",
+                'insee': self.insee,
                 'is_enable': False,
                 'parent': l_localisation_12.pk,
                 'order': MINIMUM_ORDER
             }
         )
         self.assertTrue(l_form.is_valid(), "Form is not valid !")
-        l_localisation_121 = l_form.save()
+        l_localisation_121 = l_form.save(user=self.user)
 
         # Check if all required Localisation has been created
         self.assertEqual(len(Localisation.objects.all()), 9, "Form has not been save !")

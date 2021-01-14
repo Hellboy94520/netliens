@@ -10,11 +10,11 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 
 from webbook.models import LanguageAvailable, AnnouncementLanguage, Announcement, AnnouncementStats, TITLE_MAX_LENGTH, URL_MAX_LENGTH
 from webbook.views.account import AnnouncementCreationView
-from webbook.models import User, Category, Localisation
+from webbook.models import User, Category, CategoryData, Localisation
 from webbook.forms import AnnouncementUserSettingForm, AnnouncementUserDataForm
 
 class AnnouncementModelTestCase(TestCase):
-    """ 
+    """
         -----------------------------------------
         AnnouncementModel tests
         -----------------------------------------
@@ -96,7 +96,10 @@ class AnnouncementModelTestCase(TestCase):
 
 
     def test_default_construction_database(self):
-        l_announcement = Announcement()
+        l_announcement = Announcement(
+            category=self.category,
+            localisation=self.localisation,
+            owner=self.owner)
         self.assertEqual(Announcement.objects.all().count(), 0, "[DB] Announcement already exist !")
         l_announcement.save()
         self.assertEqual(Announcement.objects.all().count(), 1, "[DB] Announcement has not been created !")
@@ -104,16 +107,12 @@ class AnnouncementModelTestCase(TestCase):
         self.assertEqual(l_announcement.url, "")
         self.assertEqual(l_announcement.image.name, "")
         self.assertEqual(l_announcement.website, "")
-        with self.assertRaises(ObjectDoesNotExist):
-            l_announcement.category
-        with self.assertRaises(ObjectDoesNotExist):
-            l_announcement.localisation
+        self.assertEqual(l_announcement.category, self.category)
+        self.assertEqual(l_announcement.localisation, self.localisation)
         self.assertEqual(l_announcement.nl, 0)
-        with self.assertRaises(ObjectDoesNotExist):
-            l_announcement.owner
+        self.assertEqual(l_announcement.owner, self.owner)
         self.assertFalse(l_announcement.is_enable)
         self.assertFalse(l_announcement.is_valid)
-        self.assertEqual(l_announcement.get_statistics().announcement, l_announcement, "[DB] Stats is not link to Announcement !")
 
 
     def test_construction_database(self):
@@ -143,7 +142,6 @@ class AnnouncementModelTestCase(TestCase):
         self.assertEqual(l_announcement.is_enable, self.is_enable)
         self.assertEqual(l_announcement.is_valid, self.is_valid)
         self.assertEqual(l_announcement.is_on_homepage, self.is_on_homepage)
-        self.assertEqual(AnnouncementStats.objects.all().count(), 1, "[DB] AnnouncementStats has not been created in same time as Announcement!")
 
 
     def test_construction_database_with_one_language(self):
@@ -177,7 +175,6 @@ class AnnouncementModelTestCase(TestCase):
         self.assertEqual(l_announcement.is_enable, self.is_enable)
         self.assertEqual(l_announcement.is_valid, self.is_valid)
         self.assertEqual(l_announcement.is_on_homepage, self.is_on_homepage)
-        self.assertEqual(AnnouncementStats.objects.all().count(), 1, "[DB] AnnouncementStats has not been created in same time as Announcement!")
 
 
     def test_construction_database_with_two_languages(self):
@@ -214,7 +211,6 @@ class AnnouncementModelTestCase(TestCase):
         self.assertEqual(l_announcement.is_enable, self.is_enable)
         self.assertEqual(l_announcement.is_valid, self.is_valid)
         self.assertEqual(l_announcement.is_on_homepage, self.is_on_homepage)
-        self.assertEqual(AnnouncementStats.objects.all().count(), 1, "[DB] AnnouncementStats has not been created in same time as Announcement!")
 
 
     def test_category_inherit_in_announcement(self):
@@ -243,10 +239,15 @@ class AnnouncementModelTestCase(TestCase):
 
         # Update Announcement and check new category
         l_object = Announcement.objects.get(pk=l_object.pk)
+        self.assertEqual(Category.objects.all().count(), 1)
+        self.assertEqual(Localisation.objects.all().count(), 1)
+        self.assertEqual(User.objects.all().count(), 1)
         self.assertEqual(l_object.category, self.category)
+        self.assertEqual(l_object.localisation, self.localisation)
+        self.assertEqual(l_object.owner, self.owner)
 
 class AnnouncementUserSettingFormTestCase(TestCase):
-    """ 
+    """
         -----------------------------------------
         AnnouncementUserSettingFormTestCase tests
         -----------------------------------------
@@ -285,7 +286,7 @@ class AnnouncementUserSettingFormTestCase(TestCase):
             files={'image': self.image})
         self.assertTrue(l_announcement.is_valid(), f"Form is not valid ! {l_announcement.errors}")
         self.assertEqual(Announcement.objects.all().count(), 0, "[DB] an Announcement already exist !")
-        l_announcement.save()
+        l_announcement.save(user=self.owner)
         self.assertEqual(Announcement.objects.all().count(), 1, "[DB] Announcement has not been created after save form !")
         l_announcement = Announcement.objects.filter()[0]
         self.assertEqual(l_announcement.url, self.url)
@@ -353,7 +354,7 @@ class AnnouncementUserSettingFormTestCase(TestCase):
                 'localisation': self.localisation.pk})
         self.assertTrue(l_announcement.is_valid(), f"Form is not valid ! {l_announcement.errors}")
         self.assertEqual(Announcement.objects.all().count(), 0, "[DB] an Announcement already exist !")
-        l_announcement.save()
+        l_announcement.save(user=self.owner)
         self.assertEqual(Announcement.objects.all().count(), 1, "[DB] Announcement has not been created after save form !")
         l_announcement = AnnouncementUserSettingForm(
             user=self.owner,
@@ -367,7 +368,7 @@ class AnnouncementUserSettingFormTestCase(TestCase):
         self.assertEqual(len(l_announcement['url'].errors), 1, "Expected only 1 error for this field !")
         self.assertEqual(l_announcement['url'].errors[0], f"Announcement with this Url already exists.", "Error message not expected !")
 
-    def test_invalid_website(self):     
+    def test_invalid_website(self):
         # Website empty
         l_announcement = AnnouncementUserSettingForm(
             user=self.owner,
@@ -379,7 +380,7 @@ class AnnouncementUserSettingFormTestCase(TestCase):
         self.assertEqual(len(l_announcement.errors), 1, "Expected only 1 error !")
         self.assertEqual(len(l_announcement['website'].errors), 1, "Expected only 1 error for 'content' field !")
         self.assertEqual(l_announcement['website'].errors[0], "This field is required.", "Error message not expected !")
-        
+
         # Website incorrect format
         self.owner.nl1 = 1
         l_announcement = AnnouncementUserSettingForm(
@@ -394,7 +395,7 @@ class AnnouncementUserSettingFormTestCase(TestCase):
         self.assertEqual(len(l_announcement.errors), 1, "Expected only 1 error !")
         self.assertEqual(len(l_announcement['website'].errors), 1, "Expected only 1 error for 'content' field !")
         self.assertEqual(l_announcement['website'].errors[0], "Enter a valid URL.", "Error message not expected !")
-        
+
         # Website incomplete format (default is http)
         l_announcement = AnnouncementUserSettingForm(
             user=self.owner,
@@ -406,7 +407,7 @@ class AnnouncementUserSettingFormTestCase(TestCase):
             files={'image': self.image})
         self.assertTrue(l_announcement.is_valid(), "Form is valid !")
         self.assertEqual(Announcement.objects.all().count(), 0, "[DB] Announcement already exist !")
-        l_announcement.save()
+        l_announcement.save(user=self.owner)
         self.assertEqual(Announcement.objects.all().count(), 1, "[DB] Announcement has not been created !")
         l_announcement = Announcement.objects.filter()[0]
         self.assertEqual(l_announcement.website, "http://toto.fr", "Incorrect website format !")
@@ -423,7 +424,7 @@ class AnnouncementUserSettingFormTestCase(TestCase):
             files={'image': self.image})
         self.assertTrue(l_announcement.is_valid(), f"Form is not valid ! {l_announcement.errors}")
         self.assertEqual(Announcement.objects.all().count(), 0, "[DB] an Announcement already exist !")
-        l_announcement.save()
+        l_announcement.save(user=self.owner)
         self.assertEqual(Announcement.objects.all().count(), 1, "[DB] Announcement has not been created after save form !")
         l_announcement = AnnouncementUserSettingForm(
             user=self.owner,
@@ -458,7 +459,7 @@ class AnnouncementUserSettingFormTestCase(TestCase):
         self.assertFalse("<option value=\"5\">5</option>" in str(l_announcement), "Option not expected !")
         self.assertFalse("<option value=\"6\">6</option>" in str(l_announcement), "Option not expected !")
         self.assertFalse("<option value=\"7\">7</option>" in str(l_announcement), "Option not expected !")
-        l_announcement.save()
+        l_announcement.save(user=self.owner)
 
         # Test with no NLX available
         self.assertEqual(Announcement.objects.all().count(), 1)
@@ -504,7 +505,7 @@ class AnnouncementUserSettingFormTestCase(TestCase):
         self.assertFalse("<option value=\"5\">5</option>" in str(l_announcement), "Option not expected !")
         self.assertFalse("<option value=\"6\">6</option>" in str(l_announcement), "Option not expected !")
         self.assertFalse("<option value=\"7\">7</option>" in str(l_announcement), "Option not expected !")
-        l_announcement.save()
+        l_announcement.save(user=self.owner)
 
         # Test with no NL1 available
         self.assertEqual(Announcement.objects.all().count(), 1)
@@ -556,7 +557,7 @@ class AnnouncementUserSettingFormTestCase(TestCase):
         self.assertTrue("<option value=\"5\">5</option>" in str(l_announcement), "Option not found !")
         self.assertTrue("<option value=\"6\">6</option>" in str(l_announcement), "Option not found !")
         self.assertTrue("<option value=\"7\">7</option>" in str(l_announcement), "Option not found !")
-        l_announcement.save()
+        l_announcement.save(user=self.owner)
 
         # Test with all NL available
         self.assertEqual(Announcement.objects.all().count(), 1)
@@ -577,7 +578,7 @@ class AnnouncementUserSettingFormTestCase(TestCase):
         self.assertTrue("<option value=\"5\">5</option>" in str(l_announcement), "Option not found !")
         self.assertTrue("<option value=\"6\">6</option>" in str(l_announcement), "Option not found !")
         self.assertTrue("<option value=\"7\">7</option>" in str(l_announcement), "Option not found !")
-        l_announcement.save()
+        l_announcement.save(user=self.owner)
 
         # Test without NL4 available
         self.assertEqual(Announcement.objects.all().count(), 2)
@@ -688,7 +689,7 @@ class AnnouncementUserSettingFormTestCase(TestCase):
         self.assertTrue(l_announcement.is_valid(), f"Form is not valid ! {l_announcement.errors}")
         self.category.delete()
         with self.assertRaises(Http404):
-            l_announcement.save()
+            l_announcement.save(user=self.owner)
         self.assertEqual(Category.objects.all().count(), 0)
 
 
@@ -755,12 +756,12 @@ class AnnouncementUserSettingFormTestCase(TestCase):
         self.assertTrue(l_announcement.is_valid(), f"Form is not valid ! {l_announcement.errors}")
         self.localisation.delete()
         with self.assertRaises(Http404):
-            l_announcement.save()
+            l_announcement.save(user=self.owner)
         self.assertEqual(Localisation.objects.all().count(), 0)
 
 
 class AnnouncementLanguageModelTestCase(TestCase):
-    """ 
+    """
         -----------------------------------------
         AnnouncementLanguageModel tests
         -----------------------------------------
@@ -774,17 +775,15 @@ class AnnouncementLanguageModelTestCase(TestCase):
         self.content_fr = "C'est une annonce !"
         self.language_fr = LanguageAvailable.FR.value
 
-        self.announcement = Announcement.objects.create()
+        self.owner = User.objects.create(email="toto@gmail.com", password="tototititutu")
+        self.category = Category.objects.create(order=1, is_enable=True)
+        self.localisation = Localisation.objects.create(code="ABC", order=1, is_enable=True)
 
-
-    def test_default_construction(self):
-        l_announcement_language = AnnouncementLanguage()
-        self.assertEqual(l_announcement_language.title, "")
-        self.assertEqual(l_announcement_language.content, "")
-        self.assertEqual(l_announcement_language.language, "")
-        with self.assertRaises(ObjectDoesNotExist):
-            l_announcement_language.announcement
-
+        self.announcement = Announcement.objects.create(
+            category=self.category,
+            localisation=self.localisation,
+            owner=self.owner
+        )
 
     def test_construction(self):
         l_announcement_language = AnnouncementLanguage(
@@ -796,19 +795,6 @@ class AnnouncementLanguageModelTestCase(TestCase):
         self.assertEqual(l_announcement_language.content, self.content_en)
         self.assertEqual(l_announcement_language.language, self.language_en)
         self.assertEqual(l_announcement_language.announcement, self.announcement)
-
-
-    def test_default_construction_database(self):
-        l_announcement_language = AnnouncementLanguage()
-        self.assertEqual(AnnouncementLanguage.objects.all().count(), 0)
-        l_announcement_language.save()
-        l_announcement_language = AnnouncementLanguage.objects.all()[0]
-        self.assertEqual(AnnouncementLanguage.objects.all().count(), 1)
-        self.assertEqual(l_announcement_language.title, "")
-        self.assertEqual(l_announcement_language.content, "")
-        self.assertEqual(l_announcement_language.language, "")
-        with self.assertRaises(ObjectDoesNotExist):
-            l_announcement_language.announcement
 
 
     def test_default_construction_database(self):
@@ -846,7 +832,7 @@ class AnnouncementLanguageModelTestCase(TestCase):
 
 
 class AnnouncementUserDataFormTestCase(TestCase):
-    """ 
+    """
         -----------------------------------------
         AnnouncementUserDataFormTestCase tests
         -----------------------------------------
@@ -860,7 +846,15 @@ class AnnouncementUserDataFormTestCase(TestCase):
         self.content_fr = "C'est une annonce !"
         self.language_fr = LanguageAvailable.FR.value
 
-        self.announcement = Announcement.objects.create()
+        self.owner = User.objects.create(email="toto@gmail.com", password="tototititutu")
+        self.category = Category.objects.create(order=1, is_enable=True)
+        self.localisation = Localisation.objects.create(code="ABC", order=1, is_enable=True)
+
+        self.announcement = Announcement.objects.create(
+            category=self.category,
+            localisation=self.localisation,
+            owner=self.owner
+        )
 
 
     def test_valid_en(self):
@@ -872,7 +866,7 @@ class AnnouncementUserDataFormTestCase(TestCase):
         )
         self.assertTrue(l_announcement.is_valid(self.announcement), f"Form is not valid ! {l_announcement.errors}")
         self.assertEqual(AnnouncementLanguage.objects.all().count(), 0, "[DB] an AnnouncementLanguage already exist !")
-        l_announcement.save()
+        l_announcement.save(user=self.owner)
         self.assertEqual(AnnouncementLanguage.objects.all().count(), 1, "[DB] AnnouncementLanguage has not been created after save form !")
         l_announcement = AnnouncementLanguage.objects.filter()[0]
         self.assertEqual(l_announcement.title, self.title_en)
@@ -889,7 +883,7 @@ class AnnouncementUserDataFormTestCase(TestCase):
         )
         self.assertTrue(l_announcement.is_valid(self.announcement), f"Form is not valid ! {l_announcement.errors}")
         self.assertEqual(AnnouncementLanguage.objects.all().count(), 0, "[DB] an AnnouncementLanguage already exist !")
-        l_announcement.save()
+        l_announcement.save(user=self.owner)
         self.assertEqual(AnnouncementLanguage.objects.all().count(), 1, "[DB] AnnouncementLanguage has not been created after save form !")
         l_announcement = AnnouncementLanguage.objects.filter()[0]
         self.assertEqual(l_announcement.title, self.title_fr)
@@ -982,7 +976,7 @@ class AnnouncementUserDataFormTestCase(TestCase):
         )
         self.assertTrue(l_announcement.is_valid(self.announcement), f"Form is not valid ! {l_announcement.errors}")
         self.assertEqual(AnnouncementLanguage.objects.all().count(), 0, "[DB] an AnnouncementLanguage already exist !")
-        l_announcement.save()
+        l_announcement.save(user=self.owner)
         self.assertEqual(AnnouncementLanguage.objects.all().count(), 1, "[DB] AnnouncementLanguage has not been created after save form !")
         # English Language already exist
         l_announcement = AnnouncementUserDataForm(
@@ -1000,7 +994,7 @@ class AnnouncementUserDataFormTestCase(TestCase):
 
 
 class AnnouncementCreationView(TestCase):
-    """ 
+    """
         -----------------------------------------
         AnnouncementCreationView tests
         -----------------------------------------
@@ -1041,15 +1035,16 @@ class AnnouncementCreationView(TestCase):
         """
             Test valid with English language
         """
-        self.assertEqual(User.objects.all().count(), 2, "Model has not been created after submit valid form !")
-        self.assertEqual(Category.objects.all().count(), 1, "Model has not been created after submit valid form !")
-        self.assertEqual(Localisation.objects.all().count(), 1, "Model has not been created after submit valid form !")
+        self.assertEqual(User.objects.all().count(), 2)
+        self.assertEqual(Category.objects.all().count(), 1)
+        self.assertEqual(CategoryData.objects.all().count(), 0)
+        self.assertEqual(Localisation.objects.all().count(), 1)
 
         # LoginView
         response = self.client.post(
-            "/account/login/", 
+            "/account/login/",
             { 'username': self.email,
-              'password': self.password 
+              'password': self.password
             }
         )
         self.assertEqual(response.url, settings.LOGIN_REDIRECT_URL, f"Redirection not exist in response '{response}'")
@@ -1089,15 +1084,16 @@ class AnnouncementCreationView(TestCase):
         """
             Test valid with French language
         """
-        self.assertEqual(User.objects.all().count(), 2, "Model has not been created after submit valid form !")
-        self.assertEqual(Category.objects.all().count(), 1, "Model has not been created after submit valid form !")
-        self.assertEqual(Localisation.objects.all().count(), 1, "Model has not been created after submit valid form !")
+        self.assertEqual(User.objects.all().count(), 2)
+        self.assertEqual(Category.objects.all().count(), 1)
+        self.assertEqual(CategoryData.objects.all().count(), 0)
+        self.assertEqual(Localisation.objects.all().count(), 1)
 
         # LoginView
         response = self.client.post(
-            "/account/login/", 
+            "/account/login/",
             { 'username': self.email,
-              'password': self.password 
+              'password': self.password
             }
         )
         self.assertEqual(response.url, settings.LOGIN_REDIRECT_URL, f"Redirection not exist in response '{response}'")
@@ -1143,9 +1139,9 @@ class AnnouncementCreationView(TestCase):
 
         # LoginView
         response = self.client.post(
-            "/account/login/", 
+            "/account/login/",
             { 'username': self.email,
-              'password': self.password 
+              'password': self.password
             }
         )
         self.assertEqual(response.url, settings.LOGIN_REDIRECT_URL, f"Redirection not exist in response '{response}'")
@@ -1216,9 +1212,9 @@ class AnnouncementCreationView(TestCase):
 
         # LoginView (with first user)
         response = self.client.post(
-            "/account/login/", 
+            "/account/login/",
             { 'username': self.email,
-              'password': self.password 
+              'password': self.password
             }
         )
         self.assertEqual(response.url, settings.LOGIN_REDIRECT_URL, f"Redirection not exist in response '{response}'")
@@ -1247,9 +1243,9 @@ class AnnouncementCreationView(TestCase):
 
         # LoginView (with second user)
         response = self.client.post(
-            "/account/login/", 
+            "/account/login/",
             { 'username': self.email_2,
-              'password': self.password 
+              'password': self.password
             }
         )
         self.assertEqual(response.url, settings.LOGIN_REDIRECT_URL, f"Redirection not exist in response '{response}'")
@@ -1286,9 +1282,9 @@ class AnnouncementCreationView(TestCase):
 
         # LoginView
         response = self.client.post(
-            "/account/login/", 
+            "/account/login/",
             { 'username': self.email,
-              'password': self.password 
+              'password': self.password
             }
         )
         self.assertEqual(response.url, settings.LOGIN_REDIRECT_URL, f"Redirection not exist in response '{response}'")
