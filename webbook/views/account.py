@@ -25,11 +25,18 @@ from django.utils.encoding import force_bytes, force_text
 from django.utils.http import urlsafe_base64_decode
 
 
+
 # -----------------------------
 # Decorator
 # -----------------------------
 def user_has_nl(function):
+    """
+        Decorator used to check if an user has NL to use or not.
+        If not, return to purchase page
+    """
     def wrap(request, *args, **kwargs):
+        if not request.user:
+            return redirect('/account/')
         if (request.user.nl0 - Announcement.objects.filter(owner=request.user, nl=0).count()) > 0 or \
         (request.user.nl1 - Announcement.objects.filter(owner=request.user, nl=1).count()) > 0 or \
         (request.user.nl2 - Announcement.objects.filter(owner=request.user, nl=2).count()) > 0 or \
@@ -44,8 +51,11 @@ def user_has_nl(function):
     wrap.__doc__ = function.__doc__
     return wrap
 
-
 def no_user_required(function):
+    """
+        Decorator used to allow only authentificate user
+        If not, return to account
+    """
     def wrap(request, *args, **kwargs):
         if request.user:
             return function(request, *args, **kwargs)
@@ -55,6 +65,10 @@ def no_user_required(function):
     return wrap
 
 def owner_required(function):
+    """
+        Decorator used to check if user is owner of announcement.
+        If not, return 404 page
+    """
     def wrap(request, *args, **kwargs):
         l_annoucement = get_object_or_404(Announcement, url=kwargs['announcement_url'])
         if l_annoucement.owner == request.user:
@@ -63,6 +77,7 @@ def owner_required(function):
             raise Http404()
     wrap.__doc__ = function.__doc__
     return wrap
+
 
 
 # -----------------------------

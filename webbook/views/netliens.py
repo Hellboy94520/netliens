@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import logout, login, authenticate
 from django.views import View
+from django.utils import translation
 
 from ..models import Homepage, Category, Announcement
 
@@ -11,7 +12,10 @@ class HomeView(View):
     """
     template_name = "home.html"
     homepage, is_create = Homepage.objects.get_or_create()
-    main_category = Category.objects.filter(parent=None, is_enable=True).order_by('order')
+    category_main = Category.get_categoryWithData(
+        language=translation.get_language(),
+        order='order',
+        parent=None, is_enable=True)
     # main_announcement = Announcement.objects.filter(is_enable=True, is_valid=True, on_homepage=True)
 
     def get(self, request, *args, **kwargs):

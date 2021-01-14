@@ -4,8 +4,11 @@ from django.utils.translation import ugettext_lazy as _
 from enum import Enum
 
 class LanguageAvailable(Enum):
-    EN = "EN"
-    FR = "FR"    
+    EN = "en"
+    FR = "fr"
+
+    def size():
+        return 2
 
 class LanguageModel(models.Model):
     language = models.CharField(

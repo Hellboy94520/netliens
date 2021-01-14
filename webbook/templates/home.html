@@ -35,21 +35,23 @@
                 </div>
         {% endif %}
     </div>
-    <!-- <div class="w3-row">
-            <!-- Left Menu 
+    <div class="w3-row">
+            <!-- Left Menu -->
             <div class="w3-col s3">
-                <h3 class="my-amber-theme-l2">{% trans 'Category' %}</h3>
-                {% for category in self.main_category %}
-                    <a href="/category/{{ category.pk }}" class="w3-bar-item w3-button w3-padding-small">{{ category.name }}</a>
-                {% empty %}
-                    <p class="w3-padding-small">{% trans 'No Category' %}</p>
-                    <a href="/error/homepage_no_category" class="w3-margin-bottom w3-padding-small">{% trans 'Notify Us' %}</a>
-                {% endfor %}
+                <div class="w3-ul w3-hoverable">
+                    <h3 class="my-amber-theme-l2">{% trans 'Category' %}</h3>
+                    {% for category, categoryData in self.category_main.items %}
+                        <li><a href="/category/{{ category.pk }}" class="w3-bar-item w3-button w3-padding-small">{{ categoryData.name }}</a></li>
+                    {% empty %}
+                        <li><p class="w3-padding-small">{% trans 'No Category' %}</p></li>
+                        <li><a href="/error/homepage_no_category" class="w3-margin-bottom w3-padding-small">{% trans 'Notify Us' %}</a></li>
+                    {% endfor %}
+                </div>
             </div>
 
-            <!-- Content 
+            <!-- Content -->
             <div class="w3-col s9 w3-container">
-                <!-- Homepage Welcome Message 
+                <!-- Homepage Welcome Message -->
                 {% if user.is_authenticated %}
                     <h1>{% blocktrans with username=user.get_username %}Welcome {{ username }}!{% endblocktrans %}</h1>
                 {% else %}
@@ -63,7 +65,7 @@
                     <a href="/error/homepage_no_announcement">{% trans 'Notify Us' %}</a>
             {% endfor %}
             </div>
-        </div> -->
+        </div>
     {% include 'footer.html' %}
 </body>
 </html>

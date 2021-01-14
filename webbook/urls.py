@@ -104,5 +104,6 @@ urlpatterns = [
       template_name="account/announcement_purchase.html")),
 
   # Admin
-  path('admin/', admin.HomeView.as_view()),
+  path('admin/', admin.HomeView.as_view(
+      template_name="admin/homepage.html"))
 ]

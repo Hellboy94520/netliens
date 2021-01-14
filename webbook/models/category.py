@@ -7,7 +7,7 @@ TITLE_MAX_LENGTH=50
 MINIMUM_ORDER=1
 
 from .statistics import Statistics
-from .language import LanguageModel
+from .language import LanguageModel, LanguageAvailable
 
 def get_all_category_in_order(**kwargs):
     l_category_list = []
@@ -43,6 +43,16 @@ class Category(models.Model):
         default=MINIMUM_ORDER,
         verbose_name=_("Order"),
         help_text=_("Display order"))
+
+    def get_categoryWithData(language: LanguageAvailable, order:str, **kwargs):
+        categoryMap = {}
+        for category in Category.objects.filter(**kwargs).order_by(order):
+            categoryMap[category] = category.get_data(language=language)
+        return categoryMap
+
+    """ ---------------------------------------------------- """
+    def get_data(self, language: LanguageAvailable = LanguageAvailable.EN.value):
+        return CategoryData.objects.get(category=self, language=language)
 
     """ ---------------------------------------------------- """
     def get_statistics(self):
