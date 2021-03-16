@@ -1,5 +1,5 @@
 # Documentation: https://www.insee.fr/fr/information/2560452
-# Code officiel géographique Insee 
+# Code officiel géographique Insee
 import csv
 import re
 from abc import ABC
@@ -15,7 +15,7 @@ class LocalisationManager():
         try:
             result = int(value)
         except Exception as e:
-            print(f"ERROR: {className} - {valueName} value \'{value}\' is not a number ! Ignore it...")
+            Log.warning(className, f"{valueName} value \'{value}\' is not a number ! Ignore it...")
             return None
         return result
 
@@ -23,7 +23,7 @@ class LocalisationManager():
         regexp = re.compile('[\w ]+')
         string = regexp.match(value)
         if not string:
-            print(f"ERROR: {className} - {valueName} value \'{value}\' is None after regexp ! Ignore it...")
+            Log.warning(className, f"{valueName} value \'{value}\' is None after regexp ! Ignore it...")
             return None
         string = string[0].lower()
         string = string.capitalize()
@@ -31,17 +31,23 @@ class LocalisationManager():
 
 
     def __init__(self):
+        Log.debug(self.__class__.__name__, 'init', 'starting...')
+
         # Clean Database
-        Log.info("Delete all Localisation")
+        Log.info("Deleting all Localisation from database...")
         Localisation.objects.all().delete()
+        if Localisation.objects.all().count() != 0:
+            Log.fatal(self.__class__.__name__, "Impossible to delete all Localisation in database")
 
         # Create Localisation
         self.continentManager = self.ContinentManager()
         self.countryManager = self.CountryManager(parent_list = self.continentManager.mongo_list)
         self.regionManager = self.RegionManager(parent_list = self.countryManager.mongo_list)
         self.departmentManager = self.DepartmentManager(parent_list = self.regionManager.mongo_list)
+        Log.debug(self.__class__.__name__, 'init', 'done')
 
     """ ---------------------------------------------------- """
+    """ Virtual Class                                        """
     """ ---------------------------------------------------- """
     class ObjectManager(ABC):
         """
@@ -49,10 +55,10 @@ class LocalisationManager():
         """
 
         def __init__(self, csvPath, cvsDelimiter, **kwargs):
-            print(f"{self.__class__.__name__} starting...")
+            Log.debug(self.__class__.__name__, "init", "starting...")
             self.mongo_list = []
             self.create_csv(csvPath, cvsDelimiter, **kwargs)
-            print(f"{self.__class__.__name__} OK !")
+            Log.debug(self.__class__.__name__, "init", "done")
 
         def create_csv(self, csvPath, cvsDelimiter, **kwargs):
             try:
@@ -62,7 +68,7 @@ class LocalisationManager():
                     for row in spamreader:
                         self.CsvObject(fromCvsFile=row, mongo_list=self.mongo_list, **kwargs)
             except Exception as e:
-                print(f"ERROR - opening file \'{csvPath}\': {e}")
+                Log.error(self.__class__.__name__, f"Impossible to open file \'{csvPath}\': {e}")
 
 
     """ ---------------------------------------------------- """
@@ -144,7 +150,7 @@ cog = {self.cog}, libcog = {self.libcog}, libcog_en = {self.libcog_en}, codeiso2
         def __init__(self, parent_list: list):
             # Check input variable
             if not parent_list:
-                print(f"ERROR: {self.__class__.__name__}: No parent list impossible to continue ! Ignore it...")
+                Log.error(self.__class__.__name__, "No parent list impossible to continue ! Ignore it...")
                 return
 
             # Conversion
@@ -182,13 +188,13 @@ cog = {self.cog}, libcog = {self.libcog}, libcog_en = {self.libcog_en}, codeiso2
                     if self.libcog != "France":
                         return
                     self.cog=99100
-                    print(f"EXCEPTION - It is France ! So continue with a cog value of {self.cog}...")
+                    Log.info(f"EXCEPTION - It is France ! So continue with a cog value of {self.cog}...")
                 if self.cog < self.cog_minimum_value:
-                    print(f"ERROR: {self.__class__.__name__} - cog value \'{self.cog}\' is less than {self.cog_minimum_value} ! Ignore it...")
+                    Log.warning(self.__class__.__name__, f"cog value \'{self.cog}\' is less than {self.cog_minimum_value} ! Ignore it...")
                     return
                 if not self.libcog:
                     return
-                    
+
                 # - parent
                 l_parent = None
                 l_parent_insee = int(str(self.cog)[:3])*100
@@ -196,7 +202,7 @@ cog = {self.cog}, libcog = {self.libcog}, libcog_en = {self.libcog_en}, codeiso2
                     if parent.insee == l_parent_insee:
                         l_parent = parent
                 if not l_parent:
-                    print(f"ERROR: {self.__class__.__name__} - parent not find with insee value \'{l_parent_insee}\' ! Ignore it...")
+                    Log.warning(self.__class__.__name__, f"parent not find with insee value \'{l_parent_insee}\' ! Ignore it...")
                     return
 
                 # Create Localisation
@@ -275,7 +281,7 @@ cog = {self.cog}, actual = {self.actual}, capay = {self.capay}, crpay = {self.cr
                 # - Reg
                 if not self.reg:
                     return
-                
+
                 # Create Localisation
                 l_localisation = Localisation.objects.create(
                     code = self.reg,
@@ -342,7 +348,7 @@ reg = {self.reg}, cheflieu = {self.cheflieu}, tncc = {self.tncc}, ncc = {self.nc
                 self.libelle = fromCvsFile[6]
 
                 # Check variable
-                # - dep 
+                # - dep
                 if not self.dep:
                     return
                 # - reg
@@ -359,7 +365,7 @@ reg = {self.reg}, cheflieu = {self.cheflieu}, tncc = {self.tncc}, ncc = {self.nc
                 if not parent:
                     print(f"ERROR: {self.__class__.__name__} - parent not find with insee value \'{self.reg}\' ! Ignore it...")
                     return
-                
+
                 # Create Localisation
                 l_localisation = Localisation.objects.create(
                     code = self.dep,

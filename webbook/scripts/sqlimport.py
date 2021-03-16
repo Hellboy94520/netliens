@@ -61,16 +61,16 @@ def run():
     Log.info("*********************************")
     Log.info("Conversion starting...")
 
-    # Log.info("Category starting...")
-    # l_annuCat_list = readSqlTable(NetLiensSqlNetwork, CategoryManager.sql_table_name)
-    # l_categoryManager = CategoryManager()
-    # l_categoryManager.createCategoryFromSql(l_annuCat_list)
-    # Log.info("Category conversion [OK]")
+    Log.info("Category starting...")
+    l_annuCat_list = readSqlTable(NetLiensSqlNetwork, CategoryManager.sql_table_name)
+    l_categoryManager = CategoryManager()
+    l_categoryManager.createCategoryFromSql(l_annuCat_list)
+    Log.info("Category conversion [OK]\n")
 
-    Log.info("Localisation starting...")
+    Log.info("Localisation Conversion starting...")
     l_annuDept_list = readSqlTable(NetLiensSqlNetwork, LocalisationManager.sql_table_name)
     l_localisationManager = LocalisationManager()
-    Log.info("Localisation conversion [OK]")
+    Log.info("Localisation conversion [OK]\n")
 
 
     Log.info("Conversion [OK]")

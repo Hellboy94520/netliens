@@ -12,16 +12,16 @@ class CategoryManager():
             self.categorySql_list[key] = self.CategorySql(value)
 
         if len(self.categorySql_list) == 0:
-            Log.fatal(self.__class__.__name__, f"No {self.CategorySql.__class__.__name__} has been created !")        
+            Log.fatal(self.__class__.__name__, f"No {self.CategorySql.__class__.__name__} has been created !")
         if len(self.categorySql_list) != len(sqlObjectList):
             Log.fatal(self.__class__.__name__, f"Impossible to create all {CategorySql.__class__.__name__} ! \
                 Get {len(self.categorySql_list)} {self.CategorySql.__class__.__name__} instead of {len(sqlObjectList)}")
 
         # Clean Database
-        Log.info("Delete all Category")
+        Log.info("Deleting all Category from database...")
         Category.objects.all().delete()
-        Log.info("Delete all CategoryData")
-        CategoryData.objects.all().delete()
+        if Category.objects.all().count() != 0:
+            Log.fatal(self.__class__.__name__, "Impossible to delete all Category in database")
 
         # Create Category and CategoryData without order and parent
         for key, categorySql in self.categorySql_list.items():
@@ -46,12 +46,12 @@ class CategoryManager():
 
         # Check Data
         if Category.objects.all().count() == 0:
-            Log.fatal(self.__class__.__name__, f"No Category has been created !")        
+            Log.fatal(self.__class__.__name__, f"No Category has been created !")
         if Category.objects.all().count() != len(sqlObjectList):
             Log.fatal(self.__class__.__name__, f"Impossible to create all Category ! \
                 Get {Category.objects.all().count()} Category instead of {len(sqlObjectList)}")
         if CategoryData.objects.all().count() == 0:
-            Log.fatal(self.__class__.__name__, f"No CategoryData has been created !")        
+            Log.fatal(self.__class__.__name__, f"No CategoryData has been created !")
         if CategoryData.objects.all().count() != len(sqlObjectList) * LanguageAvailable.size():
             Log.fatal(self.__class__.__name__, f"Impossible to create all CategoryData ! \
                 Get {CategoryData.objects.all().count()} CategoryData instead of {len(sqlObjectList)}")
