@@ -1,0 +1,13 @@
+{% load i18n %}
+<!DOCTYPE html>
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+    {% for localisation, localisationData in localisation_main.items %}
+        <li><p class="w3-bar-item w3-button w3-padding-small">{{ localisationData.name }}</p></li>
+    {% empty %}
+        <li><p class="w3-padding-small">{% trans 'No Localisation' %}</p></li>
+    {% endfor %}
+</body>
+</html>

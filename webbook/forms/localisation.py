@@ -1,7 +1,8 @@
 from django import forms
 from django.utils.translation import ugettext_lazy as _
 
-from ..models import Localisation, LocalisationData, LocalisationStats, get_all_localisation_in_order
+from ..models import get_all_model_in_order
+from ..models import Localisation, LocalisationData, LocalisationStats
 from ..models import LanguageAvailable
 
 class LocalisationForm(forms.ModelForm):
@@ -14,7 +15,7 @@ class LocalisationForm(forms.ModelForm):
             Update order of parent ModelChoiceField
         """
         super(LocalisationForm, self).__init__(*args, **kwargs)
-        self.fields['parent'].choices = get_all_localisation_in_order()
+        self.fields['parent'].choices = get_all_model_in_order(Localisation)
 
     def is_valid(self):
         """
@@ -79,9 +80,9 @@ class LocalisationDataForm(forms.ModelForm):
 
         self.localisation = localisation
         return True
-        
+
     def save(self, *args, **kwargs):
-        # Save 
+        # Save
         l_localisation = super(LocalisationDataForm, self).save(commit=False)
         l_localisation.language = self.cleaned_data['language']
         l_localisation.localisation = self.localisation

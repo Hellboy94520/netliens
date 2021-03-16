@@ -1,7 +1,8 @@
 from django import forms
 from django.utils.translation import ugettext_lazy as _
 
-from ..models import Category, CategoryData, CategoryStats, get_all_category_in_order
+from ..models import get_all_model_in_order
+from ..models import Category, CategoryData, CategoryStats
 from ..models import LanguageAvailable
 
 """ ---------------------------------------------------------------------------------------------------------------- """
@@ -15,7 +16,7 @@ class CategoryForm(forms.ModelForm):
             Update order of parent ModelChoiceField
         """
         super(CategoryForm, self).__init__(*args, **kwargs)
-        self.fields['parent'].choices = get_all_category_in_order()
+        self.fields['parent'].choices = get_all_model_in_order(model=Category)
 
     def is_valid(self):
         """
@@ -80,9 +81,9 @@ class CategoryDataForm(forms.ModelForm):
 
         self.category = category
         return True
-        
+
     def save(self, *args, **kwargs):
-        # Save 
+        # Save
         l_category = super(CategoryDataForm, self).save(commit=False)
         l_category.language = self.cleaned_data['language']
         l_category.category = self.category

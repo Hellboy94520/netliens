@@ -1,0 +1,23 @@
+{% load i18n %}
+<!DOCTYPE html>
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+    {% for category, categoryData in categories.items %}
+        {% with ''|center:categoryData.1 as range %}
+            {% for _ in range %}
+                <ul>
+            {% endfor %}
+        {% endwith %}
+        <li><p class="w3-bar-item w3-button w3-padding-small"> {{ categoryData.0.name }}</p></li>
+        {% with ''|center:categoryData.1 as range %}
+            {% for _ in range %}
+                </ul>
+            {% endfor %}
+        {% endwith %}
+    {% empty %}
+        <li><p class="w3-padding-small">{% trans 'No Category' %}</p></li>
+    {% endfor %}
+</body>
+</html>

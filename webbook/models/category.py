@@ -10,14 +10,6 @@ MINIMUM_ORDER=1
 from .statistics import Statistics
 from .language import LanguageModel, LanguageAvailable
 
-def get_all_category_in_order(**kwargs):
-    l_category_list = []
-    for l_category in Category.objects.filter(parent=None, **kwargs).order_by('order'):
-        l_category_list.append(l_category)
-        l_category_list.extend(l_category.get_children_list(**kwargs))
-    return { l_category.pk : l_category for l_category in l_category_list }
-
-
 """ --------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------
 Models
@@ -61,6 +53,16 @@ class Category(models.Model):
         except MultipleObjectsReturned:
             #TODO: Send an email, case must not be possible
             return None
+
+    """ ---------------------------------------------------- """
+    def get_childrenWithData_list(self, language: LanguageAvailable = LanguageAvailable.EN.value, **kwargs):
+        children = dict()
+        for child in Category.objects.filter(parent=self, **kwargs).order_by('order'):
+            childData = child.get_data(language)
+            children[child] = childData
+            children = children + child.get_childrenWithData_list(language=language, **kwargs)
+        return children
+
 
     """ ---------------------------------------------------- """
     def get_statistics(self):

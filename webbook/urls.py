@@ -17,7 +17,7 @@ urlpatterns = [
   # Languages
   path('languages/<str:language>', languages.activation),
   # Account
-  path('account/', 
+  path('account/',
     account.HomeView.as_view(template_name="account/home.html"),
     name="account"),
   path('account/signup/',
@@ -105,5 +105,9 @@ urlpatterns = [
 
   # Admin
   path('admin/', admin.HomeView.as_view(
-      template_name="admin/homepage.html"))
+      template_name="admin/homepage.html")),
+  path('admin/category', admin.CategoryView.as_view(
+      template_name="admin/category.html")),
+  path('admin/localisation', admin.LocalisationView.as_view(
+      template_name="admin/localisation.html")),
 ]

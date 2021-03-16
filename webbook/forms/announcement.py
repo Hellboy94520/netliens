@@ -3,9 +3,10 @@ from django.utils.translation import ugettext_lazy as _
 from django.shortcuts import get_object_or_404
 
 from ..models import LanguageAvailable
+from ..models import get_all_model_in_order
 from ..models import Announcement, AnnouncementLanguage, AnnouncementStats, TITLE_MAX_LENGTH
-from ..models import Category, get_all_category_in_order
-from ..models import Localisation, get_all_localisation_in_order
+from ..models import Category
+from ..models import Localisation
 
 class AnnouncementUserDataForm(forms.ModelForm):
     language = forms.ChoiceField(
@@ -97,12 +98,12 @@ class AnnouncementUserSettingForm(forms.ModelForm):
         self.fields['nl'].choices = l_choices
         # Category
         l_choices=[]
-        for l_pk in get_all_category_in_order(is_enable=True):
+        for l_pk in get_all_model_in_order(model=Category, is_enable=True):
             l_choices.extend([(l_pk, Category.objects.get(pk=l_pk))])
         self.fields['category'].choices = l_choices
         # Localisation
         l_choices=[]
-        for l_pk in get_all_localisation_in_order(is_enable=True):
+        for l_pk in get_all_model_in_order(model=Localisation, is_enable=True):
             l_choices.extend([(l_pk, Localisation.objects.get(pk=l_pk))])
         self.fields['localisation'].choices = l_choices
 
