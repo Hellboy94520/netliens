@@ -5,14 +5,14 @@ def fatal(pClass, pMessage):
     return False
 
 def error(pClass, pMessage):
-    print(f"ERROR in {pClass} : {pMessage}")
+    print(f"ERROR in {pClass}: {pMessage}")
     return False
 
 def warning(pClass, pMessage):
-    print(f"WARNING in {pClass} : {pMessage}")
+    print(f"WARNING in {pClass}: {pMessage}")
 
 def info(pMessage):
-    print(f"INFO : {pMessage}")
+    print(f"INFO: {pMessage}")
 
 def debug(pClass, pFunction, pMessage):
-    print(f"DEBUG : {pClass} - {pFunction} {pMessage}")
+    print(f"DEBUG : {pClass} - {pFunction}: {pMessage}")

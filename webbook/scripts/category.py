@@ -6,6 +6,9 @@ class CategoryManager():
     categorySql_list = {}
     categoryMongo_dict = {}
 
+    def deleteCategory():
+        Category.objects.all().delete()
+
     def createCategoryFromSql(self, sqlObjectList: list):
         # Convert Sql to Python object
         for key, value in sqlObjectList.items():

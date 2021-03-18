@@ -1,6 +1,7 @@
 from webbook.scripts.sqlconnection import *
 from webbook.scripts.category import CategoryManager
 from webbook.scripts.localisation import LocalisationManager
+from webbook.models import User
 from webbook.scripts import log as Log
 import os
 
@@ -61,15 +62,22 @@ def run():
     Log.info("*********************************")
     Log.info("Conversion starting...")
 
+    Log.info("Delete database")
+    CategoryManager.deleteCategory()
+    LocalisationManager.deleteLocalisation()
+    User.objects.all().delete()
+    Log.info("Creation of functionnal user...")
+    l_functionnalUser = User.objects.create_superuser(email="toto@gmail.com", password="tototatatiti")
+
     Log.info("Category starting...")
     l_annuCat_list = readSqlTable(NetLiensSqlNetwork, CategoryManager.sql_table_name)
-    l_categoryManager = CategoryManager()
-    l_categoryManager.createCategoryFromSql(l_annuCat_list)
+    # l_categoryManager = CategoryManager()
+    # l_categoryManager.createCategoryFromSql(l_annuCat_list)
     Log.info("Category conversion [OK]\n")
 
     Log.info("Localisation Conversion starting...")
     l_annuDept_list = readSqlTable(NetLiensSqlNetwork, LocalisationManager.sql_table_name)
-    l_localisationManager = LocalisationManager()
+    l_localisationManager = LocalisationManager(sqlObjectList=l_annuDept_list, functionnalUser=l_functionnalUser)
     Log.info("Localisation conversion [OK]\n")
 
 
