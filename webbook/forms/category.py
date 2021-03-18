@@ -72,12 +72,15 @@ class CategoryDataForm(forms.ModelForm):
             self.add_error('language', _("This language already exist for this category."))
             return False
 
-        # Check if name is unique in all Category
-        if CategoryData.objects.filter(
+        # Check if name is unique in Category with same parent
+        category_list = CategoryData.objects.filter(
             name=self.cleaned_data['name'],
-            language=self.cleaned_data['language']).count() > 0:
-            self.add_error('name', _("A category with this name already exist."))
-            return False
+            language=self.cleaned_data['language']
+        )
+        for categoryData in category_list:
+            if categoryData.category.parent == category.parent:
+                self.add_error('name', _("A category with this name already exist."))
+                return False
 
         self.category = category
         return True

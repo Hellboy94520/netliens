@@ -71,12 +71,14 @@ class LocalisationDataForm(forms.ModelForm):
             self.add_error('language', _("This language already exist for this localisation."))
             return False
 
-        # Check if name is unique in all Localisation
-        if LocalisationData.objects.filter(
+        # Check if name is unique in Localisation with same parent
+        localisation_list = LocalisationData.objects.filter(
             name=self.cleaned_data['name'],
-            language=self.cleaned_data['language']).count() > 0:
-            self.add_error('name', _("A localisation with this name already exist."))
-            return False
+            language=self.cleaned_data['language'])
+        for localisationData in localisation_list:
+            if localisationData.localisation.parent == localisation.parent:
+                self.add_error('name', _("A localisation with this name already exist."))
+                return False
 
         self.localisation = localisation
         return True

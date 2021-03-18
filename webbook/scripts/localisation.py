@@ -13,7 +13,7 @@ from webbook.scripts import log as Log
 
 
 class LocalisationManager():
-    sql_table_name = "annu_dept"
+    _sql_table_name = "annu_dept"
 
     def deleteLocalisation():
         Log.info("Deleting all Localisation from database...")
@@ -374,7 +374,6 @@ class LocalisationManager():
                     data={
                         'name': self.libcog,
                         'resume': 'Continent',
-                        'localisation': l_localisation,
                         'language': LanguageAvailable.FR.value
                     }
                 )
@@ -387,7 +386,6 @@ class LocalisationManager():
                     data={
                         'name': self.libcog_en,
                         'resume': 'Continent',
-                        'localisation': l_localisation,
                         'language': LanguageAvailable.EN.value
                     }
                 )
