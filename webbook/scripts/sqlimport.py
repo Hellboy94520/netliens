@@ -81,10 +81,11 @@ def run():
     Log.info("Category starting...")
     l_categoryManager = CategoryManager()
     l_categoryManager.createCategoryListFromSql(sqlObjectList=l_annuCat_list, functionnalUser=l_functionnalUser)
+    Log.info(f"Category done in {toc - tic:0.4f} seconds")
     Log.info("Category conversion [OK]\n")
 
     Log.info("Localisation Conversion starting...")
-    l_localisationManager = LocalisationManager(sqlObjectList=l_annuDept_list, functionnalUser=l_functionnalUser)
+    # l_localisationManager = LocalisationManager(sqlObjectList=l_annuDept_list, functionnalUser=l_functionnalUser)
     Log.info("Localisation conversion [OK]\n")
 
     Log.info("Conversion [OK]")

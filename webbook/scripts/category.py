@@ -30,20 +30,22 @@ class CategoryManager():
         parent = None
         if sqlObject.cat_parent != 0:
             # Check if parent has been created or not
-            if sqlObject.cat_parent in self.sqlKeyWithModelAssociation:
-                parent = Category.objects.get(pk=self.sqlKeyWithModelAssociation[sqlObject.cat_parent])
+            parent = Category.objects.filter(order=sqlObject.cat_parent)
+            if parent.count() > 0:
+                parent = parent[0]
             else:
                 Log.warning(self.__class__.__name__, f"Impossible to find a parent with key='{sqlObject.cat_parent}', create it !")
                 # Check if parent exist on SQL Database
                 if sqlObject.cat_parent in self._categorySql_list:
                     self.createCategoryFromSql(key=sqlObject.cat_parent, sqlObject=self._categorySql_list[sqlObject.cat_parent], functionnalUser=functionnalUser)
+                    parent = Category.objects.get(order=sqlObject.cat_parent)
                 else:
                     Log.error(self.__class__.__name__, f"Impossible to find a parent with key='{sqlObject.cat_parent}', skip {key} creation !")
                     self.error_quantity += 1
                     return
 
         # Check if already exist
-        if key in self.sqlKeyWithModelAssociation:
+        if Category.objects.filter(order=key).count() > 0:
             Log.warning(self.__class__.__name__, f"Category with key='{key}' already exist, skip it !")
             return
 
@@ -52,7 +54,7 @@ class CategoryManager():
             data={
                 'is_enable': is_enable,
                 'parent': parent,
-                'order': self.order
+                'order': key
             }
         )
         if l_categoryForm.is_valid() is False:
@@ -82,8 +84,6 @@ class CategoryManager():
         if l_categoryDataForm.is_valid(l_category) is False:
             Log.fatal(self.__class__.__name__, f"Error on CategoryDataForm (EN) with Name='{categorySql.cat_name}' - Key='{key}': {l_categoryDataForm.errors}")
         l_categoryDataForm.save(user=functionnalUser)
-        self.sqlKeyWithModelAssociation[key] = l_category.pk
-        self.order += 1
 
 
 
@@ -105,8 +105,6 @@ class CategoryManager():
 
         # Create Category and CategoryData
         self.error_quantity = 0
-        self.order = 1
-        self.sqlKeyWithModelAssociation = {}
         for key, categorySql in self._categorySql_list.items():
             self.createCategoryFromSql(key, categorySql, functionnalUser)
 
