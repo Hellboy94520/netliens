@@ -4,7 +4,7 @@ from django.shortcuts import get_object_or_404
 
 from ..models import LanguageAvailable
 from ..models import get_all_model_in_order
-from ..models import Announcement, AnnouncementLanguage, AnnouncementStats, TITLE_MAX_LENGTH
+from ..models import Announcement, AnnouncementData, AnnouncementStats, TITLE_MAX_LENGTH
 from ..models import Category
 from ..models import Localisation
 
@@ -17,14 +17,14 @@ class AnnouncementUserDataForm(forms.ModelForm):
         help_text=_("Language of content"))
 
     class Meta:
-        model = AnnouncementLanguage
+        model = AnnouncementData
         fields = [ 'title', 'content' ]
 
     def is_valid(self, announcement: Announcement):
         if not super(AnnouncementUserDataForm, self).is_valid():
             return False
         # Check if the language exist or not for an announcement
-        if AnnouncementLanguage.objects.filter(
+        if AnnouncementData.objects.filter(
                 language=self.cleaned_data['language'],
                 announcement=announcement
             ).count() > 0:

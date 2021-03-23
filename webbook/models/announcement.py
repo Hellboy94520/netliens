@@ -93,7 +93,7 @@ class Announcement(models.Model):
 
 
 """ ---------------------------------------------------------------------------------------------------------------- """
-class AnnouncementLanguage(LanguageModel):
+class AnnouncementData(LanguageModel):
     title = models.CharField(
         max_length=TITLE_MAX_LENGTH,
         blank=False,

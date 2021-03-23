@@ -1,18 +1,32 @@
-def fatal(pClass, pMessage):
-    print(f"FATAL in {pClass} : {pMessage}")
-    print("----------------------------")
-    exit(1)
-    return False
+import logging as Logging
+import os, sys
 
-def error(pClass, pMessage):
-    print(f"ERROR in {pClass}: {pMessage}")
-    return False
+log_file = 'script.log'
 
-def warning(pClass, pMessage):
-    print(f"WARNING in {pClass}: {pMessage}")
+class ShutdownHandler(Logging.StreamHandler):
+    # Will leave the application on critical log
+    def emit(self, record):
+        super(ShutdownHandler, self).emit(record)
+        if record.levelno >= Logging.CRITICAL:
+            sys.exit(1)
 
-def info(pMessage):
-    print(f"INFO: {pMessage}")
+def create_logger(name: str, deletePreviousLog: bool = False):
+    if deletePreviousLog:
+        os.remove(log_file)
 
-def debug(pClass, pFunction, pMessage):
-    print(f"DEBUG : {pClass} - {pFunction}: {pMessage}")
+    logging = Logging.getLogger(name)
+    Logging.basicConfig(
+        format='%(asctime)s - %(levelname)s - %(name)s - %(message)s',
+        filename=log_file
+    )
+    logging.setLevel(Logging.DEBUG)
+    # create console handler and set level to debug
+    ch = ShutdownHandler()
+    ch.setLevel(Logging.INFO)
+    # create formatter
+    formatter = Logging.Formatter('%(asctime)s - %(levelname)s -  %(name)s - %(message)s')
+    # add formatter to ch
+    ch.setFormatter(formatter)
+    # add ch to logger
+    logging.addHandler(ch)
+    return logging
