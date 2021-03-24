@@ -17,15 +17,21 @@ def create_logger(name: str, deletePreviousLog: bool = False):
 
     logging = Logging.getLogger(name)
     Logging.basicConfig(
-        format='%(asctime)s - %(levelname)s - %(name)s: %(message)s',
-        filename=log_file
+        format='%(asctime)s - %(levelname)s - %(name)s.%(funcName)s(%(lineno)d): %(message)s',
+        handlers=[
+            Logging.FileHandler(
+                filename=log_file,
+                encoding='utf-8',
+                mode='a+'
+            )
+        ]
     )
     logging.setLevel(Logging.DEBUG)
     # create console handler and set level to debug
     ch = ShutdownHandler()
     ch.setLevel(Logging.INFO)
     # create formatter
-    formatter = Logging.Formatter('%(asctime)s - %(levelname)s -  %(name)s: %(message)s')
+    formatter = Logging.Formatter('%(asctime)s - %(levelname)s - %(name)s.%(funcName)s(%(lineno)d): %(message)s')
     # add formatter to ch
     ch.setFormatter(formatter)
     # add ch to logger

@@ -71,7 +71,7 @@ class CategoryManager(Manager):
             }
         )
         if l_categoryForm.is_valid() is False:
-            Log.fatal(self.__class__.__name__, f"Error on Category with Name='{sqlObject.cat_name}': {l_categoryForm.errors}")
+            self.critical(f"Error on Category with Name='{sqlObject.cat_name}': {l_categoryForm.errors}")
         l_category = l_categoryForm.save(user=functionnalUser)
 
         # Create CategoryData (FR)

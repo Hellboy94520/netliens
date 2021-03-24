@@ -1,5 +1,5 @@
 from webbook.scripts.log import create_logger
-from webbook.models import User
+from webbook.models import User, LanguageAvailable
 import logging
 
 def deleteModel(model, modelData, logging: logging):
@@ -20,15 +20,15 @@ class Manager():
     def __init__(self, className, model, modelData, modelSql):
         # Creation of the log
         self.logging = create_logger(className)
-        self.logging.debug("starting init...")
+        self.logging.debug("starting...")
         # Init value with input parameters
         self.__model = model
         self.__modelData = modelData
         self.__sqlModel = modelSql
         # Init variable
-        self.__sqlObjectMap = dict()
+        self.sqlObjectMap = dict()
 
-        self.logging.debug("init done")
+        self.logging.debug("done")
 
 
     def deleteModel(self):
@@ -55,34 +55,34 @@ class Manager():
             return False
         # Convert Map to Python object
         for key, value in sqlObjectMap.items():
-            self.__sqlObjectMap[key] = self.__sqlModel(value)
+            self.sqlObjectMap[key] = self.__sqlModel(value)
         # Verifying output
-        if len(sqlObjectMap) != len(self.__sqlObjectMap):
+        if len(sqlObjectMap) != len(self.sqlObjectMap):
             self.logging.critical(f"Expected {len(sqlObjectMap)} {self.__sqlModel.__class__.__name__}, " \
-            f"I have {len(self.__sqlObjectMap)} {self.__sqlModel.__class__.__name__} !")
+            f"I have {len(self.sqlObjectMap)} {self.__sqlModel.__class__.__name__} !")
         # Return Output
-        self.logging.info(f"{len(self.__sqlObjectMap)} {self.__sqlModel.__class__.__name__} has been created.")
+        self.logging.info(f"{len(self.sqlObjectMap)} {self.__sqlModel.__class__.__name__} has been created.")
         return True
 
 
     def createModelsFromSqlObjectMap(self, functionnalUser: User):
         self.error = 0
-        for key, modelSql in self.__sqlObjectMap.items():
+        for key, modelSql in self.sqlObjectMap.items():
             self.createModelFromSql(
                 key=key,
                 sqlObject=modelSql,
-                sqlObjectMap=self.__sqlObjectMap,
+                sqlObjectMap=self.sqlObjectMap,
                 functionnalUser=functionnalUser
             )
 
         # Verifying Output
         l_modelQuantity = self.__model.objects.all().count()
-        l_modelDataQuantity = self.__model.objects.all().count()
-        if (len(self.__sqlObjectMap) - self.error) != l_modelQuantity:
-            self.logging.critical(f"Expected {len(self.__sqlObjectMap)-self.error} {self.__model._meta.model.__name__}" \
+        l_modelDataQuantity = self.__modelData.objects.all().count()
+        if (len(self.sqlObjectMap) - self.error) != l_modelQuantity:
+            self.logging.critical(f"Expected {len(self.sqlObjectMap)-self.error} {self.__model._meta.model.__name__} " \
             f"I have {l_modelQuantity} {self.__model._meta.model.__name__}")
         if l_modelQuantity*LanguageAvailable.size() != l_modelDataQuantity:
-            self.logging.critical(f"Expected {len(l_modelQuantity*LanguageAvailable.size())} {self.__modelData._meta.model.__name__}" \
+            self.logging.critical(f"Expected {l_modelQuantity*LanguageAvailable.size()} {self.__modelData._meta.model.__name__} " \
             f"I have {l_modelDataQuantity} {self.__modelData._meta.model.__name__}")
 
 
