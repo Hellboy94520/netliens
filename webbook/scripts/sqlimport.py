@@ -75,31 +75,31 @@ def run():
     logging.info("Conversion starting...")
 
     logging.info("Get SQL Data...")
-    # l_annuCat_list = readSqlTable(
-    #     logging=logging,
-    #     sqlConnection=NetLiensSqlNetwork,
-    #     sql_table_name=CategoryManager._sql_table_name,
-    #     order='cat_parent'
-    # )
+    l_annuCat_map = readSqlTable(
+        logging=logging,
+        sqlConnection=NetLiensSqlNetwork,
+        sql_table_name=CategoryManager.sqlTableName,
+        order='cat_parent'
+    )
     # l_annuDept_list = readSqlTable(
     #     logging=logging,
     #     sqlConnection=NetLiensSqlNetwork,
     #     sql_table_name=LocalisationManager._sql_table_name
     # )
-    l_annuSite_map = readSqlTable(
-        logging=logging,
-        sqlConnection=NetLiensSqlNetwork,
-        sql_table_name=AnnouncementManager.sqlTableName
-    )
+    # l_annuSite_map = readSqlTable(
+    #     logging=logging,
+    #     sqlConnection=NetLiensSqlNetwork,
+    #     sql_table_name=AnnouncementManager.sqlTableName
+    # )
 
     logging.info("Starting Management instances...")
     l_category = CategoryManager()
-    l_localisation = LocalisationManager()
+    # l_localisation = LocalisationManager()
     l_announcement = AnnouncementManager()
 
     logging.info("Delete database...")
-    CategoryManager.deleteCategory()
-    LocalisationManager.deleteLocalisation()
+    l_category.deleteModel()
+    # LocalisationManager.deleteLocalisation()
     l_announcement.deleteModel()
     User.objects.all().delete()
 
@@ -108,8 +108,13 @@ def run():
     l_functionnalUser = User.objects.create_superuser(email="toto@gmail.com", password="tototatatiti")
 
     logging.info("Category starting...")
-    # l_categoryManager = CategoryManager()
-    # l_categoryManager.createCategoryListFromSql(sqlObjectList=l_annuCat_list, functionnalUser=l_functionnalUser)
+    l_category.createSqlObject(
+        sqlObjectMap=l_annuCat_map,
+        functionnalUser=l_functionnalUser
+    )
+    l_category.createModelsFromSqlObjectMap(
+        functionnalUser=l_functionnalUser
+    )
     logging.info("Category conversion [OK]")
 
     logging.info("Localisation Conversion starting...")

@@ -1,6 +1,4 @@
 from webbook.models import Announcement, AnnouncementData
-from webbook.models import User
-from webbook.scripts.log import create_logger
 from webbook.scripts.common import Manager, ManagerSqlObject
 
 class AnnouncementManager(Manager):

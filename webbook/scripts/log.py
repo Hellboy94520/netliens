@@ -12,11 +12,12 @@ class ShutdownHandler(Logging.StreamHandler):
 
 def create_logger(name: str, deletePreviousLog: bool = False):
     if deletePreviousLog:
-        os.remove(log_file)
+        if os.path.isfile(log_file):
+            os.remove(log_file)
 
     logging = Logging.getLogger(name)
     Logging.basicConfig(
-        format='%(asctime)s - %(levelname)s - %(name)s - %(message)s',
+        format='%(asctime)s - %(levelname)s - %(name)s: %(message)s',
         filename=log_file
     )
     logging.setLevel(Logging.DEBUG)
@@ -24,7 +25,7 @@ def create_logger(name: str, deletePreviousLog: bool = False):
     ch = ShutdownHandler()
     ch.setLevel(Logging.INFO)
     # create formatter
-    formatter = Logging.Formatter('%(asctime)s - %(levelname)s -  %(name)s - %(message)s')
+    formatter = Logging.Formatter('%(asctime)s - %(levelname)s -  %(name)s: %(message)s')
     # add formatter to ch
     ch.setFormatter(formatter)
     # add ch to logger
