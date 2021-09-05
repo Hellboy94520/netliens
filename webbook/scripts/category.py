@@ -27,7 +27,7 @@ class CategoryManager(Manager):
             self.cat_subd_type = sqlObject[7]
             self.cat_color = sqlObject[8]
 
-    def createModelFromSql(self, key, sqlObject, sqlObjectMap, functionnalUser: User):
+    def createModelFromSql(self, key, sqlObject, sqlObjectMap, functionnalUser: User, *args, **kwargs):
         # Check if parent is key is not identical as current key
         if key == sqlObject.cat_parent:
             self.logging.error(f"Key and Parent key is identical, skip {key} creation !")

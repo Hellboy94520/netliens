@@ -8,7 +8,7 @@ from PIL import Image
 from io import BytesIO # Python 2: from StringIO import StringIO
 from django.core.files.uploadedfile import InMemoryUploadedFile
 
-from webbook.models import LanguageAvailable, AnnouncementLanguage, Announcement, AnnouncementStats, TITLE_MAX_LENGTH, URL_MAX_LENGTH
+from webbook.models import LanguageAvailable, AnnouncementData, Announcement, AnnouncementStats, TITLE_MAX_LENGTH, URL_MAX_LENGTH
 from webbook.views.account import AnnouncementCreationView
 from webbook.models import User, Category, CategoryData, Localisation
 from webbook.forms import AnnouncementUserSettingForm, AnnouncementUserDataForm
@@ -38,12 +38,12 @@ class AnnouncementModelTestCase(TestCase):
         self.is_valid = True
         self.is_on_homepage = True
 
-        # AnnouncementLanguage creation
-        self.announcement_language_en = AnnouncementLanguage(
+        # AnnouncementData creation
+        self.announcement_language_en = AnnouncementData(
             title = "This is a Title !",
             content = "This is a content !",
             language = LanguageAvailable.EN.value)
-        self.announcement_language_fr = AnnouncementLanguage(
+        self.announcement_language_fr = AnnouncementData(
             title = "C'est un Titre !",
             content = "C'est un contenue !",
             language = LanguageAvailable.FR.value)
@@ -160,10 +160,10 @@ class AnnouncementModelTestCase(TestCase):
         self.assertEqual(Announcement.objects.all().count(), 0, "[DB] Announcement already exist !")
         l_announcement.save()
         self.assertEqual(Announcement.objects.all().count(), 1, "[DB] Announcement has not been created !")
-        self.assertEqual(AnnouncementLanguage.objects.all().count(), 0, "[DB] AnnouncementLanguage already exist !")
+        self.assertEqual(AnnouncementData.objects.all().count(), 0, "[DB] AnnouncementData already exist !")
         self.announcement_language_en.announcement = l_announcement
         self.announcement_language_en.save()
-        self.assertEqual(AnnouncementLanguage.objects.all().count(), 1, "[DB] AnnouncementLanguage has not been created !")
+        self.assertEqual(AnnouncementData.objects.all().count(), 1, "[DB] AnnouncementData has not been created !")
         l_announcement = Announcement.objects.filter()[0]
         self.assertEqual(l_announcement.url, self.url)
         self.assertIsNotNone(l_announcement.image.name)
@@ -193,13 +193,13 @@ class AnnouncementModelTestCase(TestCase):
         self.assertEqual(Announcement.objects.all().count(), 0, "[DB] Announcement already exist !")
         l_announcement.save()
         self.assertEqual(Announcement.objects.all().count(), 1, "[DB] Announcement has not been created !")
-        self.assertEqual(AnnouncementLanguage.objects.all().count(), 0, "[DB] AnnouncementLanguage already exist !")
+        self.assertEqual(AnnouncementData.objects.all().count(), 0, "[DB] AnnouncementData already exist !")
         self.announcement_language_en.announcement = l_announcement
         self.announcement_language_en.save()
-        self.assertEqual(AnnouncementLanguage.objects.all().count(), 1, "[DB] AnnouncementLanguage has not been created !")
+        self.assertEqual(AnnouncementData.objects.all().count(), 1, "[DB] AnnouncementData has not been created !")
         self.announcement_language_fr.announcement = l_announcement
         self.announcement_language_fr.save()
-        self.assertEqual(AnnouncementLanguage.objects.all().count(), 2, "[DB] AnnouncementLanguage has not been created !")
+        self.assertEqual(AnnouncementData.objects.all().count(), 2, "[DB] AnnouncementData has not been created !")
         l_announcement = Announcement.objects.filter()[0]
         self.assertEqual(l_announcement.url, self.url)
         self.assertIsNotNone(l_announcement.image.name)
@@ -760,10 +760,10 @@ class AnnouncementUserSettingFormTestCase(TestCase):
         self.assertEqual(Localisation.objects.all().count(), 0)
 
 
-class AnnouncementLanguageModelTestCase(TestCase):
+class AnnouncementDataModelTestCase(TestCase):
     """
         -----------------------------------------
-        AnnouncementLanguageModel tests
+        AnnouncementDataModel tests
         -----------------------------------------
     """
     def setUp(self):
@@ -786,7 +786,7 @@ class AnnouncementLanguageModelTestCase(TestCase):
         )
 
     def test_construction(self):
-        l_announcement_language = AnnouncementLanguage(
+        l_announcement_language = AnnouncementData(
             title = self.title_en,
             content = self.content_en,
             language = self.language_en,
@@ -798,15 +798,15 @@ class AnnouncementLanguageModelTestCase(TestCase):
 
 
     def test_default_construction_database(self):
-        l_announcement_language = AnnouncementLanguage(
+        l_announcement_language = AnnouncementData(
             title = self.title_en,
             content = self.content_en,
             language = self.language_en,
             announcement = self.announcement)
-        self.assertEqual(AnnouncementLanguage.objects.all().count(), 0)
+        self.assertEqual(AnnouncementData.objects.all().count(), 0)
         l_announcement_language.save()
-        self.assertEqual(AnnouncementLanguage.objects.all().count(), 1)
-        l_announcement_language = AnnouncementLanguage.objects.all()[0]
+        self.assertEqual(AnnouncementData.objects.all().count(), 1)
+        l_announcement_language = AnnouncementData.objects.all()[0]
         self.assertEqual(l_announcement_language.title, self.title_en)
         self.assertEqual(l_announcement_language.content, self.content_en)
         self.assertEqual(l_announcement_language.language, self.language_en)
@@ -814,20 +814,20 @@ class AnnouncementLanguageModelTestCase(TestCase):
 
 
     def test_announcement_delete(self):
-        # Create AnnouncementLanguage associated to Category
-        l_object = AnnouncementLanguage.objects.create(
+        # Create AnnouncementData associated to Category
+        l_object = AnnouncementData.objects.create(
             title = self.title_en,
             content = self.content_en,
             language = self.language_en,
             announcement = self.announcement
         )
-        self.assertEqual(AnnouncementLanguage.objects.all().count(), 1)
+        self.assertEqual(AnnouncementData.objects.all().count(), 1)
         self.assertEqual(Announcement.objects.all().count(), 1)
 
         # Delete Category which delete CategoryData
         self.announcement.delete()
         self.assertEqual(Announcement.objects.all().count(), 0)
-        self.assertEqual(AnnouncementLanguage.objects.all().count(), 0)
+        self.assertEqual(AnnouncementData.objects.all().count(), 0)
 
 
 
@@ -865,10 +865,10 @@ class AnnouncementUserDataFormTestCase(TestCase):
             }
         )
         self.assertTrue(l_announcement.is_valid(self.announcement), f"Form is not valid ! {l_announcement.errors}")
-        self.assertEqual(AnnouncementLanguage.objects.all().count(), 0, "[DB] an AnnouncementLanguage already exist !")
+        self.assertEqual(AnnouncementData.objects.all().count(), 0, "[DB] an AnnouncementData already exist !")
         l_announcement.save(user=self.owner)
-        self.assertEqual(AnnouncementLanguage.objects.all().count(), 1, "[DB] AnnouncementLanguage has not been created after save form !")
-        l_announcement = AnnouncementLanguage.objects.filter()[0]
+        self.assertEqual(AnnouncementData.objects.all().count(), 1, "[DB] AnnouncementData has not been created after save form !")
+        l_announcement = AnnouncementData.objects.filter()[0]
         self.assertEqual(l_announcement.title, self.title_en)
         self.assertEqual(l_announcement.content, self.content_en)
         self.assertEqual(l_announcement.language, self.language_en)
@@ -882,17 +882,17 @@ class AnnouncementUserDataFormTestCase(TestCase):
             }
         )
         self.assertTrue(l_announcement.is_valid(self.announcement), f"Form is not valid ! {l_announcement.errors}")
-        self.assertEqual(AnnouncementLanguage.objects.all().count(), 0, "[DB] an AnnouncementLanguage already exist !")
+        self.assertEqual(AnnouncementData.objects.all().count(), 0, "[DB] an AnnouncementData already exist !")
         l_announcement.save(user=self.owner)
-        self.assertEqual(AnnouncementLanguage.objects.all().count(), 1, "[DB] AnnouncementLanguage has not been created after save form !")
-        l_announcement = AnnouncementLanguage.objects.filter()[0]
+        self.assertEqual(AnnouncementData.objects.all().count(), 1, "[DB] AnnouncementData has not been created after save form !")
+        l_announcement = AnnouncementData.objects.filter()[0]
         self.assertEqual(l_announcement.title, self.title_fr)
         self.assertEqual(l_announcement.content, self.content_fr)
         self.assertEqual(l_announcement.language, self.language_fr)
 
 
     def test_title(self):
-        self.assertEqual(AnnouncementLanguage.objects.all().count(), 0, "[DB] an AnnouncementLanguage already exist !")
+        self.assertEqual(AnnouncementData.objects.all().count(), 0, "[DB] an AnnouncementData already exist !")
         # Empty Title
         l_announcement = AnnouncementUserDataForm(
             data={'title': "",
@@ -901,7 +901,7 @@ class AnnouncementUserDataFormTestCase(TestCase):
             }
         )
         self.assertFalse(l_announcement.is_valid(self.announcement), f"Form is valid !")
-        self.assertEqual(AnnouncementLanguage.objects.all().count(), 0, "[DB] an AnnouncementLanguage has been created !")
+        self.assertEqual(AnnouncementData.objects.all().count(), 0, "[DB] an AnnouncementData has been created !")
         self.assertEqual(len(l_announcement.errors), 1, "Expected only 1 error !")
         self.assertEqual(len(l_announcement['title'].errors), 1, "Expected only 1 error for 'title' field !")
         self.assertEqual(l_announcement['title'].errors[0], "This field is required.", "Error message not expected !")
@@ -914,13 +914,13 @@ class AnnouncementUserDataFormTestCase(TestCase):
             }
         )
         self.assertFalse(l_announcement.is_valid(self.announcement), f"Form is valid !")
-        self.assertEqual(AnnouncementLanguage.objects.all().count(), 0, "[DB] an AnnouncementLanguage has been created !")
+        self.assertEqual(AnnouncementData.objects.all().count(), 0, "[DB] an AnnouncementData has been created !")
         self.assertEqual(len(l_announcement.errors), 1, "Expected only 1 error !")
         self.assertEqual(len(l_announcement['title'].errors), 1, "Expected only 1 error for 'title' field !")
         self.assertEqual(l_announcement['title'].errors[0], f"Ensure this value has at most {TITLE_MAX_LENGTH} characters (it has {TITLE_MAX_LENGTH+1}).", "Error message not expected !")
 
     def test_content(self):
-        self.assertEqual(AnnouncementLanguage.objects.all().count(), 0, "[DB] an AnnouncementLanguage already exist !")
+        self.assertEqual(AnnouncementData.objects.all().count(), 0, "[DB] an AnnouncementData already exist !")
         # Empty Title
         l_announcement = AnnouncementUserDataForm(
             data={'title': self.title_fr,
@@ -929,14 +929,14 @@ class AnnouncementUserDataFormTestCase(TestCase):
             }
         )
         self.assertFalse(l_announcement.is_valid(self.announcement), f"Form is valid !")
-        self.assertEqual(AnnouncementLanguage.objects.all().count(), 0, "[DB] an AnnouncementLanguage has been created !")
+        self.assertEqual(AnnouncementData.objects.all().count(), 0, "[DB] an AnnouncementData has been created !")
         self.assertEqual(len(l_announcement.errors), 1, "Expected only 1 error !")
         self.assertEqual(len(l_announcement['content'].errors), 1, "Expected only 1 error for 'content' field !")
         self.assertEqual(l_announcement['content'].errors[0], "This field is required.", "Error message not expected !")
 
 
     def test_language(self):
-        self.assertEqual(AnnouncementLanguage.objects.all().count(), 0, "[DB] an AnnouncementLanguage already exist !")
+        self.assertEqual(AnnouncementData.objects.all().count(), 0, "[DB] an AnnouncementData already exist !")
         # Empty Language
         l_announcement = AnnouncementUserDataForm(
             data={'title': self.title_fr,
@@ -945,7 +945,7 @@ class AnnouncementUserDataFormTestCase(TestCase):
             }
         )
         self.assertFalse(l_announcement.is_valid(self.announcement), f"Form is valid !")
-        self.assertEqual(AnnouncementLanguage.objects.all().count(), 0, "[DB] an AnnouncementLanguage has been created !")
+        self.assertEqual(AnnouncementData.objects.all().count(), 0, "[DB] an AnnouncementData has been created !")
         self.assertEqual(len(l_announcement.errors), 1, "Expected only 1 error !")
         self.assertEqual(len(l_announcement['language'].errors), 1, "Expected only 1 error for 'content' field !")
         self.assertEqual(l_announcement['language'].errors[0], "This field is required.", "Error message not expected !")
@@ -959,14 +959,14 @@ class AnnouncementUserDataFormTestCase(TestCase):
             }
         )
         self.assertFalse(l_announcement.is_valid(self.announcement), f"Form is valid !")
-        self.assertEqual(AnnouncementLanguage.objects.all().count(), 0, "[DB] an AnnouncementLanguage has been created !")
+        self.assertEqual(AnnouncementData.objects.all().count(), 0, "[DB] an AnnouncementData has been created !")
         self.assertEqual(len(l_announcement.errors), 1, "Expected only 1 error !")
         self.assertEqual(len(l_announcement['language'].errors), 1, "Expected only 1 error for 'content' field !")
         self.assertEqual(l_announcement['language'].errors[0], f"Select a valid choice. {l_language} is not one of the available choices.", "Error message not expected !")
 
 
     def test_language_already_exist(self):
-        self.assertEqual(AnnouncementLanguage.objects.all().count(), 0, "[DB] an AnnouncementLanguage already exist !")
+        self.assertEqual(AnnouncementData.objects.all().count(), 0, "[DB] an AnnouncementData already exist !")
         # Generate an English Language valid
         l_announcement = AnnouncementUserDataForm(
             data={'title': self.title_en,
@@ -975,9 +975,9 @@ class AnnouncementUserDataFormTestCase(TestCase):
             }
         )
         self.assertTrue(l_announcement.is_valid(self.announcement), f"Form is not valid ! {l_announcement.errors}")
-        self.assertEqual(AnnouncementLanguage.objects.all().count(), 0, "[DB] an AnnouncementLanguage already exist !")
+        self.assertEqual(AnnouncementData.objects.all().count(), 0, "[DB] an AnnouncementData already exist !")
         l_announcement.save(user=self.owner)
-        self.assertEqual(AnnouncementLanguage.objects.all().count(), 1, "[DB] AnnouncementLanguage has not been created after save form !")
+        self.assertEqual(AnnouncementData.objects.all().count(), 1, "[DB] AnnouncementData has not been created after save form !")
         # English Language already exist
         l_announcement = AnnouncementUserDataForm(
             data={'title': self.title_en,
@@ -986,7 +986,7 @@ class AnnouncementUserDataFormTestCase(TestCase):
             }
         )
         self.assertFalse(l_announcement.is_valid(self.announcement), f"Form is valid !")
-        self.assertEqual(AnnouncementLanguage.objects.all().count(), 1, "[DB] AnnouncementLanguage has been created !")
+        self.assertEqual(AnnouncementData.objects.all().count(), 1, "[DB] AnnouncementData has been created !")
         self.assertEqual(len(l_announcement.errors), 1, "Expected only 1 error !")
         self.assertEqual(len(l_announcement['language'].errors), 1, "Expected only 1 error for 'language' field !")
         self.assertEqual(l_announcement['language'].errors[0], f"This Language already exist for this announcement !")
@@ -1077,7 +1077,7 @@ class AnnouncementCreationView(TestCase):
         )
         self.assertEqual(response.url, "/account/announcement/", f"Response not expected : {response}")
         self.assertEqual(Announcement.objects.all().count(), 1)
-        self.assertEqual(AnnouncementLanguage.objects.all().count(), 1)
+        self.assertEqual(AnnouncementData.objects.all().count(), 1)
 
 
     def test_valid_only_french(self):
@@ -1126,7 +1126,7 @@ class AnnouncementCreationView(TestCase):
         )
         self.assertEqual(response.url, "/account/announcement/", f"Response not expected : {response}")
         self.assertEqual(Announcement.objects.all().count(), 1)
-        self.assertEqual(AnnouncementLanguage.objects.all().count(), 1)
+        self.assertEqual(AnnouncementData.objects.all().count(), 1)
 
 
     def test_valid_english_and_french(self):
@@ -1174,7 +1174,7 @@ class AnnouncementCreationView(TestCase):
         )
         self.assertEqual(response.url, "/account/announcement/", f"Response not expected : {response}")
         self.assertEqual(Announcement.objects.all().count(), 1)
-        self.assertEqual(AnnouncementLanguage.objects.all().count(), 1)
+        self.assertEqual(AnnouncementData.objects.all().count(), 1)
 
         # Create announcement data in french
         response = self.client.post(
@@ -1186,7 +1186,7 @@ class AnnouncementCreationView(TestCase):
         )
         self.assertEqual(response.url, "/account/announcement/", f"Response not expected : {response}")
         self.assertEqual(Announcement.objects.all().count(), 1)
-        self.assertEqual(AnnouncementLanguage.objects.all().count(), 2)
+        self.assertEqual(AnnouncementData.objects.all().count(), 2)
 
 
     def test_invalid_no_user_login(self):

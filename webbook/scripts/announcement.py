@@ -1,5 +1,9 @@
 from webbook.models import Announcement, AnnouncementData
+from webbook.models import User, UserManager
+from webbook.forms import AdminUserForm, AnnouncementUserSettingForm, AnnouncementUserDataForm
 from webbook.scripts.common import Manager, ManagerSqlObject
+from webbook.scripts.log import create_logger
+import time
 
 class AnnouncementManager(Manager):
     sqlTableName = "annu_site"
@@ -44,6 +48,45 @@ class AnnouncementManager(Manager):
             self.site_paypal_txn = sqlObject[27]
             self.site_type_inscr = sqlObject[28]
 
+    def createModelFromSql(self, key, sqlObject, sqlObjectMap, functionnalUser: User):#, categorySqlsAssociationMap, localisationSqlAssociationMap):
+        # Create user with email adress if exist
+        l_user = None
+        if sqlObject.site_mail:
+            l_email = sqlObject.site_mail.lower()
+            self.logging.debug(f"Email = {l_email}")
+            userQuerySet = User.objects.filter(email=l_email)
+            self.logging.debug(f"QuerySet Count = {userQuerySet.count()}")
+            for user in userQuerySet:
+                self.logging.debug(f"User = {user}")
+            if userQuerySet.count() == 0:
+                l_user = User.objects.create_user(email=l_email)
+                self.logging.debug(f"User creation = {l_user}")
+            else:
+                l_user = userQuerySet[0]
+                self.logging.debug(f"User used = {l_user}")
+            self.logging.debug(f"--------")
+            # if User.objects.filter(email=sqlObject.site_mail.lower()):
+            #     l_user = UserManager.create_user(email=sqlObject.site_mail.lower())
+            # else:
+            #     User.objects.get(email=sqlObject.site_mail.lower())
+        # if sqlObject.site_mail:
+        #     l_userQuery = User.objects.filter(email=sqlObject.site_mail.lower())
+        #     if l_userQuery.count() == 0:
+        #         l_user = User.objects.create_user(email=sqlObject.site_mail.lower())
+        #     else:
+        #         print(l_userQuery.count())
+        #         print(l_userQuery[0])
+        #         l_user = l_userQuery[0]
+
+        # l_announcementForm = AnnouncementUserSettingForm(
+        #     data={
+        #         'url': sqlObject.site_name,
+        #         'website': sqlObject.site_url,
+        #         # 'nl': sqlObject.site_pr,
+        #         'owner': l_user
+        #     }
+        # )
+            #self.logging.warning(f"No email find for: '{sqlObject.site_url}'")
 
 # class AnnouncementManager():
 #     _sql_table_name = "annu_site"

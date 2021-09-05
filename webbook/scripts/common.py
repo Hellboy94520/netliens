@@ -65,14 +65,16 @@ class Manager():
         return True
 
 
-    def createModelsFromSqlObjectMap(self, functionnalUser: User):
+    def createModelsFromSqlObjectMap(self, functionnalUser: User, *args, **kwargs):
         self.error = 0
         for key, modelSql in self.sqlObjectMap.items():
             self.createModelFromSql(
                 key=key,
                 sqlObject=modelSql,
                 sqlObjectMap=self.sqlObjectMap,
-                functionnalUser=functionnalUser
+                functionnalUser=functionnalUser,
+                *args,
+                **kwargs
             )
 
         # Verifying Output

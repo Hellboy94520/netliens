@@ -47,7 +47,7 @@ def run():
     # -----------------------------------
     # Read config file for SQL
     # -----------------------------------
-    l_sqlConfig_filename = "sql_config.ini"
+    l_sqlConfig_filename = "config.ini"
     l_sqlConfig_folder = "/etc"
     l_sqlConfig_file = f"{l_sqlConfig_folder}/{l_sqlConfig_filename}"
     import configparser
@@ -75,17 +75,17 @@ def run():
     logging.info("Conversion starting...")
 
     logging.info("Get SQL Data...")
-    l_annuCat_map = readSqlTable(
-        logging=logging,
-        sqlConnection=NetLiensSqlNetwork,
-        sql_table_name=CategoryManager.sqlTableName,
-        order='cat_parent'
-    )
-    l_annuDept_map = readSqlTable(
-        logging=logging,
-        sqlConnection=NetLiensSqlNetwork,
-        sql_table_name=LocalisationManager.sqlTableName
-    )
+    # l_annuCat_map = readSqlTable(
+    #     logging=logging,
+    #     sqlConnection=NetLiensSqlNetwork,
+    #     sql_table_name=CategoryManager.sqlTableName,
+    #     order='cat_parent'
+    # )
+    # l_annuDept_map = readSqlTable(
+    #     logging=logging,
+    #     sqlConnection=NetLiensSqlNetwork,
+    #     sql_table_name=LocalisationManager.sqlTableName
+    # )
     l_annuSite_map = readSqlTable(
         logging=logging,
         sqlConnection=NetLiensSqlNetwork,
@@ -104,23 +104,26 @@ def run():
     User.objects.all().delete()
 
     logging.info("Creation of functionnal user...")
-    l_functionnalUser = User.objects.create_superuser(email="toto@gmail.com", password="tototatatiti")
+    l_functionnalUser = User.objects.create_superuser(
+        email=settings.get('import_username', 'email'),
+        password=settings.get('import_username', 'password')
+    )
 
     logging.info("Category starting...")
-    l_category.createSqlObject(
-        sqlObjectMap = l_annuCat_map,
-        functionnalUser = l_functionnalUser
-    )
-    l_category.createModelsFromSqlObjectMap(
-        functionnalUser = l_functionnalUser
-    )
+    # l_category.createSqlObject(
+    #     sqlObjectMap = l_annuCat_map,
+    #     functionnalUser = l_functionnalUser
+    # )
+    # l_category.createModelsFromSqlObjectMap(
+    #     functionnalUser = l_functionnalUser
+    # )
     logging.info("Category conversion [OK]")
 
     logging.info("Localisation Conversion starting...")
-    l_localisation.createModelsFromInseeFile(
-        sqlObjectMap = l_annuDept_map,
-        functionnalUser = l_functionnalUser
-    )
+    # l_localisation.createModelsFromInseeFile(
+    #     sqlObjectMap = l_annuDept_map,
+    #     functionnalUser = l_functionnalUser
+    # )
     logging.info("Localisation conversion [OK]")
 
     logging.info("Announcement Conversion starting...")
@@ -128,6 +131,10 @@ def run():
         sqlObjectMap=l_annuSite_map,
         functionnalUser=l_functionnalUser
     )
+    l_announcement.createModelsFromSqlObjectMap(
+        functionnalUser = l_functionnalUser
+    )
+
     logging.info("Announcement conversion [OK]")
 
     logging.info("Conversion [OK]")

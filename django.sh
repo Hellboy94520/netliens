@@ -3,7 +3,7 @@
 # PATH
 project_path=$PWD
 app_path=$project_path/webbook
-python_path='python3.6'
+python_path='python3.8'
 
 usage()
 {
@@ -115,5 +115,5 @@ do
     \?) echo -e "\e[91mInvalid arguments\e[0m"; usage; exit 1;;
   esac
 done
- 
+
 exit 0
