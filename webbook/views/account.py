@@ -156,7 +156,7 @@ class SignupConfirmation(TemplateView):
             'to_email': l_user.email
         }
         SendEmail(**opts)
-
+        login(request, l_user)
         return super(SignupConfirmation, self).get(request, *args, **kwargs)
 
 
@@ -164,12 +164,15 @@ class SignupConfirmation(TemplateView):
 from django.contrib.auth.views import PasswordChangeView as DjangoPasswordChangeView
 from ..forms import PasswordChangeForm
 class PasswordChangeView(DjangoPasswordChangeView):
+    """
+        View to request Password change
+    """
     email_template_name = None
     subject_template_name = None
     form_class = PasswordChangeForm
 
     def form_valid(self, form):
-        l_response = super(DjangoPasswordChangeView, self).form_valid(form)
+        l_view = super(DjangoPasswordChangeView, self).form_valid(form)
         opts = {
             'email_template_name': self.email_template_name,
             'subject_template_name': self.subject_template_name,
@@ -177,19 +180,24 @@ class PasswordChangeView(DjangoPasswordChangeView):
             'to_email': form.user.email
         }
         form.send_email(**opts)
-        return l_response
+        return l_view
 
 
 # -----------------------------
 from django.contrib.auth.views import PasswordResetConfirmView as DjangoPasswordResetConfirmView
 from ..forms import SetPasswordForm
 class PasswordResetConfirmView(DjangoPasswordResetConfirmView):
+    """
+        View to update Password from Email
+    """
     email_template_name = None
     subject_template_name = None
     form_class = SetPasswordForm
+    # Seems to not work with my form_valid:
+    post_reset_login = True
 
     def form_valid(self, form):
-        l_response = super(DjangoPasswordResetConfirmView, self).form_valid(form)
+        l_view = super(DjangoPasswordResetConfirmView, self).form_valid(form)
         opts = {
             'email_template_name': self.email_template_name,
             'subject_template_name': self.subject_template_name,
@@ -197,7 +205,7 @@ class PasswordResetConfirmView(DjangoPasswordResetConfirmView):
             'to_email': form.user.email
         }
         form.send_email(**opts)
-        return l_response
+        return l_view
 
 
 # -----------------------------

@@ -53,7 +53,7 @@
             <div class="w3-col s9 w3-container">
                 <!-- Homepage Welcome Message -->
                 {% if user.is_authenticated %}
-                    <h1>{% blocktrans with username=user.get_username %}Welcome {{ username }}!{% endblocktrans %}</h1>
+                    <h1>{% blocktrans with first_name=user.first_name last_name=user.last_name %}Welcome {{ last_name }} {{ first_name }} !{% endblocktrans %}</h1>
                 {% else %}
                     <h1>{% trans "Welcome !" %}</h1>
                 {% endif %}
