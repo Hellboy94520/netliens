@@ -30,12 +30,13 @@ class SignUpView(TestCase):
     """
     def test_user_creation(self):
         response = self.client.post(
-            _SIGNUP_URL, data={  "email": _EMAIL,
-                                        "password1": _PASSWORD,
-                                        "password2": _PASSWORD,
-                                        "last_name": _LAST_NAME,
-                                        "first_name": _FIRST_NAME,
-                                        "company": _COMPANY})
+            _SIGNUP_URL, data={
+                "email": _EMAIL,
+                "password1": _PASSWORD,
+                "password2": _PASSWORD,
+                "last_name": _LAST_NAME,
+                "first_name": _FIRST_NAME,
+                "company": _COMPANY})
         self.assertEqual(response.url, "/account/signup/done/", "Invalid response url")
         self.assertEqual(User.objects.all().count(), 1, "UserForm has not been created after submit valid form !")
         l_user = User.objects.get(email=_EMAIL)
@@ -124,6 +125,7 @@ class LoginView(TestCase):
                                         "last_name": _LAST_NAME,
                                         "first_name": _FIRST_NAME,
                                         "company": _COMPANY})
+        self.assertEqual(len(mail.outbox), 1, "SetUp Invalid !")
         l_re = re.search(SIGNUP_CONFIRMATION_LINK, mail.outbox[0].body)
         l_confirmation_link = l_re.group(0)
         self.client.get(l_confirmation_link)
