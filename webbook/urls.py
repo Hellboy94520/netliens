@@ -78,6 +78,28 @@ urlpatterns = [
       template_name="account/password_reset_complete.html",
       title=_("Password reset complete")),
     name="password_reset_complete"),
+  path('account/deletion/',
+    account.authentification.DeleteView.as_view(
+      template_name="account/account_deletion.html",
+      success_url="/account/deletion/done/",
+      email_context_deletion_url="account/deletion/<uidb64>/<token>/complete/",
+      email_template_name="account/email_deletion_content.html",
+      subject_template_name="account/email_deletion_subject.txt"),
+    name="account_deletion"),
+  path('account/deletion/done/',
+    TemplateView.as_view(
+      template_name='account/account_deletion_done.html'),
+    name="account_deletion_done"),
+  path('account/deletion/<uidb64>/<token>/complete/',
+    account.authentification.DeleteCompleteView.as_view(
+      template_name="account/account_deletion_complete.html",
+      success_url="/",
+      cancel_url="account/",
+      email_template_name="account/email_deletion_complete_content.html",
+      subject_template_name="account/email_deletion_coomplete_subject.txt"),
+    name="account_deletion_complete"
+    ),
+  #   name="account_deletion_complete"),
   # path('account/update/', account.UpdateView.as_view(template_name="account/update.html"),
   #   name="account_update"),
   # path('account/delete/', account.)

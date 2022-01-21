@@ -1,19 +1,24 @@
+from django.forms.forms import Form
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import Http404
 from django.utils.decorators import method_decorator
 from django.utils.translation import ugettext_lazy as _
-from django.contrib.auth import login
+from django.contrib.auth import login, logout
 from django.contrib.auth.tokens import default_token_generator
+from django.contrib.auth.decorators import login_required
 from django.contrib.sites.shortcuts import get_current_site
+from django.utils.encoding import force_bytes
+from django.utils.http import urlsafe_base64_encode
 
 from django.views import View
-from django.views.generic import TemplateView
+from django.views.generic import TemplateView, FormView
 
 
 from ..common import decorators as my_decorators
+from ..common import email
 
 from ...models import User
-from ...forms import SignUpForm, send_mail as SendEmail
+from ...forms import CheckPasswordForm, SignUpForm, send_mail as SendEmail
 
 # -----------------------------
 # Token
@@ -41,16 +46,20 @@ class SignupView(View):
     def post(self, request, *args, **kwargs):
         form = SignUpForm(request.POST)
         if form.is_valid():
-            current_site = get_current_site(request)
-            opts = {
-            'use_https': request.is_secure(),
-            'site_domain': current_site.domain,
-            'site_name': current_site.name,
-            'email_template_name': self.email_template_name,
-            'subject_template_name': self.subject_template_name,
-            'from_email': self.from_email
+            form.save()
+            context = {
+                'uid': urlsafe_base64_encode(force_bytes(form.user.pk)),
+                'user': form.user,
+                'token': default_token_generator.make_token(form.user),
             }
-            form.save(**opts)
+            opts = {
+                'request': request,
+                'subject_template_name': self.subject_template_name,
+                'email_template_name': self.email_template_name,
+                'context': context,
+                'to_email': [form.user.email]
+            }
+            email.send_mail(**opts)
             return redirect(self.success_url)
         return render(request, self.template_name, locals())
 
@@ -78,62 +87,123 @@ class SignupConfirmation(TemplateView):
         l_user.is_active = True
         l_user.save()
         # - Send Email
+        context = {
+            'user': l_user
+        }
         opts = {
+            'request': request,
             'email_template_name': self.email_template_name,
             'subject_template_name': self.subject_template_name,
-            'context': { 'user': l_user },
-            'from_email': None,
-            'to_email': l_user.email
+            'context': context,
+            'to_email': [l_user.email]
         }
-        SendEmail(**opts)
+        email.send_mail(**opts)
         login(request, l_user)
         return super(SignupConfirmation, self).get(request, *args, **kwargs)
 
 
 # -----------------------------
 from django.contrib.auth.views import PasswordChangeView as DjangoPasswordChangeView
-from ...forms import PasswordChangeForm
+from django.contrib.auth.forms import PasswordChangeForm as DjangoPasswordChangeForm
 class PasswordChangeView(DjangoPasswordChangeView):
     """
         View to request Password change
     """
     email_template_name = None
     subject_template_name = None
-    form_class = PasswordChangeForm
+    form_class = DjangoPasswordChangeForm
 
-    def form_valid(self, form):
-        l_view = super(DjangoPasswordChangeView, self).form_valid(form)
-        opts = {
-            'email_template_name': self.email_template_name,
-            'subject_template_name': self.subject_template_name,
-            'from_email': None,
-            'to_email': form.user.email
-        }
-        form.send_email(**opts)
-        return l_view
+    def post(self, request, *args, **kwargs):
+        form = DjangoPasswordChangeForm(request.POST)
+        if form.is_valid():
+            form.save()
+            opts = {
+                'request': request,
+                'subject_template_name': self.subject_template_name,
+                'email_template_name': self.email_template_name,
+                'context': None,
+                'to_email': [form.user.email]
+            }
+            email.send_mail(**opts)
+            return redirect(self.success_url)
+        return render(request, self.template_name, locals())
 
 
 # -----------------------------
 from django.contrib.auth.views import PasswordResetConfirmView as DjangoPasswordResetConfirmView
-from ...forms import SetPasswordForm
+from django.contrib.auth.forms import SetPasswordForm as DjangoSetPasswordForm
 class PasswordResetConfirmView(DjangoPasswordResetConfirmView):
     """
         View to update Password from Email
     """
     email_template_name = None
     subject_template_name = None
-    form_class = SetPasswordForm
-    # Seems to not work with my form_valid:
+    form_class = DjangoSetPasswordForm
     post_reset_login = True
 
-    def form_valid(self, form):
-        l_view = super(DjangoPasswordResetConfirmView, self).form_valid(form)
-        opts = {
-            'email_template_name': self.email_template_name,
-            'subject_template_name': self.subject_template_name,
-            'from_email': None,
-            'to_email': form.user.email
-        }
-        form.send_email(**opts)
-        return l_view
+    def post(self, request, *args, **kwargs):
+        form = DjangoPasswordChangeForm(request.POST)
+        if form.is_valid():
+            form.save()
+            opts = {
+                'request': request,
+                'subject_template_name': self.subject_template_name,
+                'email_template_name': self.email_template_name,
+                'context': None,
+                'to_email': [form.user.email]
+            }
+            email.send_mail(**opts)
+            return redirect(self.success_url)
+        return render(request, self.template_name, locals())
 
+
+
+@method_decorator(login_required, name='dispatch')
+class DeleteView(FormView):
+    form_class = CheckPasswordForm
+    email_context_deletion_url = None
+    email_template_name = None
+    subject_template_name = None
+
+    def get(self, request, *args, **kwargs):
+        return super(DeleteView, self).get(request, args, kwargs)
+
+    def post(self, request, *args, **kwargs):
+        form = self.get_form()
+        if form.is_valid(user=request.user):
+            context = {
+                'uid': urlsafe_base64_encode(force_bytes(request.user.pk)),
+                'user': request.user,
+                'token': default_token_generator.make_token(request.user),
+            }
+            opts = {
+                'request': request,
+                'subject_template_name': self.subject_template_name,
+                'email_template_name': self.email_template_name,
+                'context': context,
+                'to_email': [request.user.email]
+            }
+            email.send_mail(**opts)
+            return redirect(self.success_url)
+        return render(request, self.template_name, locals())
+
+@method_decorator(login_required, name='dispatch')
+class DeleteCompleteView(TemplateView):
+    success_url = None
+    cancel_url = None
+    email_template_name = None
+    subject_template_name = None
+
+    #Accessible only via Email
+    #TODO: Template with a confirm/cancel button.
+    def post(self, request, *args, **kwargs):
+        print(request)
+        print(args)
+        print(kwargs)
+        # # Manage Which buttons has been pushed
+        # l_user = User.objects.get(email=request.context['user'])
+        # l_user.is_active=False
+        # l_user.save()
+        # #TODO: What is the behavior, we want here ?
+        # logout()
+        return render(request, self.template_name, locals())

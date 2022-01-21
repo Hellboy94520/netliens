@@ -8,9 +8,7 @@ from django.core.mail import EmailMultiAlternatives
 from django.template import loader
 
 from ..models import User
-from django.contrib.auth.forms import UserCreationForm, PasswordResetForm
-
-from django.core.exceptions import ValidationError
+from django.contrib.auth.forms import UserCreationForm
 
 import logging
 logger = logging.getLogger("forms")
@@ -71,70 +69,33 @@ class SignUpForm(UserCreationForm):
         self.fields['first_name'].widget.attrs['placeholder'] = self.fields['first_name'].label
         self.fields['company'].widget.attrs['placeholder'] = self.fields['company'].label
 
-    def save(self, 
-             use_https=False,
-             site_domain=None,
-             site_name=None,
-             email_template_name=None,
-             subject_template_name=None,
-             from_email=None):
+    def save(self):
         """
             Generate a one-use only link to validate account creation.
         """
         # Create user without commit
-        l_user = super(SignUpForm, self).save(commit=False)
-        l_user.is_staff = False
-        l_user.is_active = False
-        l_user.is_superuser = False
-        l_user.save()
-        # Set content for email
-        context = {
-                'email': l_user.email,
-                'domain': site_domain,
-                'site_name': site_name,
-                'uid': urlsafe_base64_encode(force_bytes(l_user.pk)),
-                'user': l_user,
-                'token': default_token_generator.make_token(l_user),
-                'protocol': 'https' if use_https else 'http'
-        }
-        # - Send email
-        send_mail(subject_template_name,
-                  email_template_name,
-                  context,
-                  from_email,
-                  l_user.email)
+        self.user = super(SignUpForm, self).save(commit=False)
+        self.user.is_staff = False
+        self.user.is_active = False
+        self.user.is_superuser = False
+        self.user.save()
         return True
 
-# -----------------------------
-from django.contrib.auth.forms import PasswordChangeForm as DjangoPasswordChangeForm
-class PasswordChangeForm(DjangoPasswordChangeForm):
+class CheckPasswordForm(forms.Form):
+    """
+        This form is used to identify the user
+    """
+    password = forms.CharField(
+        required=True,
+        label=_("Password"),
+        strip=False,
+        widget=forms.PasswordInput(),
+    )
 
-    def send_email(self,
-            email_template_name=None,
-            subject_template_name=None,
-            from_email = None,
-            to_email=None):
-        # Send email
-        send_mail(subject_template_name,
-                  email_template_name,
-                  None,
-                  from_email,
-                  to_email)
-        return True
-
-# -----------------------------
-from django.contrib.auth.forms import SetPasswordForm as DjangoSetPasswordForm
-class SetPasswordForm(DjangoSetPasswordForm):
-
-    def send_email(self,
-            email_template_name=None,
-            subject_template_name=None,
-            from_email = None,
-            to_email=None):
-        # Send email
-        send_mail(subject_template_name,
-                  email_template_name,
-                  None,
-                  from_email,
-                  to_email)
+    def is_valid(self, user):
+        if not super(CheckPasswordForm, self).is_valid():
+            return False
+        if not user.check_password(self.cleaned_data['password']):
+            self.add_error('password', _("Invalid Password !"))
+            return False
         return True

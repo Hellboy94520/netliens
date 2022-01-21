@@ -1,0 +1,21 @@
+{% load i18n %}
+<!DOCTYPE html>
+<html>
+{% load static %}
+<head>
+    <meta charset="UTF-8">
+    {% include 'header.html' %}
+    <link rel="stylesheet" type="text/css" href="{% static 'css/form.css' %}">
+</head>
+<body style="margin-top:60px">
+    <div class="w3-panel w3-card" style="padding:0px; max-width: 600px; width:90%; margin: auto;">
+        <header>
+            <h1 class="w3-center my-amber-theme-l1" style="margin-top: 0px; margin-bottom: 10px;">{% trans "Log In" %}</h1>
+        </header>
+            <div class="w3-container" style="margin-bottom: 10px;">
+                <a>An email has been sent, to confirm the deletion of the account !</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
