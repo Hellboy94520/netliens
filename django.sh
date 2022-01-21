@@ -3,7 +3,7 @@
 # PATH
 project_path=$PWD
 app_path=$project_path/webbook
-python_path='python3.8'
+python_path='python3'
 
 usage()
 {

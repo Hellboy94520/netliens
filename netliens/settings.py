@@ -11,13 +11,19 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 """
 
 import os
-import json
 
-with open('/etc/config.json') as config_file:
+# Read .env file
+from dotenv import load_dotenv
+from os.path import join
+load_dotenv(join('../env', '.env'))
+
+import json
+from os.path import dirname, abspath
+with open('../config/config.json') as config_file:
     config = json.load(config_file)
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR = dirname(dirname(abspath(__file__)))
 
 
 # Quick-start development settings - unsuitable for production
@@ -82,9 +88,9 @@ AUTH_USER_MODEL = 'webbook.User'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'netliens',
-        'USER': config['DB_USERNAME'],
-        'PASSWORD': config['DB_PASSWORD'],
+        'NAME': os.environ['POSTGRES_NAME'],
+        'USER': os.environ['POSTGRES_USER'],
+        'PASSWORD': os.environ['POSTGRES_PASSWORD'],
         'HOST': config['DB_HOST'],
         'PORT': config['DB_PORT'],
         'AUTH_SOURCE': 'admin'
