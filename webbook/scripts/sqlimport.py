@@ -67,7 +67,6 @@ def run():
                                     settings.get('sql_netLiens', 'databasename'))
     logging.info(f"SQL Database has been set !")
 
-
     # # -----------------------------------
     # # Start conversion
     # # -----------------------------------

@@ -19,8 +19,9 @@ load_dotenv(join('../env', '.env'))
 
 import json
 from os.path import dirname, abspath
-with open('../config/config.json') as config_file:
-    config = json.load(config_file)
+CONFIG_FILE=None
+with open(abspath('../config/config.json')) as config_file:
+    CONFIG_FILE = json.load(config_file)
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = dirname(dirname(abspath(__file__)))
@@ -30,7 +31,7 @@ BASE_DIR = dirname(dirname(abspath(__file__)))
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config['SECRET_KEY']
+SECRET_KEY = CONFIG_FILE['SECRET_KEY']
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -91,8 +92,8 @@ DATABASES = {
         'NAME': os.environ['POSTGRES_NAME'],
         'USER': os.environ['POSTGRES_USER'],
         'PASSWORD': os.environ['POSTGRES_PASSWORD'],
-        'HOST': config['DB_HOST'],
-        'PORT': config['DB_PORT'],
+        'HOST': CONFIG_FILE['DB_HOST'],
+        'PORT': CONFIG_FILE['DB_PORT'],
         'AUTH_SOURCE': 'admin'
     }
 }
@@ -117,10 +118,10 @@ AUTH_PASSWORD_VALIDATORS = [
 # Email settings
 #TODO: To test only
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-EMAIL_HOST = config['EMAIL_HOST']
-EMAIL_PORT = config['EMAIL_PORT']
-EMAIL_HOST_USER = config['EMAIL_USER']
-EMAIL_HOST_PASSWORD = config['EMAIL_PASS']
+EMAIL_HOST = CONFIG_FILE['EMAIL_HOST']
+EMAIL_PORT = CONFIG_FILE['EMAIL_PORT']
+EMAIL_HOST_USER = CONFIG_FILE['EMAIL_USER']
+EMAIL_HOST_PASSWORD = CONFIG_FILE['EMAIL_PASS']
 EMAIL_USE_TLS = False
 DEFAULT_FROM_EMAIL = "Netliens <noreply@netliens.com>"
 
