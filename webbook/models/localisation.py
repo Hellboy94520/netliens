@@ -7,10 +7,9 @@ TITLE_MAX_LENGTH=50
 MINIMUM_ORDER=1
 MAX_CODE_LENGTH=5
 
-from .statistics import Statistics
-from .language import LanguageModel, LanguageAvailable
-
-from enum import Enum
+from webbook.models.statistics import Statistics
+from webbook.models.sqlimport import SqlImport
+from webbook.models.language import LanguageModel, LanguageAvailable
 
 def get_all_localisation_in_order(**kwargs):
     l_localisation_list = []
@@ -20,7 +19,7 @@ def get_all_localisation_in_order(**kwargs):
     return { l_localisation.pk : l_localisation for l_localisation in l_localisation_list }
 
 
-class Localisation(models.Model):
+class Localisation(Statistics):
     # Code Iso3 if provided
     code    = models.CharField(
         max_length=MAX_CODE_LENGTH,
@@ -29,7 +28,8 @@ class Localisation(models.Model):
         null=False,
         help_text=_("Localisation code"))
     # First column provide by Insee File
-    insee = models.PositiveIntegerField(
+    insee = models.IntegerField(
+        # unique=True, # TODO:Unique with the same parent !
         validators=[MinValueValidator(MINIMUM_ORDER)],
         default=MINIMUM_ORDER,
         verbose_name=_("Order"),
@@ -38,11 +38,6 @@ class Localisation(models.Model):
         default=False,
         verbose_name=_("Enable"),
         help_text=_("Localisation is enabled"))
-    # This variable is used by HTML for disabled option choice for User
-    is_linkeable = models.BooleanField(
-        default=False,
-        verbose_name=_("Linkable"),
-        help_text=_("Localisation can be link to an Announcement"))
     parent = models.ForeignKey(
         'Localisation',
         default=None,
@@ -57,6 +52,9 @@ class Localisation(models.Model):
         default=MINIMUM_ORDER,
         verbose_name=_("Order"),
         help_text=_("Display order"))
+    # TODO: To delete after migration
+    old_migrateStatus = models.TextField(default="")
+
 
     """ ---------------------------------------------------- """
     def get_localisationWithData(language: LanguageAvailable, order:str, **kwargs):
@@ -68,10 +66,6 @@ class Localisation(models.Model):
     """ ---------------------------------------------------- """
     def get_data(self, language: LanguageAvailable = LanguageAvailable.EN.value):
         return LocalisationData.objects.get(localisation=self, language=language)
-
-    """ ---------------------------------------------------- """
-    def get_statistics(self):
-        return LocalisationStats.objects.get(localisation=self)
 
     """ ---------------------------------------------------- """
     def get_children_list(self, **kwargs):
@@ -101,11 +95,6 @@ class LocalisationData(LanguageModel):
     localisation = models.ForeignKey(
         Localisation,
         on_delete=models.CASCADE)
-
-
-""" ---------------------------------------------------------------------------------------------------------------- """
-class LocalisationStats(Statistics):
-    localisation = models.OneToOneField(Localisation, on_delete=models.CASCADE, primary_key=True)
 
 
 """ --------------------------------------------------------------------------------------------------------------------

@@ -14,7 +14,9 @@ class AnnuCat():
 
     @classmethod
     def fromSql(self, sqlObject):
-        self.cat_id, self.cat_name, self.cat_parent, self.cat_priority, self.cat_show, self.cat_locked, self.cat_subd_geo, self.cat_subd_type, self.cat_color = \
+        self.cat_id = sqlObject.get("cat_id")
+        self.cat_name = sqlObject.get("cat_id")
+         self.cat_parent, self.cat_priority, self.cat_show, self.cat_locked, self.cat_subd_geo, self.cat_subd_type, self.cat_color = \
             sqlObject
 
 

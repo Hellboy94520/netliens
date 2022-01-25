@@ -751,4 +751,3 @@ reg = {self.reg}, cheflieu = {self.cheflieu}, tncc = {self.tncc}, ncc = {self.nc
             def __str__(self):
                 return f"""{self.__class__.__name__}: \
 dep = {self.dep}, reg = {self.reg}, cheflieu = {self.cheflieu}, tncc = {self.tncc}, ncc = {self.ncc}, nccenr = {self.nccenr}, libelle = {self.libelle}"""
-

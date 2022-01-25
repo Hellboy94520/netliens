@@ -2,24 +2,28 @@ from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from django.utils import timezone
 
-from .user import User
+from webbook.models.user import User
 
 class Statistics(models.Model):
-    date_creation = models.DateTimeField(default=timezone.now())
-    user_creation = models.ForeignKey(
+    creation_date = models.DateTimeField(auto_now_add=True)
+    creation_user = models.ForeignKey(
         User,
-        related_name='user_creation',
-        on_delete=models.RESTRICT)
-    date_validation = models.DateTimeField(
+        on_delete=models.RESTRICT,
+        related_name="%(class)s_creation_user"
+    )
+    last_update_date = models.DateTimeField(auto_now=True)
+    approval_date = models.DateTimeField(
         default = None,
         null=True,
-        blank=True)
-    user_validation = models.ForeignKey(
+        blank=True
+    )
+    approval_user = models.ForeignKey(
         User,
         default=None,
-        related_name='user_validation',
         null=True,
         blank=True,
-        on_delete=models.RESTRICT)
-    last_update = models.DateTimeField(default=timezone.now())
-
+        on_delete=models.RESTRICT,
+        related_name="%(class)s_approval_user"
+    )
+    class Meta:
+        abstract = True

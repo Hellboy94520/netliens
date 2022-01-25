@@ -7,15 +7,16 @@ from django.core.exceptions import ObjectDoesNotExist
 TITLE_MAX_LENGTH=50
 MINIMUM_ORDER=1
 
-from .statistics import Statistics
-from .language import LanguageModel, LanguageAvailable
+from webbook.models.statistics import Statistics
+from webbook.models.language import LanguageModel, LanguageAvailable
+from webbook.models.sqlimport import SqlImport
 
 """ --------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------
 Models
 ------------------------------------------------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------------------------------------- """
-class Category(models.Model):
+class Category(Statistics, SqlImport):
     is_enable = models.BooleanField(
         default=False,
         verbose_name=_("Enable"),
@@ -65,10 +66,6 @@ class Category(models.Model):
 
 
     """ ---------------------------------------------------- """
-    def get_statistics(self):
-        return CategoryStats.objects.get(category=self)
-
-    """ ---------------------------------------------------- """
     def get_children_list(self, **kwargs):
         children = list()
         for child in Category.objects.filter(parent=self, **kwargs).order_by('order'):
@@ -97,10 +94,6 @@ class CategoryData(LanguageModel):
         Category,
         on_delete=models.CASCADE)
 
-
-""" ---------------------------------------------------------------------------------------------------------------- """
-class CategoryStats(Statistics):
-    category = models.OneToOneField(Category, on_delete=models.CASCADE, primary_key=True)
 
 
 """ --------------------------------------------------------------------------------------------------------------------

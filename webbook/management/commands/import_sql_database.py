@@ -1,45 +1,56 @@
 from configparser import ConfigParser
+from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 
-from webbook.models import Category, Localisation
+from webbook.models import Category, Localisation, User
 
 from time import time
-from os.path import abspath
+from os.path import abspath, exists
 from configparser import ConfigParser, ExtendedInterpolation
 import pymysql
 
-from .sql_object.sqlObject import *
+from .sql_object import category as SqlCategory
+from .sql_object import localisation as SqlLocation
 
-SQL_TABLE_CATEGORY = "annu_cats"
-SQL_TABLE_LOCALISATION = "annu_dept"
+EXPECTED_ANSWER_TO_START = "YES"
+
+SQL_TABLE_CATS = "annu_cats"
+SQL_TABLE_DEPT = "annu_dept"
 SQL_TABLE_SITE = "annu_site"
 
 class Command(BaseCommand):
     help = 'Import Old Sql Database'
 
+    def print_info(self, msg):
+        self.stdout.write(f"[INFO] {msg}.")
+
     def print_running(self, msg):
-        self.stdout.write(f"[RUNNING] {msg}...", ending="\x1b[1K\r")
+        self.stdout.write(f"[RUNNING] {msg}...", ending="\r")
 
     def print_ok(self, msg):
+        self.stdout.write("\033[2K", ending="\r") # Cleaning current line
         self.stdout.write(f"{self.style.SUCCESS('[OK]')} {msg}.")
 
-    def check_models_empty(self, models):
-        assert models.objects.count()==0, \
-            CommandError(f"[ERROR] {models.__name__} is not empty !")
+    def check_models_empty(self, model):
+        if model.objects.count() != 0:
+            if not settings.DEBUG:
+                result = input(f"Model {model.__name__} is not empty, do you want to delete them ? ({EXPECTED_ANSWER_TO_START}/NO)")
+                assert result==EXPECTED_ANSWER_TO_START, CommandError(f"[ERROR] {model.__name__} is not empty !")
+            self.print_running(f"'{model.__name__}' will be deleted")
+            model.objects.all().delete()
+            self.print_ok(f"'{model.__name__}' has been deleted")
 
-    def save_sqlModel(self, object):
+    def getSqlModel(self, sql_key):
         """
             @params:
             - object: Python object to save on
         """
         with self.connection.cursor() as cursor:
-            self.print_running(f"Download '{object.SQL_KEY}' from Sql Database")
-            dataList = []
-            cursor.execute(f"select * from {object.SQL_KEY}")
-            for data in cursor.fetchall():
-                dataList.append(object.fromSql(data))
-            self.print_ok(f"{len(dataList)} '{object.SQL_KEY}' from Sql Database downloaded")
-            return dataList
+            self.print_running(f"Download '{sql_key}' from Sql Database")
+            # dataList = []
+            cursor.execute(f"select * from `{sql_key}`")
+            self.print_ok(f"'{sql_key}' downloaded")
+            return cursor.fetchall()
 
     def handle(self, *args, **options):
         tic = time()
@@ -47,7 +58,7 @@ class Command(BaseCommand):
         # Verification
         # ------------------------------------
         # Check if PostGreSql models are empty
-        self.print_running("Vérifying local Database is empty")
+        self.stdout.write("[INFO] Vérifying local Database is empty")
         for model in [
             Category, Localisation
         ]:
@@ -78,15 +89,52 @@ class Command(BaseCommand):
             raise CommandError(f"[ERROR] SQL Network Failed ({sql_config.get('sql_netLiens', 'address')}")
         self.print_ok("SQL Network established")
 
+        # Read Insee Data
+        INSEE_PATH_FOLDER = abspath(sql_config.get("InseeData", 'folder'))
+        if not exists(INSEE_PATH_FOLDER):
+            raise CommandError(f"[ERROR] Folder not found '{INSEE_PATH_FOLDER}' from '{SQL_CONFIG_PATH}' config file.")
+
         # ------------------------------------
-        # Preparation to import DB
+        # Preparation
         # ------------------------------------
-        annu_cats = self.save_sqlModel(AnnuCat)
-        annu_dept = self.save_sqlModel(AnnuDept)
-        annu_site = self.save_sqlModel(AnnuSite)
+        # Creation on a staff user to import
+        try:
+            IMPORT_ACCOUNT_EMAIL = f"{sql_config.get('sql_netLiens', 'user')}@netliens.com"
+            import_account = User.objects.get(email=IMPORT_ACCOUNT_EMAIL)
+        except User.DoesNotExist:
+            import_account = User.objects.create(
+                email = IMPORT_ACCOUNT_EMAIL,
+                password = sql_config.get('sql_netLiens', 'password'),
+                first_name = sql_config.get('sql_netLiens', 'user'),
+                last_name = sql_config.get('sql_netLiens', 'user'),
+                company="NetLiens",
+                is_active = True,
+                is_staff = True,
+                is_superuser = False
+            )
+        except Exception as e:
+            raise CommandError(f"[ERROR] Account '{IMPORT_ACCOUNT_EMAIL}' can not be created/get: {e}")
+        self.print_ok(f"Account '{IMPORT_ACCOUNT_EMAIL}' ready")
+
+        # ------------------------------------
+        # Import DB
+        # ------------------------------------
+        annu_cats = self.getSqlModel(SQL_TABLE_CATS)
+        annu_dept = self.getSqlModel(SQL_TABLE_DEPT)
+        annu_site = self.getSqlModel(SQL_TABLE_SITE)
+
+        # ------------------------------------
+        # Creation DB
+        # ------------------------------------
+        self.print_running(f"Creation of {Category.__name__} in PostgreSql")
+        # SqlCategory.conversion(annu_cats, import_account)
+        self.print_ok(f"{Category.objects.all().count()} {Category.__name__} imported.")
+        self.print_running(f"Creation of {Localisation.__name__} in PostgreSql")
+        # SqlLocation.generateModels(import_account, INSEE_PATH_FOLDER, sql_config)
+        self.print_ok(f"{Localisation.objects.all().count()} {Localisation.__name__} imported.")
 
         # ------------------------------------
         # End
         # ------------------------------------
         toc = time()
-        self.stdout.write(f"Command finished in {int(round((toc - tic)))} s")
+        self.stdout.write(f"[INFO] Command finished in {int(round((toc - tic)))} s")
