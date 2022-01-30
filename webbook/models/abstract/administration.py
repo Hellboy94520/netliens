@@ -3,7 +3,22 @@ from django.utils.translation import ugettext_lazy as _
 
 from webbook.models.user import User
 
-class Statistics(models.Model):
+class Administration(models.Model):
+    """
+        Contains the data used by administration_only for models
+    """
+    is_enable = models.BooleanField(
+        default=False,
+        verbose_name=_("Enable"),
+        help_text=_("Enable to be use by Admin, Staff and User")
+    )
+    is_visible = models.BooleanField(
+        default=False,
+        verbose_name=_("Visible"),
+        help_text=_("Enable to be use by Admin and Staff but not by User")
+    )
+
+    """ ------------------------- """
     creation_date = models.DateTimeField(auto_now_add=True)
     creation_user = models.ForeignKey(
         User,
@@ -24,5 +39,6 @@ class Statistics(models.Model):
         on_delete=models.RESTRICT,
         related_name="%(class)s_approval_user"
     )
+
     class Meta:
         abstract = True

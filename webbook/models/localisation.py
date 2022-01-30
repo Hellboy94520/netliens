@@ -10,8 +10,7 @@ MINIMUM_ORDER=0
 MINIMUM_INSEE=0
 MAX_CODE_LENGTH=5
 
-from webbook.models.abstract.model_administration import ModelAdministration
-from webbook.models.abstract.statistics import Statistics
+from webbook.models.abstract.administration import Administration as AdministrationModel
 from webbook.models.abstract.language import Language as LanguageModel
 from webbook.models.abstract.language import LanguageAvailable
 
@@ -23,7 +22,7 @@ def get_all_localisation_in_order(**kwargs):
     return { l_localisation.pk : l_localisation for l_localisation in l_localisation_list }
 
 
-class Localisation(ModelAdministration, Statistics):
+class Localisation(AdministrationModel):
     # Code Iso3 if provided
     code    = models.CharField(
         max_length=MAX_CODE_LENGTH,

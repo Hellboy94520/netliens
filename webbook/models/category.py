@@ -10,8 +10,7 @@ from datetime import datetime
 TITLE_MAX_LENGTH=50
 MINIMUM_ORDER=1
 
-from webbook.models.abstract.model_administration import ModelAdministration
-from webbook.models.abstract.statistics import Statistics
+from webbook.models.abstract.administration import Administration as AdministrationModel
 from webbook.models.abstract.sqlimport import SqlImport
 from webbook.models.abstract.language import Language as LanguageModel
 from webbook.models.abstract.language import LanguageAvailable
@@ -21,7 +20,7 @@ from webbook.models.abstract.language import LanguageAvailable
 Models
 ------------------------------------------------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------------------------------------- """
-class Category(ModelAdministration, Statistics, SqlImport):
+class Category(AdministrationModel, SqlImport):
     parent = models.ForeignKey(
         'Category',
         default=None,

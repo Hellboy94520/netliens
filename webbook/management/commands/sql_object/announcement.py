@@ -1,7 +1,7 @@
 from datetime import datetime
 from webbook.models import Announcement, AnnouncementData
 from webbook.models import Category, getUnknownCategory
-from webbook.models import Localisation, getUnknownLocalisation
+from webbook.models import getUnknownLocalisation
 from webbook.models.abstract.language import LanguageAvailable
 from webbook.management.commands.sql_object.localisation import sqlAssociation
 
@@ -15,7 +15,7 @@ def conversion(sqlAnnuSiteList, annuSiteAppartientModelName, sqlPointer, importU
         is_enable = True if sqlObject.get('site_status') == 9 else False
         is_visible = True if sqlObject.get('site_status') == 9 else False
         old_sqlId = sqlObject.get('site_id')
-        old_migrateStatus = f"[IMPORT] - [INFO]: site_status={sqlObject.get('site_status')}, site_dispmode={sqlObject.get('site_dispmode')}; "
+        old_migrateStatus = f"[IMPORT] - [INFO]: site_pr={sqlObject.get('site_pr')}, site_status={sqlObject.get('site_status')}, site_dispmode={sqlObject.get('site_dispmode')}; "
         nl = sqlObject.get('site_pr') if sqlObject.get('site_pr') else 0
         creation_date = datetime.fromtimestamp(sqlObject.get('site_reg_date')) if sqlObject.get('site_reg_date') != 0 else datetime.today()
         approval_date = datetime.fromtimestamp(sqlObject.get('site_valid_date')) if sqlObject.get('site_valid_date') != 0 else None

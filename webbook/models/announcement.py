@@ -7,8 +7,7 @@ from webbook.models.user import User
 from webbook.models.category import Category
 from webbook.models.abstract.language import Language as LanguageModel
 from webbook.models.localisation import Localisation
-from webbook.models.abstract.model_administration import ModelAdministration
-from webbook.models.abstract.statistics import Statistics
+from webbook.models.abstract.administration import Administration as AdministrationModel
 from webbook.models.abstract.sqlimport import SqlImport
 
 alphanumeric = RegexValidator(r'^[0-9a-zA-Z]*$', _("Only alphanumeric characters are allowed."))
@@ -23,7 +22,7 @@ NL_LEVEL_MAX=10
 Models
 ------------------------------------------------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------------------------------------- """
-class Announcement(ModelAdministration, Statistics, SqlImport):
+class Announcement(AdministrationModel, SqlImport):
     # Updatable by User
     url = models.CharField(
         default="",
