@@ -80,12 +80,13 @@ class Command(BaseCommand):
                 last_name = sqlConfigParser.get('sql_netLiens', 'user'),
                 company="NetLiens",
                 is_active = True,
+                is_vip = False,
                 is_staff = True,
                 is_superuser = False
             )
         except Exception as e:
             raise CommandError(f"[ERROR] Account '{IMPORT_ACCOUNT_EMAIL}' can not be created/get: {e}")
-        self.print_ok(f"Account '{IMPORT_ACCOUNT_EMAIL}' ready")
+        self.print_ok(f"Account '{IMPORT_ACCOUNT_EMAIL}' created")
 
         # ------------------------------------
         # Import DB
@@ -100,15 +101,15 @@ class Command(BaseCommand):
         # ------------------------------------
         self.print_running(f"Creation of {Category.__name__} in PostgreSql")
         SqlCategory.conversion(annu_cats, import_account)
-        self.print_ok(f"{Category.objects.all().count()} {Category.__name__}/{len(annu_cats)} imported.")
+        self.print_ok(f"{Category.objects.all().count()}/{len(annu_cats)} {Category.__name__} imported.")
 
         self.print_running(f"Creation of {Localisation.__name__} in PostgreSql")
         SqlLocation.generateModels(import_account, INSEE_PATH_FOLDER, sqlConfigParser)
-        self.print_ok(f"{Localisation.objects.all().count()} {Localisation.__name__} imported.")
+        self.print_ok(f"{Localisation.objects.all().count()} {Localisation.__name__} created.")
 
         self.print_running(f"Creation of {Announcement.__name__} in PostgreSql")
         SqlAnnouncement.conversion(annu_site, SQL_TABLE_SITE_APPARTIENT, sqlPointer, import_account)
-        self.print_ok(f"{Announcement.objects.all().count()} {Announcement.__name__}/{len(annu_site)} imported.")
+        self.print_ok(f"{Announcement.objects.all().count()}/{len(annu_site)} {Announcement.__name__} imported.")
         self.print_ok(f"{User.objects.all().count()} {User.__name__} created.")
 
         # ------------------------------------

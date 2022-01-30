@@ -56,16 +56,36 @@ class Announcement(AdministrationModel, SqlImport):
         on_delete=models.DO_NOTHING,
         verbose_name=_("Localisation"),
         help_text=_("Announcement Localisation"))
-    # ReadOnly
+    return_url = models.CharField(
+        default="",
+        blank=True,
+        null=True,
+        max_length=URL_MAX_LENGTH,
+        verbose_name=_("Return Url"),
+        help_text=_("Return Url used to link that announcement"))
+    # ReadOnly by User
     nl = models.PositiveIntegerField(
         validators=[MaxValueValidator(NL_LEVEL_MAX)],
         default=0,
         verbose_name=_("NL Level"),
         help_text=_("NL Level of the website"))
+    click_quantity = models.PositiveIntegerField(
+        default=0,
+        verbose_name=_("Click"),
+        help_text=_("Announcement click quantity"))
+    return_url_quantity = models.PositiveIntegerField(
+        default=0,
+        verbose_name=_("Return"),
+        help_text=_("Return Url quantity"))
     # Private
     owner = models.ForeignKey(
         User,
         on_delete=models.CASCADE)
+    is_visible_by_officetourisme = models.BooleanField(
+        default=False,
+        verbose_name=_("Visibility on Office Tourisme"),
+        help_text=_("Set is this announcement is visible by Office Tourisme website")
+    )
 
     """ ---------------------------------------------------- """
     def get_announcement_language(self, language: str):

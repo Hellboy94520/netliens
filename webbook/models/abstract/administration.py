@@ -5,7 +5,7 @@ from webbook.models.user import User
 
 class Administration(models.Model):
     """
-        Contains the data used by administration_only for models
+        Contains the data used by administration_only for models, not visible by Users
     """
     is_enable = models.BooleanField(
         default=False,
@@ -24,6 +24,12 @@ class Administration(models.Model):
         User,
         on_delete=models.RESTRICT,
         related_name="%(class)s_creation_user"
+    )
+    creation_ip = models.GenericIPAddressField(
+        protocol='both',
+        default=None,
+        null=True,
+        blank=True
     )
     last_update_date = models.DateTimeField(auto_now=True)
     approval_date = models.DateTimeField(
