@@ -1,13 +1,16 @@
-from webbook.models import Category, CategoryData
-from webbook.models.language import LanguageAvailable
+from webbook.models import Category, CategoryData, createUnknownCategory
+from webbook.models.abstract.language import LanguageAvailable
 from django.db.models import F, Value
 from django.db.models.functions import Concat
 
-import datetime
+from datetime import datetime
 
 def conversion(sqlObjectList, importUser):
+    # --------------------------
+    # Create Models from SQL Database
+    # --------------------------
     for sqlObject in sqlObjectList:
-        is_enable = bool(sqlObject.get('cat_show'))
+        is_visible = bool(sqlObject.get('cat_show'))
         old_migrateStatus = ""
 
         # --------------------------
@@ -16,28 +19,30 @@ def conversion(sqlObjectList, importUser):
         # Check if parent is key is not identical as current one
         if sqlObject.get('cat_id') == sqlObject.get('cat_parent'):
             old_migrateStatus = f"[IMPORT] - [ERROR]: Identical value on cat_id and cat_parent;"
-            is_enable = False
+            is_visible = False
 
         # --------------------------
         # Model creation
         # --------------------------
         category = Category.objects.create(
-            is_enable = is_enable,
+            is_enable = True,
+            is_visible = is_visible,
             old_sqlId = int(sqlObject.get('cat_id')),
             old_migrateStatus = str(old_migrateStatus),
             creation_user = importUser,
-            approval_date = datetime.datetime.now(),
+            # TODO: Get the real date
+            approval_date = datetime.now(),
             approval_user = importUser
         )
         CategoryData.objects.create(
             name = str(sqlObject.get('cat_name')),
-            resume = str(sqlObject.get('cat_name')),
-            language = LanguageAvailable.FR.value,
+            description = str(sqlObject.get('cat_name')),
+            language = LanguageAvailable.FR,
             category = category
         )
 
     # --------------------------
-    # Add parent
+    # Add parent to model created in PostgreSql
     # --------------------------
     for sqlObject in sqlObjectList:
         # If there is no parent nothing to do
@@ -49,7 +54,7 @@ def conversion(sqlObjectList, importUser):
         if len(resultat) == 0:
             Category.objects.filter(old_sqlId=sqlObject.get('cat_id')).update(
                 old_migrateStatus = Concat(F('old_migrateStatus'), Value(f"[IMPORT] - [ERROR]: Parent {sqlObject.get('cat_parent')} is not find;")),
-                is_enable = False
+                is_visible = False
             )
             continue
         # if several parent are find
@@ -61,3 +66,8 @@ def conversion(sqlObjectList, importUser):
         )
 
     #TODO: What about the order ?
+
+    # --------------------------
+    # Create an unknown
+    # --------------------------
+    createUnknownCategory(importUser)

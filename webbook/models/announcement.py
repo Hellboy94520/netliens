@@ -3,11 +3,13 @@ from django.utils.translation import ugettext_lazy as _
 from django.core.validators import MaxValueValidator, MinValueValidator, RegexValidator
 from django.db.models.signals import pre_delete
 
-from .user import User
-from .category import Category
-from .language import LanguageModel
-from .localisation import Localisation
-from .statistics import Statistics
+from webbook.models.user import User
+from webbook.models.category import Category
+from webbook.models.abstract.language import Language as LanguageModel
+from webbook.models.localisation import Localisation
+from webbook.models.abstract.model_administration import ModelAdministration
+from webbook.models.abstract.statistics import Statistics
+from webbook.models.abstract.sqlimport import SqlImport
 
 alphanumeric = RegexValidator(r'^[0-9a-zA-Z]*$', _("Only alphanumeric characters are allowed."))
 
@@ -21,7 +23,7 @@ NL_LEVEL_MAX=10
 Models
 ------------------------------------------------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------------------------------------- """
-class Announcement(models.Model):
+class Announcement(ModelAdministration, Statistics, SqlImport):
     # Updatable by User
     url = models.CharField(
         default="",
@@ -65,28 +67,12 @@ class Announcement(models.Model):
     owner = models.ForeignKey(
         User,
         on_delete=models.CASCADE)
-    is_enable = models.BooleanField(
-        default=False,
-        verbose_name=_("Enable"),
-        help_text=_("Announcement is enabled"))
-    is_valid = models.BooleanField(
-        default=False,
-        verbose_name=_("Valid"),
-        help_text=_("Announcement is valid"))
-    is_on_homepage = models.BooleanField(
-        default=False,
-        verbose_name=_("On Homepage"),
-        help_text=_("Announcement is visible on Homepage"))
 
     """ ---------------------------------------------------- """
     def get_announcement_language(self, language: str):
-        return AnnouncementLanguage.objects.get(
+        return AnnouncementData.objects.get(
             announcement=self,
             language=language)
-
-    """ ---------------------------------------------------- """
-    def get_statistics(self):
-        return AnnouncementStats.objects.get(announcement=self)
 
     class Meta:
         verbose_name = _("Announcement")
@@ -94,25 +80,9 @@ class Announcement(models.Model):
 
 """ ---------------------------------------------------------------------------------------------------------------- """
 class AnnouncementData(LanguageModel):
-    title = models.CharField(
-        max_length=TITLE_MAX_LENGTH,
-        blank=False,
-        null=False,
-        verbose_name=_("Title"),
-        help_text=_("Title of your announcement"))
-    content = models.TextField(
-        blank=False,
-        null=False,
-        verbose_name=_("Content"),
-        help_text=_("Content of your announcement"))
     announcement = models.ForeignKey(
         Announcement,
         on_delete=models.CASCADE)
-
-
-""" ---------------------------------------------------------------------------------------------------------------- """
-class AnnouncementStats(Statistics):
-    announcement = models.OneToOneField(Announcement, on_delete=models.CASCADE, primary_key=True)
 
 
 """ --------------------------------------------------------------------------------------------------------------------
@@ -120,12 +90,12 @@ class AnnouncementStats(Statistics):
 Signals
 ------------------------------------------------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------------------------------------- """
-def _category_deletion(instance, **kwargs):
-    """
-        Deletion of a category
-    """
-    for announcement in Announcement.objects.filter(category=instance):
-        announcement.category = instance.parent
-        announcement.save()
+# def _category_deletion(instance, **kwargs):
+#     """
+#         Deletion of a category
+#     """
+#     for announcement in Announcement.objects.filter(category=instance):
+#         announcement.category = instance.parent
+#         announcement.save()
 
-pre_delete.connect(_category_deletion, sender = Category)
+# pre_delete.connect(_category_deletion, sender = Category)

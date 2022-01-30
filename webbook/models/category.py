@@ -1,26 +1,27 @@
+from faulthandler import is_enabled
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from django.core.validators import MinValueValidator
 from django.db.models.signals import pre_delete
 from django.core.exceptions import ObjectDoesNotExist
 
+from datetime import datetime
+
 TITLE_MAX_LENGTH=50
 MINIMUM_ORDER=1
 
-from webbook.models.statistics import Statistics
-from webbook.models.language import LanguageModel, LanguageAvailable
-from webbook.models.sqlimport import SqlImport
+from webbook.models.abstract.model_administration import ModelAdministration
+from webbook.models.abstract.statistics import Statistics
+from webbook.models.abstract.sqlimport import SqlImport
+from webbook.models.abstract.language import Language as LanguageModel
+from webbook.models.abstract.language import LanguageAvailable
 
 """ --------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------
 Models
 ------------------------------------------------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------------------------------------- """
-class Category(Statistics, SqlImport):
-    is_enable = models.BooleanField(
-        default=False,
-        verbose_name=_("Enable"),
-        help_text=_("Category is enabled"))
+class Category(ModelAdministration, Statistics, SqlImport):
     parent = models.ForeignKey(
         'Category',
         default=None,
@@ -46,7 +47,7 @@ class Category(Statistics, SqlImport):
         return objectMap
 
     """ ---------------------------------------------------- """
-    def get_data(self, language: LanguageAvailable = LanguageAvailable.EN.value):
+    def get_data(self, language: LanguageAvailable = LanguageAvailable.EN):
         try:
             return CategoryData.objects.get(category=self, language=language)
         except ObjectDoesNotExist:
@@ -56,7 +57,7 @@ class Category(Statistics, SqlImport):
             return None
 
     """ ---------------------------------------------------- """
-    def get_childrenWithData_list(self, language: LanguageAvailable = LanguageAvailable.EN.value, **kwargs):
+    def get_childrenWithData_list(self, language: LanguageAvailable = LanguageAvailable.EN, **kwargs):
         children = dict()
         for child in Category.objects.filter(parent=self, **kwargs).order_by('order'):
             childData = child.get_data(language)
@@ -79,17 +80,6 @@ class Category(Statistics, SqlImport):
 
 """ ---------------------------------------------------------------------------------------------------------------- """
 class CategoryData(LanguageModel):
-    name = models.CharField(
-        max_length=TITLE_MAX_LENGTH,
-        blank=False,
-        null=False,
-        verbose_name=_("Name"),
-        help_text=_("Name of the category"))
-    resume = models.TextField(
-        blank=False,
-        null=False,
-        verbose_name=_("Resume"),
-        help_text=_("Resume of the category"))
     category = models.ForeignKey(
         Category,
         on_delete=models.CASCADE)
@@ -110,3 +100,56 @@ def _category_deletion(instance, **kwargs):
         children.save()
 
 pre_delete.connect(_category_deletion, sender = Category)
+
+""" ------------------------------
+Unknown Category
+------------------------------ """
+#TODO: For all Unknown model, add verification is_visible to False in main_consistency
+class UnknownCategory:
+    LANGUAGE_FR_NAME = "Inconnu"
+    LANGUAGE_FR_DESCRIPTION = \
+            "Categorie permettant de stocker les orphelins. Ne pas rendre visible !"
+    LANGUAGE_FR_LANGUAGE = LanguageAvailable.FR
+
+    LANGUAGE_EN_NAME = "Unknown"
+    LANGUAGE_EN_DESCRIPTION = \
+            "Category use to store lost. Do not set it visible !"
+    LANGUAGE_EN_LANGUAGE = LanguageAvailable.EN
+
+    PARENT = None
+    IS_ENABLE = True
+    IS_VISIBLE = False
+
+def createUnknownCategory(user):
+    category = Category.objects.create(
+        parent = UnknownCategory.PARENT,
+        is_enable = UnknownCategory.IS_ENABLE,
+        is_visible = UnknownCategory.IS_VISIBLE,
+        creation_user = user,
+        approval_date = datetime.now(),
+        approval_user = user
+    )
+    CategoryData.objects.create(
+        name = UnknownCategory.LANGUAGE_FR_NAME,
+        description = UnknownCategory.LANGUAGE_FR_DESCRIPTION,
+        language = UnknownCategory.LANGUAGE_FR_LANGUAGE,
+        category = category
+    )
+    CategoryData.objects.create(
+        name = UnknownCategory.LANGUAGE_EN_NAME,
+        description = UnknownCategory.LANGUAGE_EN_DESCRIPTION,
+        language = UnknownCategory.LANGUAGE_EN_LANGUAGE,
+        category = category
+    )
+
+def getUnknownCategory():
+    return CategoryData.objects.get(
+        name = UnknownCategory.LANGUAGE_EN_NAME,
+        description = UnknownCategory.LANGUAGE_EN_DESCRIPTION,
+        language = UnknownCategory.LANGUAGE_EN_LANGUAGE,
+        category__in=Category.objects.filter(
+            parent = UnknownCategory.PARENT,
+            is_enable = UnknownCategory.IS_ENABLE,
+            is_visible = UnknownCategory.IS_VISIBLE
+            )
+    ).category

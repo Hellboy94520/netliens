@@ -1,25 +1,11 @@
-from faulthandler import is_enabled
-from importlib.resources import contents
-from webbook.models.localisation import Localisation, LocalisationData
-from webbook.models.language import LanguageAvailable
+from webbook.models.localisation import Localisation, LocalisationData, UnknownLocalisation
+from webbook.models.abstract.language import LanguageAvailable
 from .localisation_mapping import SQL_MAP_LIST
 
 
 from re import compile
 from os.path import join
 from datetime import datetime
-
-CONTINENT_SQL_ASSOCIATION = {
-
-}
-CONTINENT_SQL_ASSOCIATION_2 = {
-    "EUR": [202],
-    "AMR": [203, 204],
-    "AFR": [205, 206],
-    "ASA": [207],
-    "OCE": [208, 211],
-    "UNKNOWN": [209, 210] #TODO: Find a match for that one
-}
 
 INSEE_KEY = "InseeData"
 
@@ -65,20 +51,21 @@ def __getContinent(importUser, inseePath, sqlConfig):
             code = content[4],
             insee = __toInteger(content[0]),
             is_enable = True,
+            is_visible = True,
             creation_user = importUser,
             approval_date = datetime.now(),
             approval_user = importUser
         )
         LocalisationData.objects.create(
             name = __toLowerCase(content[1]),
-            resume = "Continent",
-            language = LanguageAvailable.FR.value,
+            description = "Continent",
+            language = LanguageAvailable.FR,
             localisation = localisation
         )
         LocalisationData.objects.create(
             name = __toLowerCase(content[2]),
-            resume = "Continent",
-            language = LanguageAvailable.EN.value,
+            description = "Continent",
+            language = LanguageAvailable.EN,
             localisation = localisation
         )
 
@@ -122,6 +109,7 @@ def __getCountry(importUser, inseePath, sqlConfig):
             code = content[9],
             insee = content[0],
             is_enable = True,
+            is_visible = True,
             creation_user = importUser,
             approval_date = datetime.now(),
             approval_user = importUser,
@@ -129,15 +117,21 @@ def __getCountry(importUser, inseePath, sqlConfig):
         )
         LocalisationData.objects.create(
             name = __toLowerCase(content[5]),
-            resume = "Pays",
-            language = LanguageAvailable.FR.value,
+            description = "Pays",
+            language = LanguageAvailable.FR,
+            localisation = localisation
+        )
+        LocalisationData.objects.create(
+            name = __toLowerCase(content[5]),
+            description = "Country",
+            language = LanguageAvailable.EN,
             localisation = localisation
         )
 
 def __getFranceFromDb():
     # Get France Localisation to continue
     FRANCE_NAME = "France"
-    franceData = LocalisationData.objects.filter(name=FRANCE_NAME, language=LanguageAvailable.FR.value)
+    franceData = LocalisationData.objects.filter(name=FRANCE_NAME, language=LanguageAvailable.FR)
     assert franceData.count() == 1, f"Impossible to find a parent with a name value equal to '{FRANCE_NAME}'"
     return franceData[0].localisation
 
@@ -169,9 +163,10 @@ def __getRegion(importUser, inseePath, sqlConfig, france):
 
         # Generate Model
         localisation = Localisation.objects.create(
-            code = "",
+            code = content[1],
             insee = __toInteger(content[0]),
             is_enable = True,
+            is_visible = True,
             creation_user = importUser,
             approval_date = datetime.now(),
             approval_user = importUser,
@@ -179,10 +174,17 @@ def __getRegion(importUser, inseePath, sqlConfig, france):
         )
         LocalisationData.objects.create(
             name = __toLowerCase(content[4]),
-            resume = "Région Française",
-            language = LanguageAvailable.FR.value,
+            description = "Région Française",
+            language = LanguageAvailable.FR,
             localisation = localisation
         )
+        LocalisationData.objects.create(
+            name = __toLowerCase(content[4]),
+            description = "French region",
+            language = LanguageAvailable.EN,
+            localisation = localisation
+        )
+
 
 def __getDepartment(importUser, inseePath, sqlConfig, france):
     """
@@ -219,9 +221,10 @@ def __getDepartment(importUser, inseePath, sqlConfig, france):
 
         # Generate Model
         localisation = Localisation.objects.create(
-            code = "",
+            code = content[2],
             insee = __toInteger(content[0]),
             is_enable = True,
+            is_visible = True,
             creation_user = importUser,
             approval_date = datetime.now(),
             approval_user = importUser,
@@ -229,10 +232,17 @@ def __getDepartment(importUser, inseePath, sqlConfig, france):
         )
         LocalisationData.objects.create(
             name = content[5],
-            resume = "Département Français",
-            language = LanguageAvailable.FR.value,
+            description = "Département Français",
+            language = LanguageAvailable.FR,
             localisation = localisation
         )
+        LocalisationData.objects.create(
+            name = content[5],
+            description = "French Department",
+            language = LanguageAvailable.EN,
+            localisation = localisation
+        )
+
 
 def generateModels(importUser, inseePath, sqlConfig):
     __getContinent(importUser, inseePath, sqlConfig)
@@ -243,16 +253,29 @@ def generateModels(importUser, inseePath, sqlConfig):
     __getRegion(importUser, inseePath, sqlConfig, france)
     __getDepartment(importUser, inseePath, sqlConfig, france)
 
+    # --------------------------
+    # Create an unknown
+    # --------------------------
+    unknownLocalisationFields = UnknownLocalisation.getFields()
+    unknownLocalisationFields['creation_user'] = importUser
+    unknownLocalisation = Localisation.objects.create(**unknownLocalisationFields)
+    LocalisationData.objects.create(**UnknownLocalisation.getFieldsDataFr(), localisation=unknownLocalisation)
+    LocalisationData.objects.create(**UnknownLocalisation.getFieldsDataEn(), localisation=unknownLocalisation)
+
 def sqlAssociation(sqlKey: int) -> Localisation:
     for map in SQL_MAP_LIST:
         # Read map with key
         filters = map.get(sqlKey, None)
         # If key is find, but value is empty, it is an error
-        assert filters != "", f"Key '{sqlKey}' has not value in '{map.__name__}' map"
-        # If no key find, we continue to search in another map
-        if filters is None:
+        if filters == "" or filters is None:
             continue
         # If key find, return value
-        return Localisation.objects.get(*filters)
+        child = None
+        for localisation in filters[::-1]:
+            if child:
+                child = Localisation.objects.get(**localisation, parent=child)
+            else:
+                child = Localisation.objects.get(**localisation)
+        return child
     # If that part is reach, key does not exist on all map
     raise f"Key '{sqlKey}' not find on any SQL_MAPS"

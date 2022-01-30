@@ -2,21 +2,24 @@ from configparser import ConfigParser
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 
-from webbook.models import Category, Localisation, User
+from webbook.models import Category, Localisation, User, Announcement
 
 from time import time
 from os.path import abspath, exists
-from configparser import ConfigParser, ExtendedInterpolation
-import pymysql
 
+from .sql_object.configParser import parseSqlConfig
+from .sql_object.sqlPointer import SqlPointer
 from .sql_object import category as SqlCategory
 from .sql_object import localisation as SqlLocation
+from .sql_object import announcement as SqlAnnouncement
 
 EXPECTED_ANSWER_TO_START = "YES"
 
 SQL_TABLE_CATS = "annu_cats"
-SQL_TABLE_DEPT = "annu_dept"
 SQL_TABLE_SITE = "annu_site"
+SQL_TABLE_SITE_APPARTIENT = "annu_site_appartient"
+
+SQL_CONFIG_PATH = abspath("../config/sql_config.ini")
 
 class Command(BaseCommand):
     help = 'Import Old Sql Database'
@@ -40,18 +43,6 @@ class Command(BaseCommand):
             model.objects.all().delete()
             self.print_ok(f"'{model.__name__}' has been deleted")
 
-    def getSqlModel(self, sql_key):
-        """
-            @params:
-            - object: Python object to save on
-        """
-        with self.connection.cursor() as cursor:
-            self.print_running(f"Download '{sql_key}' from Sql Database")
-            # dataList = []
-            cursor.execute(f"select * from `{sql_key}`")
-            self.print_ok(f"'{sql_key}' downloaded")
-            return cursor.fetchall()
-
     def handle(self, *args, **options):
         tic = time()
         # ------------------------------------
@@ -60,53 +51,33 @@ class Command(BaseCommand):
         # Check if PostGreSql models are empty
         self.stdout.write("[INFO] Vérifying local Database is empty")
         for model in [
-            Category, Localisation
+            Announcement, Category, Localisation, User
         ]:
             self.check_models_empty(model)
-
         self.print_ok("Local Database is empty")
 
-        # Read Sql Database Configuration file
-        SQL_CONFIG_PATH = abspath("../config/sql_config.ini")
-        self.print_running(f"SQL Configuration file '{SQL_CONFIG_PATH}' opening")
-        try:
-            sql_config = ConfigParser()
-            sql_config._interpolation = ExtendedInterpolation()
-            sql_config.read(SQL_CONFIG_PATH)
-        except:
-            CommandError(f"[ERROR] Impossible to open SQL Configuration file '{SQL_CONFIG_PATH}'")
-        self.print_ok(f"SQL Configuration file '{SQL_CONFIG_PATH}' opened")
-
-        # Check if Sql Database Connection is working
-        self.print_running("SQL Network connection")
-        try:
-            self.connection = pymysql.connect(host=sql_config.get('sql_netLiens', 'address'),
-                user=sql_config.get('sql_netLiens', 'user'),
-                password=sql_config.get('sql_netLiens', 'password'),
-                database=sql_config.get('sql_netLiens', 'databasename'),
-                cursorclass=pymysql.cursors.DictCursor)
-        except:
-            raise CommandError(f"[ERROR] SQL Network Failed ({sql_config.get('sql_netLiens', 'address')}")
+        sqlConfigParser = parseSqlConfig(file=SQL_CONFIG_PATH)
+        sqlPointer = SqlPointer(sqlConfig=sqlConfigParser)
         self.print_ok("SQL Network established")
 
         # Read Insee Data
-        INSEE_PATH_FOLDER = abspath(sql_config.get("InseeData", 'folder'))
+        INSEE_PATH_FOLDER = abspath(sqlConfigParser.get("InseeData", 'folder'))
         if not exists(INSEE_PATH_FOLDER):
-            raise CommandError(f"[ERROR] Folder not found '{INSEE_PATH_FOLDER}' from '{SQL_CONFIG_PATH}' config file.")
+            raise CommandError(f"[ERROR] File not found '{INSEE_PATH_FOLDER}' from '{SQL_CONFIG_PATH}' config file.")
 
         # ------------------------------------
         # Preparation
         # ------------------------------------
         # Creation on a staff user to import
         try:
-            IMPORT_ACCOUNT_EMAIL = f"{sql_config.get('sql_netLiens', 'user')}@netliens.com"
+            IMPORT_ACCOUNT_EMAIL = f"{sqlConfigParser.get('sql_netLiens', 'user')}@netliens.com"
             import_account = User.objects.get(email=IMPORT_ACCOUNT_EMAIL)
         except User.DoesNotExist:
             import_account = User.objects.create(
                 email = IMPORT_ACCOUNT_EMAIL,
-                password = sql_config.get('sql_netLiens', 'password'),
-                first_name = sql_config.get('sql_netLiens', 'user'),
-                last_name = sql_config.get('sql_netLiens', 'user'),
+                password = sqlConfigParser.get('sql_netLiens', 'password'),
+                first_name = sqlConfigParser.get('sql_netLiens', 'user'),
+                last_name = sqlConfigParser.get('sql_netLiens', 'user'),
                 company="NetLiens",
                 is_active = True,
                 is_staff = True,
@@ -119,19 +90,26 @@ class Command(BaseCommand):
         # ------------------------------------
         # Import DB
         # ------------------------------------
-        annu_cats = self.getSqlModel(SQL_TABLE_CATS)
-        annu_dept = self.getSqlModel(SQL_TABLE_DEPT)
-        annu_site = self.getSqlModel(SQL_TABLE_SITE)
+        self.print_running("Models from SQL Database downloading")
+        annu_cats = sqlPointer.getSqlModel(SQL_TABLE_CATS)
+        annu_site = sqlPointer.getSqlModel(SQL_TABLE_SITE)
+        self.print_ok("Models from SQL Database downloaded")
 
         # ------------------------------------
         # Creation DB
         # ------------------------------------
         self.print_running(f"Creation of {Category.__name__} in PostgreSql")
-        # SqlCategory.conversion(annu_cats, import_account)
-        self.print_ok(f"{Category.objects.all().count()} {Category.__name__} imported.")
+        SqlCategory.conversion(annu_cats, import_account)
+        self.print_ok(f"{Category.objects.all().count()} {Category.__name__}/{len(annu_cats)} imported.")
+
         self.print_running(f"Creation of {Localisation.__name__} in PostgreSql")
-        # SqlLocation.generateModels(import_account, INSEE_PATH_FOLDER, sql_config)
+        SqlLocation.generateModels(import_account, INSEE_PATH_FOLDER, sqlConfigParser)
         self.print_ok(f"{Localisation.objects.all().count()} {Localisation.__name__} imported.")
+
+        self.print_running(f"Creation of {Announcement.__name__} in PostgreSql")
+        SqlAnnouncement.conversion(annu_site, SQL_TABLE_SITE_APPARTIENT, sqlPointer, import_account)
+        self.print_ok(f"{Announcement.objects.all().count()} {Announcement.__name__}/{len(annu_site)} imported.")
+        self.print_ok(f"{User.objects.all().count()} {User.__name__} created.")
 
         # ------------------------------------
         # End

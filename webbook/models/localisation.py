@@ -3,13 +3,17 @@ from django.utils.translation import ugettext_lazy as _
 from django.core.validators import MinValueValidator
 from django.db.models.signals import pre_delete
 
+from datetime import datetime
+
 TITLE_MAX_LENGTH=50
-MINIMUM_ORDER=1
+MINIMUM_ORDER=0
+MINIMUM_INSEE=0
 MAX_CODE_LENGTH=5
 
-from webbook.models.statistics import Statistics
-from webbook.models.sqlimport import SqlImport
-from webbook.models.language import LanguageModel, LanguageAvailable
+from webbook.models.abstract.model_administration import ModelAdministration
+from webbook.models.abstract.statistics import Statistics
+from webbook.models.abstract.language import Language as LanguageModel
+from webbook.models.abstract.language import LanguageAvailable
 
 def get_all_localisation_in_order(**kwargs):
     l_localisation_list = []
@@ -19,7 +23,7 @@ def get_all_localisation_in_order(**kwargs):
     return { l_localisation.pk : l_localisation for l_localisation in l_localisation_list }
 
 
-class Localisation(Statistics):
+class Localisation(ModelAdministration, Statistics):
     # Code Iso3 if provided
     code    = models.CharField(
         max_length=MAX_CODE_LENGTH,
@@ -30,14 +34,10 @@ class Localisation(Statistics):
     # First column provide by Insee File
     insee = models.IntegerField(
         # unique=True, # TODO:Unique with the same parent !
-        validators=[MinValueValidator(MINIMUM_ORDER)],
-        default=MINIMUM_ORDER,
+        validators=[MinValueValidator(MINIMUM_INSEE)],
+        default=MINIMUM_INSEE,
         verbose_name=_("Order"),
         help_text=_("Display order"))
-    is_enable = models.BooleanField(
-        default=False,
-        verbose_name=_("Enable"),
-        help_text=_("Localisation is enabled"))
     parent = models.ForeignKey(
         'Localisation',
         default=None,
@@ -52,8 +52,10 @@ class Localisation(Statistics):
         default=MINIMUM_ORDER,
         verbose_name=_("Order"),
         help_text=_("Display order"))
-    # TODO: To delete after migration
-    old_migrateStatus = models.TextField(default="")
+    #TODO: TMP: To delete after migrations
+    old_migrateStatus = models.TextField(
+        default=""
+    )
 
 
     """ ---------------------------------------------------- """
@@ -64,7 +66,7 @@ class Localisation(Statistics):
         return objectMap
 
     """ ---------------------------------------------------- """
-    def get_data(self, language: LanguageAvailable = LanguageAvailable.EN.value):
+    def get_data(self, language: LanguageAvailable = LanguageAvailable.EN):
         return LocalisationData.objects.get(localisation=self, language=language)
 
     """ ---------------------------------------------------- """
@@ -111,3 +113,89 @@ def _localisation_deletion(instance, **kwargs):
         children.save()
 
 pre_delete.connect(_localisation_deletion, sender = Localisation)
+
+""" ------------------------------
+Unknown Localisation
+------------------------------ """
+#TODO: For all Unknown model, add verification is_visible to False in main_consistency
+class UnknownLocalisation:
+    LANGUAGE_FR_NAME = "Inconnu"
+    LANGUAGE_FR_DESCRIPTION = \
+            "Localisation permettant de stocker les orphelins. Ne pas rendre visible !"
+    LANGUAGE_FR_LANGUAGE = LanguageAvailable.FR
+
+    LANGUAGE_EN_NAME = "Unknown"
+    LANGUAGE_EN_DESCRIPTION = \
+            "Localisation use to store lost. Do not set it visible !"
+    LANGUAGE_EN_LANGUAGE = LanguageAvailable.EN
+
+    CODE = "NONE"
+    INSEE = 0
+    ORDER = 0
+    PARENT = None
+    IS_ENABLE = True
+    IS_VISIBLE = False
+
+    def getFieldsDataFr():
+        return {
+            "name": UnknownLocalisation.LANGUAGE_FR_NAME,
+            "description": UnknownLocalisation.LANGUAGE_FR_DESCRIPTION,
+            "language": UnknownLocalisation.LANGUAGE_FR_LANGUAGE
+        }
+    def getFieldsDataEn():
+        return {
+            "name": UnknownLocalisation.LANGUAGE_EN_NAME,
+            "description": UnknownLocalisation.LANGUAGE_EN_DESCRIPTION,
+            "language": UnknownLocalisation.LANGUAGE_EN_LANGUAGE
+        }
+    def getFields():
+        toto = UnknownLocalisation.INSEE
+        return {
+            "code": UnknownLocalisation.CODE,
+            "insee": UnknownLocalisation.INSEE,
+            "order": UnknownLocalisation.ORDER,
+            "parent": UnknownLocalisation.PARENT,
+            "is_enable": UnknownLocalisation.IS_ENABLE,
+            "is_visible": UnknownLocalisation.IS_VISIBLE
+        }
+
+
+def createUnknownLocalisation(user):
+    localisation = Localisation.objects.create(
+        code = UnknownLocalisation.CODE,
+        insee = UnknownLocalisation.INSEE,
+        order = UnknownLocalisation.ORDER,
+        # parent = UnknownLocalisation.PARENT,
+        is_enable = UnknownLocalisation.IS_ENABLE,
+        is_visible = UnknownLocalisation.IS_VISIBLE,
+        creation_user = user,
+        approval_date = datetime.now(),
+        approval_user = user
+    )
+    LocalisationData.objects.create(
+        name = UnknownLocalisation.LANGUAGE_FR_NAME,
+        description = UnknownLocalisation.LANGUAGE_FR_DESCRIPTION,
+        language = UnknownLocalisation.LANGUAGE_FR_LANGUAGE,
+        category = localisation
+    )
+    LocalisationData.objects.create(
+        name = UnknownLocalisation.LANGUAGE_EN_NAME,
+        description = UnknownLocalisation.LANGUAGE_EN_DESCRIPTION,
+        language = UnknownLocalisation.LANGUAGE_EN_LANGUAGE,
+        category = localisation
+    )
+
+def getUnknownLocalisation():
+    return LocalisationData.objects.get(
+        name = UnknownLocalisation.LANGUAGE_EN_NAME,
+        description = UnknownLocalisation.LANGUAGE_EN_DESCRIPTION,
+        language = UnknownLocalisation.LANGUAGE_EN_LANGUAGE,
+        localisation__in=Localisation.objects.filter(
+            code = UnknownLocalisation.CODE,
+            insee = UnknownLocalisation.INSEE,
+            order = UnknownLocalisation.ORDER,
+            parent = UnknownLocalisation.PARENT,
+            is_enable = UnknownLocalisation.IS_ENABLE,
+            is_visible = UnknownLocalisation.IS_VISIBLE
+            )
+    ).localisation
