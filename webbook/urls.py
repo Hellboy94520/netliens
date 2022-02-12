@@ -2,6 +2,7 @@
 
 from django.urls import path, include
 from django.conf.urls import url
+from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.conf.urls.i18n import i18n_patterns
 from django.utils.translation import ugettext_lazy as _
@@ -9,7 +10,15 @@ from django.views.generic import TemplateView
 
 from .views import *
 
+from rest_framework import routers
+from todo import views
+
+router = routers.DefaultRouter()
+router.register(r'todos', views.TodoView, 'todo')
+
 urlpatterns = [
+  path('admin/', admin.site.urls),
+  path('api/', include(router.urls)),
   # NetLiens
   # path('', netliens.HomeView.as_view()),
   # path('category/<int:category_id>', netliens.CategoryView.as_view()),

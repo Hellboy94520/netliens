@@ -41,13 +41,19 @@ ALLOWED_HOSTS = ['*']
 
 # Application definition
 INSTALLED_APPS = [
+    'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_extensions',
-    'webbook'
+    # React
+    'corsheaders',
+    'rest_framework',
+    # Django application
+    'webbook',
+    'todo',
 ]
 
 MIDDLEWARE = [
@@ -58,6 +64,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    # React
+    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'netliens.urls'
@@ -238,3 +246,9 @@ handler404 = 'annuaire.views.errors.error404'
 handler500 = 'annuaire.views.errors.error500'
 handler403 = 'annuaire.views.errors.error403'
 handler400 = 'annuaire.views.errors.error400'
+
+
+# React
+CORS_ORIGIN_WHITELIST = [
+     'http://localhost:3000'
+]
