@@ -19,9 +19,15 @@ load_dotenv(join('../env', '.env'))
 
 import json
 from os.path import dirname, abspath
-CONFIG_FILE=None
-with open(abspath('../config/config.json')) as config_file:
+with open(abspath('../config/django.json')) as config_file:
     CONFIG_FILE = json.load(config_file)
+
+if os.environ['DJANGO_CONFIG_FILE']:
+    """
+        Some value need to be updated on a Docker context
+    """
+    with open(os.environ['DJANGO_CONFIG_FILE']) as config_file:
+        CONFIG_FILE = CONFIG_FILE | json.load(config_file)
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = dirname(dirname(abspath(__file__)))
