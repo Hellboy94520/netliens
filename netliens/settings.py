@@ -12,17 +12,19 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 
 import os
 
-# Read .env file
+# Read .env file on Docker context
 from dotenv import load_dotenv
-from os.path import join
-load_dotenv(join('../env', '.env'))
+from os.path import join, exists
+env_file_path = join('/workspace/env', '.env')
+if exists(env_file_path):
+    load_dotenv(env_file_path)
 
 import json
 from os.path import dirname, abspath
 with open(abspath('../config/django.json')) as config_file:
     CONFIG_FILE = json.load(config_file)
 
-if os.environ['DJANGO_CONFIG_FILE']:
+if os.environ.get('DJANGO_CONFIG_FILE'):
     """
         Some value need to be updated on a Docker context
     """
@@ -103,9 +105,9 @@ AUTH_USER_MODEL = 'webbook.User'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ['POSTGRES_NAME'],
-        'USER': os.environ['POSTGRES_USER'],
-        'PASSWORD': os.environ['POSTGRES_PASSWORD'],
+        'NAME': os.environ.get('POSTGRES_NAME', "postgres"),
+        'USER': os.environ.get('POSTGRES_USER', ""),
+        'PASSWORD': os.environ.get('POSTGRES_PASSWORD', ""),
         'HOST': CONFIG_FILE['DB_HOST'],
         'PORT': CONFIG_FILE['DB_PORT'],
         'AUTH_SOURCE': 'admin'

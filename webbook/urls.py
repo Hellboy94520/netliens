@@ -1,24 +1,21 @@
 # https://github.com/django/django/blob/stable/2.2.x/django/
 
 from django.urls import path, include
-from django.conf.urls import url
 from django.contrib import admin
-from django.contrib.auth import views as auth_views
-from django.conf.urls.i18n import i18n_patterns
-from django.utils.translation import ugettext_lazy as _
-from django.views.generic import TemplateView
-
-from .views import *
+from webbook.views.user import HomeView
 
 from rest_framework import routers
-from todo import views
+# EXEMPLE POUR LE TODO:
+# from todo import views
 
-router = routers.DefaultRouter()
-router.register(r'todos', views.TodoView, 'todo')
+# router = routers.DefaultRouter()
+# router.register(r'todos', views.TodoView, 'todo')
+router = routers.SimpleRouter()
 
 urlpatterns = [
   path('admin/', admin.site.urls),
-  path('api/', include(router.urls)),
+  path('', include(router.urls)),
+  path('home/', HomeView.as_view())
   # NetLiens
   # path('', netliens.HomeView.as_view()),
   # path('category/<int:category_id>', netliens.CategoryView.as_view()),
