@@ -1,15 +1,26 @@
+import { Link } from "react-router-dom";
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 
-import './App.css';
+export class App extends Component {
+  static propTypes = {
+  };
 
-class App extends Component {
-
-  render()  {
-    return  (
-      <h1>TOTO</h1>
+  render() {
+    return (
+      <div>
+        <h1>Bookkeeper</h1>
+        <nav
+          style={{
+            borderBottom: "solid 1px",
+            paddingBottom: "1rem",
+          }}
+        >
+          <Link to="/invoices">Invoices</Link> |{" "}
+          <Link to="/expenses">Expenses</Link>
+        </nav>
+      </div>
     );
   }
 }
-
-
-export default App;
+export default App()();
