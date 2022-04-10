@@ -8,15 +8,14 @@ import {
   Route,
 } from "react-router-dom";
 import App from "./features/home/App";
+import Root from "./Root";
 
 const Loading = () => <p>Loading ...</p>;
 
 ReactDOM.render(
   <React.Suspense fallback={<Loading />}>
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<App />} />
-      </Routes>
+      <Root />
     </BrowserRouter>
   </React.Suspense>,
   document.getElementById('root')
