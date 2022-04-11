@@ -2,20 +2,19 @@
 
 from django.urls import path, include
 from django.contrib import admin
+from webbook.views.account.authentification import CategoryView
 from webbook.views.user import HomeView
 
 from rest_framework import routers
-# EXEMPLE POUR LE TODO:
-# from todo import views
 
 # router = routers.DefaultRouter()
 # router.register(r'todos', views.TodoView, 'todo')
 router = routers.SimpleRouter()
-
-urlpatterns = [
-  path('admin/', admin.site.urls),
-  path('', include(router.urls)),
-  path('home/', HomeView.as_view())
+router.register('category', CategoryView, 'newcategory')
+urlpatterns = router.urls
+# urlpatterns = [
+#   path('admin/', admin.site.urls),
+#   path('', include(router.urls)),
   # NetLiens
   # path('', netliens.HomeView.as_view()),
   # path('category/<int:category_id>', netliens.CategoryView.as_view()),
@@ -133,4 +132,4 @@ urlpatterns = [
   #     template_name="admin/category.html")),
   # path('admin/localisation', admin.LocalisationView.as_view(
   #     template_name="admin/localisation.html")),
-]
+# ]

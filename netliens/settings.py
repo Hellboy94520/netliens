@@ -61,7 +61,6 @@ INSTALLED_APPS = [
     'rest_framework',
     # Django application
     'webbook',
-    'todo',
 ]
 
 MIDDLEWARE = [
