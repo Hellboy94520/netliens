@@ -28,6 +28,9 @@ class CategoryView(ModelViewSet):
     serializer_class = NewCategorySerializer
     queryset = NewCategory.objects.all()
 
+    def __init__(self, **kwargs) -> None:
+        super().__init__(**kwargs)
+
 
 
 # from ...models import User

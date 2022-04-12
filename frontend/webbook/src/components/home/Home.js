@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import { getCategories } from './actions/category';
+import { getCategories } from '../../actions/category';
 
 import Grid from '@mui/material/Grid';
 import TextField from '@mui/material/TextField';
@@ -11,15 +11,15 @@ import { connect } from 'react-redux';
 export class Home extends Component {
 
   static propTypes = {
-    categories: PropTypes.array.isRequired,
     getCategories: PropTypes.func.isRequired
   };
 
   componentDidMount() {
-    this.props.getCategories();
+    this.props.getCategories()
   }
 
   render() {
+    const { categories } = this.props;
     return (
       <div className='category-form'>
         <Grid container>
@@ -35,12 +35,13 @@ export class Home extends Component {
             <Button variant="contained">Save</Button>
           </Grid>
         </Grid>
+        { console.log(categories) }
           {
-            this.props.categories ? (
+            categories ? (
               <table className='category_list'>
-              { this.props.categories.map((category) => (
+              { categories.map((category) => (
               <tr key={category.id} className='category'>
-                <td>{category.name}</td>
+                <td>{category.name}: {category.description}</td>
               </tr>
               ))}
               </table>

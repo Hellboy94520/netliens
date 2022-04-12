@@ -1,10 +1,10 @@
-import { GET_CATEGORIES } from '../actions/types.js';
+import { GET_CATEGORIES } from '../actions/types';
 
 const initialState = {
-  categories: []
+  categories: null
 };
 
-export default function getCategories(state = initialState, action) {
+export default function cat(state = initialState, action) {
   switch(action.type) {
     case GET_CATEGORIES:
       return {
