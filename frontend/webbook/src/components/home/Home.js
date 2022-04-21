@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import { getCategories } from '../../actions/category';
+import { getCategories } from '../../actions/getCategory';
 
+import { DataGrid, } from '@mui/x-data-grid';
 import Grid from '@mui/material/Grid';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
@@ -29,26 +30,54 @@ export class Home extends Component {
               type={'name'}
               fullWidth/>
           </Grid>
+          <Grid item xs={12}>
+            <TextField id={'description'}
+                label={'Description'}
+                type={'description'}
+                fullWidth/>
+          </Grid>
         </Grid>
         <Grid container marginTop={'10px'}>
           <Grid item xs={12}>
-            <Button variant="contained">Save</Button>
+            <Button variant="contained">Create</Button>
           </Grid>
         </Grid>
-        { console.log(categories) }
-          {
-            categories ? (
-              <table className='category_list'>
-              { categories.map((category) => (
-              <tr key={category.id} className='category'>
-                <td>{category.name}: {category.description}</td>
-              </tr>
-              ))}
-              </table>
+        <div style={{ width: '100%', height: '900px', marginTop: '10px'}}>
+          { categories ? (
+              <DataGrid
+                marginTop={10}
+                rows={categories}
+                rowHeight={130}
+                getRowId={(row) => row.id}
+                columns={[
+                  {
+                    field: 'id',
+                    headerName: 'id',
+                    flex: 2,
+                    align: 'center',
+                    headerAlign: 'center',
+                  },
+                  {
+                    field: 'name',
+                    headerName: 'Name',
+                    flex: 2,
+                    align: 'center',
+                    headerAlign: 'center',
+                  },
+                  {
+                    field: 'description',
+                    headerName: 'Description',
+                    flex: 8,
+                    align: 'left',
+                    headerAlign: 'center',
+                  }
+                ]}
+              />
             ) : (
               <h3>No Category</h3>
             )
           }
+        </div>
       </div>
     );
   }
