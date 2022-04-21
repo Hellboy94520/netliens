@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import { getCategories } from '../../actions/getCategory';
+import { getCategories } from '../../actions/getCategories';
 
 import { DataGrid, } from '@mui/x-data-grid';
 import Grid from '@mui/material/Grid';
