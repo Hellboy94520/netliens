@@ -10,7 +10,6 @@ render((
     <BrowserRouter>
       <Fragment>
         <div className="container">
-          <h3>TOTO</h3>
           <App  />
         </div>
       </Fragment>

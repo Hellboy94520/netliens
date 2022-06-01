@@ -6,19 +6,21 @@ from webbook.views.account.authentification import CategoryView
 
 from rest_framework import routers
 from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
     TokenRefreshView,
     TokenVerifyView
 )
-# router = routers.DefaultRouter()
-# router.register(r'todos', views.TodoView, 'todo')
+from webbook.views.authentification import LogoutAndBlacklistRefreshTokenForUserView
+from webbook.views.authentification import TokenObtainPairView
+
 router = routers.SimpleRouter()
 router.register('category', CategoryView, 'newcategory')
 urlpatterns = [
-  re_path(r'^api/', include((router.urls))),
-  path('api/token/', TokenObtainPairView.as_view()),
+  # re_path(r'^api/', include((router.urls))),
+  path('api/token/', TokenObtainPairView.as_view(), name='token_refresh'),
   path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
   path('api/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
+  path('api/blacklist/', LogoutAndBlacklistRefreshTokenForUserView.as_view(), name='blacklist'),
+  path('admin/', admin.site.urls),
 ]
 # urlpatterns = [
 #   path('admin/', admin.site.urls),
