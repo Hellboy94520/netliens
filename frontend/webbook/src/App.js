@@ -8,6 +8,9 @@ import { AuthProvider } from "./content/AuthContext"
 import Navbar from "./components/Navbar"
 import Home from "./components/home/Home"
 import Login from "./components/login/Login";
+import ProtectedPage from "./components/home/Protected";
+
+import PrivateRoute from "./utils/AuthRoute";
 // import { loadUser } from "./actions/auth";
 
 class App extends Component {
@@ -27,6 +30,11 @@ class App extends Component {
             <Routes>
               <Route path="/" element={<Home />}/>
               <Route exact path="/login/" element={<Login />}/>
+              <Route element={
+                <PrivateRoute>
+                  <ProtectedPage />
+                </PrivateRoute>
+              } path="/protected" exact />
             </Routes>
           </AuthProvider>
       </div>
