@@ -1,6 +1,6 @@
 import { useContext } from "react";
 import { Link } from "react-router-dom";
-import AuthContext from "../content/AuthContext"
+import AuthContext from "../context/AuthContext"
 
 const Navbar = () => {
   const { user, logoutUser } = useContext(AuthContext);
@@ -9,9 +9,9 @@ const Navbar = () => {
       <div>
         <h1>App Name</h1>
         <div>
+          <Link to="/">Home</Link>
           {user ? (
             <>
-              <Link to="/">Home</Link>
               <Link to="/protected">Protected Page</Link>
               <button onClick={logoutUser}>Logout</button>
             </>

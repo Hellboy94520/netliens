@@ -4,14 +4,13 @@ import {
   Routes
 } from "react-router-dom";
 
-import { AuthProvider } from "./content/AuthContext"
+import { AuthProvider } from "./context/AuthContext"
 import Navbar from "./components/Navbar"
 import Home from "./components/home/Home"
 import Login from "./components/login/Login";
 import ProtectedPage from "./components/home/Protected";
 
 import PrivateRoute from "./utils/AuthRoute";
-// import { loadUser } from "./actions/auth";
 
 class App extends Component {
   constructor(props) {

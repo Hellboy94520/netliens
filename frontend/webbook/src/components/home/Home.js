@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import AuthContext from '../../content/AuthContext';
+import AuthContext from '../../context/AuthContext';
 
 export class Home extends Component {
 

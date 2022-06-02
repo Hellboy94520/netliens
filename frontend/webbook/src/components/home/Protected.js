@@ -7,7 +7,6 @@ export class ProtectedPage extends Component {
     return (
       <div>
         <h1>Protected Page</h1>
-        {/* <p>{res}</p> */}
       </div>
     );
   }
