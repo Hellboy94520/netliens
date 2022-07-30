@@ -2,6 +2,8 @@
 # from .abstract.administration import Administration
 # from .announcement import Announcement, AnnouncementData, TITLE_MAX_LENGTH, URL_MAX_LENGTH
 from webbook.models.category import Category, CategoryData
+from webbook.models.localisation import Localisation, LocalisationData
+from webbook.models.announcement import Announcement, AnnouncementData
 from .user import User
 # from .homepage import Homepage
 # from .localisation import Localisation, LocalisationData, UnknownLocalisation, createUnknownLocalisation, getUnknownLocalisation, get_all_localisation_in_order, MINIMUM_ORDER, TITLE_MAX_LENGTH, MAX_CODE_LENGTH

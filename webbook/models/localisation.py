@@ -10,9 +10,9 @@ MINIMUM_ORDER=0
 MINIMUM_INSEE=0
 MAX_CODE_LENGTH=5
 
-from webbook.models.abstract.administration import Administration as AdministrationModel
-from webbook.models.abstract.language import Language as LanguageModel
-from webbook.models.abstract.language import LanguageAvailable
+from webbook.models.abstract.administration import AdministrationModel
+from webbook.models.abstract.language import LanguageModel
+from webbook.models.abstract.language import Language
 
 def get_all_localisation_in_order(**kwargs):
     l_localisation_list = []
@@ -58,14 +58,14 @@ class Localisation(AdministrationModel):
 
 
     """ ---------------------------------------------------- """
-    def get_localisationWithData(language: LanguageAvailable, order:str, **kwargs):
+    def get_localisationWithData(language: Language, order:str, **kwargs):
         objectMap = {}
         for localisation in Localisation.objects.filter(**kwargs).order_by(order):
             objectMap[localisation] = localisation.get_data(language=language)
         return objectMap
 
     """ ---------------------------------------------------- """
-    def get_data(self, language: LanguageAvailable = LanguageAvailable.EN):
+    def get_data(self, language: Language = Language.EN):
         return LocalisationData.objects.get(localisation=self, language=language)
 
     """ ---------------------------------------------------- """
@@ -103,98 +103,12 @@ class LocalisationData(LanguageModel):
 Signals
 ------------------------------------------------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------------------------------------- """
-def _localisation_deletion(instance, **kwargs):
-    """
-        Deletion of Localisation need to change it children parent settings
-    """
-    for children in Localisation.objects.filter(parent=instance):
-        children.parent = instance.parent
-        children.save()
+# def _localisation_deletion(instance, **kwargs):
+#     """
+#         Deletion of Localisation need to change it children parent settings
+#     """
+#     for children in Localisation.objects.filter(parent=instance):
+#         children.parent = instance.parent
+#         children.save()
 
-pre_delete.connect(_localisation_deletion, sender = Localisation)
-
-""" ------------------------------
-Unknown Localisation
------------------------------- """
-#TODO: For all Unknown model, add verification is_visible to False in main_consistency
-class UnknownLocalisation:
-    LANGUAGE_FR_NAME = "Inconnu"
-    LANGUAGE_FR_DESCRIPTION = \
-            "Localisation permettant de stocker les orphelins. Ne pas rendre visible !"
-    LANGUAGE_FR_LANGUAGE = LanguageAvailable.FR
-
-    LANGUAGE_EN_NAME = "Unknown"
-    LANGUAGE_EN_DESCRIPTION = \
-            "Localisation use to store lost. Do not set it visible !"
-    LANGUAGE_EN_LANGUAGE = LanguageAvailable.EN
-
-    CODE = "NONE"
-    INSEE = 0
-    ORDER = 0
-    PARENT = None
-    IS_ENABLE = True
-    IS_VISIBLE = False
-
-    def getFieldsDataFr():
-        return {
-            "name": UnknownLocalisation.LANGUAGE_FR_NAME,
-            "description": UnknownLocalisation.LANGUAGE_FR_DESCRIPTION,
-            "language": UnknownLocalisation.LANGUAGE_FR_LANGUAGE
-        }
-    def getFieldsDataEn():
-        return {
-            "name": UnknownLocalisation.LANGUAGE_EN_NAME,
-            "description": UnknownLocalisation.LANGUAGE_EN_DESCRIPTION,
-            "language": UnknownLocalisation.LANGUAGE_EN_LANGUAGE
-        }
-    def getFields():
-        toto = UnknownLocalisation.INSEE
-        return {
-            "code": UnknownLocalisation.CODE,
-            "insee": UnknownLocalisation.INSEE,
-            "order": UnknownLocalisation.ORDER,
-            "parent": UnknownLocalisation.PARENT,
-            "is_enable": UnknownLocalisation.IS_ENABLE,
-            "is_visible": UnknownLocalisation.IS_VISIBLE
-        }
-
-
-def createUnknownLocalisation(user):
-    localisation = Localisation.objects.create(
-        code = UnknownLocalisation.CODE,
-        insee = UnknownLocalisation.INSEE,
-        order = UnknownLocalisation.ORDER,
-        # parent = UnknownLocalisation.PARENT,
-        is_enable = UnknownLocalisation.IS_ENABLE,
-        is_visible = UnknownLocalisation.IS_VISIBLE,
-        creation_user = user,
-        approval_date = datetime.now(),
-        approval_user = user
-    )
-    LocalisationData.objects.create(
-        name = UnknownLocalisation.LANGUAGE_FR_NAME,
-        description = UnknownLocalisation.LANGUAGE_FR_DESCRIPTION,
-        language = UnknownLocalisation.LANGUAGE_FR_LANGUAGE,
-        category = localisation
-    )
-    LocalisationData.objects.create(
-        name = UnknownLocalisation.LANGUAGE_EN_NAME,
-        description = UnknownLocalisation.LANGUAGE_EN_DESCRIPTION,
-        language = UnknownLocalisation.LANGUAGE_EN_LANGUAGE,
-        category = localisation
-    )
-
-def getUnknownLocalisation():
-    return LocalisationData.objects.get(
-        name = UnknownLocalisation.LANGUAGE_EN_NAME,
-        description = UnknownLocalisation.LANGUAGE_EN_DESCRIPTION,
-        language = UnknownLocalisation.LANGUAGE_EN_LANGUAGE,
-        localisation__in=Localisation.objects.filter(
-            code = UnknownLocalisation.CODE,
-            insee = UnknownLocalisation.INSEE,
-            order = UnknownLocalisation.ORDER,
-            parent = UnknownLocalisation.PARENT,
-            is_enable = UnknownLocalisation.IS_ENABLE,
-            is_visible = UnknownLocalisation.IS_VISIBLE
-            )
-    ).localisation
+# pre_delete.connect(_localisation_deletion, sender = Localisation)

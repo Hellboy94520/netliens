@@ -1,5 +1,5 @@
-from webbook.models.localisation import Localisation, LocalisationData, UnknownLocalisation
-from webbook.models.abstract.language import LanguageAvailable
+from webbook.models.localisation import Localisation, LocalisationData
+from webbook.models.abstract.language import Language
 from .localisation_mapping import SQL_MAP_LIST
 
 
@@ -59,13 +59,13 @@ def __getContinent(importUser, inseePath, sqlConfig):
         LocalisationData.objects.create(
             name = __toLowerCase(content[1]),
             description = "Continent",
-            language = LanguageAvailable.FR,
+            language = Language.FR,
             localisation = localisation
         )
         LocalisationData.objects.create(
             name = __toLowerCase(content[2]),
             description = "Continent",
-            language = LanguageAvailable.EN,
+            language = Language.EN,
             localisation = localisation
         )
 
@@ -118,20 +118,20 @@ def __getCountry(importUser, inseePath, sqlConfig):
         LocalisationData.objects.create(
             name = __toLowerCase(content[5]),
             description = "Pays",
-            language = LanguageAvailable.FR,
+            language = Language.FR,
             localisation = localisation
         )
         LocalisationData.objects.create(
             name = __toLowerCase(content[5]),
             description = "Country",
-            language = LanguageAvailable.EN,
+            language = Language.EN,
             localisation = localisation
         )
 
 def __getFranceFromDb():
     # Get France Localisation to continue
     FRANCE_NAME = "France"
-    franceData = LocalisationData.objects.filter(name=FRANCE_NAME, language=LanguageAvailable.FR)
+    franceData = LocalisationData.objects.filter(name=FRANCE_NAME, language=Language.FR)
     assert franceData.count() == 1, f"Impossible to find a parent with a name value equal to '{FRANCE_NAME}'"
     return franceData[0].localisation
 
@@ -175,13 +175,13 @@ def __getRegion(importUser, inseePath, sqlConfig, france):
         LocalisationData.objects.create(
             name = __toLowerCase(content[4]),
             description = "Région Française",
-            language = LanguageAvailable.FR,
+            language = Language.FR,
             localisation = localisation
         )
         LocalisationData.objects.create(
             name = __toLowerCase(content[4]),
             description = "French region",
-            language = LanguageAvailable.EN,
+            language = Language.EN,
             localisation = localisation
         )
 
@@ -233,13 +233,13 @@ def __getDepartment(importUser, inseePath, sqlConfig, france):
         LocalisationData.objects.create(
             name = content[5],
             description = "Département Français",
-            language = LanguageAvailable.FR,
+            language = Language.FR,
             localisation = localisation
         )
         LocalisationData.objects.create(
             name = content[5],
             description = "French Department",
-            language = LanguageAvailable.EN,
+            language = Language.EN,
             localisation = localisation
         )
 
@@ -252,15 +252,6 @@ def generateModels(importUser, inseePath, sqlConfig):
 
     __getRegion(importUser, inseePath, sqlConfig, france)
     __getDepartment(importUser, inseePath, sqlConfig, france)
-
-    # --------------------------
-    # Create an unknown
-    # --------------------------
-    unknownLocalisationFields = UnknownLocalisation.getFields()
-    unknownLocalisationFields['creation_user'] = importUser
-    unknownLocalisation = Localisation.objects.create(**unknownLocalisationFields)
-    LocalisationData.objects.create(**UnknownLocalisation.getFieldsDataFr(), localisation=unknownLocalisation)
-    LocalisationData.objects.create(**UnknownLocalisation.getFieldsDataEn(), localisation=unknownLocalisation)
 
 def sqlAssociation(sqlKey: int) -> Localisation:
     for map in SQL_MAP_LIST:

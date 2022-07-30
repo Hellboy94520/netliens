@@ -5,10 +5,9 @@ from django.db.models.signals import pre_delete
 
 from webbook.models.user import User
 from webbook.models.category import Category
-from webbook.models.abstract.language import Language as LanguageModel
+from webbook.models.abstract.language import LanguageModel
 from webbook.models.localisation import Localisation
-from webbook.models.abstract.administration import Administration as AdministrationModel
-from webbook.models.abstract.sqlimport import SqlImport
+from webbook.models.abstract.administration import AdministrationModel
 
 alphanumeric = RegexValidator(r'^[0-9a-zA-Z]*$', _("Only alphanumeric characters are allowed."))
 
@@ -22,7 +21,7 @@ NL_LEVEL_MAX=10
 Models
 ------------------------------------------------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------------------------------------- """
-class Announcement(AdministrationModel, SqlImport):
+class Announcement(AdministrationModel):
     # Updatable by User
     url = models.CharField(
         default="",
@@ -48,11 +47,13 @@ class Announcement(AdministrationModel, SqlImport):
         help_text=_("Your website address"))
     category = models.ForeignKey(
         Category,
+        null=True,
         on_delete=models.DO_NOTHING,
         verbose_name=_("Category"),
         help_text=_("Announcement Category"))
     localisation = models.ForeignKey(
         Localisation,
+        null=True,
         on_delete=models.DO_NOTHING,
         verbose_name=_("Localisation"),
         help_text=_("Announcement Localisation"))
@@ -101,7 +102,8 @@ class Announcement(AdministrationModel, SqlImport):
 class AnnouncementData(LanguageModel):
     announcement = models.ForeignKey(
         Announcement,
-        on_delete=models.CASCADE)
+        on_delete=models.CASCADE
+    )
 
 
 """ --------------------------------------------------------------------------------------------------------------------
