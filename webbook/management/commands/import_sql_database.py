@@ -2,7 +2,7 @@ from configparser import ConfigParser
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 
-from webbook.models import Category, Localisation, User, Announcement
+from webbook.models import Category, User#, Localisation, Announcement
 
 from time import time
 from os.path import abspath, exists
@@ -10,8 +10,8 @@ from os.path import abspath, exists
 from .sql_object.configParser import parseSqlConfig
 from .sql_object.sqlPointer import SqlPointer
 from .sql_object import category as SqlCategory
-from .sql_object import localisation as SqlLocation
-from .sql_object import announcement as SqlAnnouncement
+# from .sql_object import localisation as SqlLocation
+# from .sql_object import announcement as SqlAnnouncement
 
 EXPECTED_ANSWER_TO_START = "YES"
 
@@ -51,7 +51,7 @@ class Command(BaseCommand):
         # Check if PostGreSql models are empty
         self.stdout.write("[INFO] Vérifying local Database is empty")
         for model in [
-            Announcement, Category, Localisation, User
+            Category, User#, Localisation, Localisation,
         ]:
             self.check_models_empty(model)
         self.print_ok("Local Database is empty")
@@ -93,7 +93,7 @@ class Command(BaseCommand):
         # ------------------------------------
         self.print_running("Models from SQL Database downloading")
         annu_cats = sqlPointer.getSqlModel(SQL_TABLE_CATS)
-        annu_site = sqlPointer.getSqlModel(SQL_TABLE_SITE)
+        # annu_site = sqlPointer.getSqlModel(SQL_TABLE_SITE)
         self.print_ok("Models from SQL Database downloaded")
 
         # ------------------------------------
@@ -103,14 +103,14 @@ class Command(BaseCommand):
         SqlCategory.conversion(annu_cats, import_account)
         self.print_ok(f"{Category.objects.all().count()}/{len(annu_cats)} {Category.__name__} imported.")
 
-        self.print_running(f"Creation of {Localisation.__name__} in PostgreSql")
-        SqlLocation.generateModels(import_account, INSEE_PATH_FOLDER, sqlConfigParser)
-        self.print_ok(f"{Localisation.objects.all().count()} {Localisation.__name__} created.")
+        # self.print_running(f"Creation of {Localisation.__name__} in PostgreSql")
+        # SqlLocation.generateModels(import_account, INSEE_PATH_FOLDER, sqlConfigParser)
+        # self.print_ok(f"{Localisation.objects.all().count()} {Localisation.__name__} created.")
 
-        self.print_running(f"Creation of {Announcement.__name__} in PostgreSql")
-        SqlAnnouncement.conversion(annu_site, SQL_TABLE_SITE_APPARTIENT, sqlPointer, import_account)
-        self.print_ok(f"{Announcement.objects.all().count()}/{len(annu_site)} {Announcement.__name__} imported.")
-        self.print_ok(f"{User.objects.all().count()} {User.__name__} created.")
+        # self.print_running(f"Creation of {Announcement.__name__} in PostgreSql")
+        # SqlAnnouncement.conversion(annu_site, SQL_TABLE_SITE_APPARTIENT, sqlPointer, import_account)
+        # self.print_ok(f"{Announcement.objects.all().count()}/{len(annu_site)} {Announcement.__name__} imported.")
+        # self.print_ok(f"{User.objects.all().count()} {User.__name__} created.")
 
         # ------------------------------------
         # End

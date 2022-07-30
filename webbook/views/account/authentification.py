@@ -20,19 +20,17 @@ from rest_framework.viewsets import ModelViewSet, ViewSet
 from rest_framework.views import APIView
 
 from rest_framework.response import Response
-from webbook.models import NewCategory
-from webbook.serializer import NewCategorySerializer
 
 # from ..common import decorators as my_decorators
 # from ..common import email
 
-class CategoryView(ModelViewSet):
+# class CategoryView(ModelViewSet):
 
-    serializer_class = NewCategorySerializer
-    queryset = NewCategory.objects.all()
+#     serializer_class = NewCategorySerializer
+#     queryset = NewCategory.objects.all()
 
-    def __init__(self, **kwargs) -> None:
-        super().__init__(**kwargs)
+#     def __init__(self, **kwargs) -> None:
+#         super().__init__(**kwargs)
 
 class TestView(APIView):
     authentication_classes = [authentication.TokenAuthentication]

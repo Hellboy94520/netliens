@@ -3,7 +3,6 @@
 from django.urls import path, include, re_path
 from django.contrib import admin
 from webbook.views.account.authentification import TestView
-from webbook.views.account.authentification import CategoryView
 
 from rest_framework import routers
 from rest_framework_simplejwt.views import (

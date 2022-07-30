@@ -3,7 +3,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from webbook.models.user import User
 
-class Administration(models.Model):
+class AdministrationModel(models.Model):
     """
         Contains the data used by administration_only for models, not visible by Users
     """
@@ -45,6 +45,7 @@ class Administration(models.Model):
         on_delete=models.RESTRICT,
         related_name="%(class)s_approval_user"
     )
+    internal_note = models.TextField(default='', blank=True, verbose_name=_("Internal note"))
 
     class Meta:
         abstract = True
