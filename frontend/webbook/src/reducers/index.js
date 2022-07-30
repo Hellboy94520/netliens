@@ -1,6 +1,7 @@
 import { combineReducers } from "redux";
-import categories from './categories'
+import test from './test'
 
+//Cf src/common/routeReducer
 export default combineReducers({
-  categories
+  test
 });

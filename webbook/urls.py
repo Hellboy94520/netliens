@@ -2,6 +2,7 @@
 
 from django.urls import path, include, re_path
 from django.contrib import admin
+from webbook.views.account.authentification import TestView
 from webbook.views.account.authentification import CategoryView
 
 from rest_framework import routers
@@ -13,9 +14,11 @@ from webbook.views.authentification import LogoutAndBlacklistRefreshTokenForUser
 from webbook.views.authentification import TokenObtainPairView
 
 router = routers.SimpleRouter()
-router.register('category', CategoryView, 'newcategory')
+# router.register('category', CategoryView, 'newcategory')
+# router.register('test/', TestView, base_name='test')
 urlpatterns = [
-  # re_path(r'^api/', include((router.urls))),
+  re_path(r'^api/', include((router.urls))),
+  path('api/test/', TestView.as_view(), name="test"),
   path('api/token/', TokenObtainPairView.as_view(), name='token_refresh'),
   path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
   path('api/token/verify/', TokenVerifyView.as_view(), name='token_verify'),

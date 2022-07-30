@@ -1,4 +1,5 @@
 import json
+from random import randint
 from django.forms.forms import Form
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import Http404, HttpResponse
@@ -14,8 +15,10 @@ from django.utils.http import urlsafe_base64_encode
 # from django.views import View
 # from django.views.generic import TemplateView, FormView
 
+from rest_framework import authentication
+from rest_framework.viewsets import ModelViewSet, ViewSet
 from rest_framework.views import APIView
-from rest_framework.viewsets import ModelViewSet
+
 from rest_framework.response import Response
 from webbook.models import NewCategory
 from webbook.serializer import NewCategorySerializer
@@ -31,9 +34,15 @@ class CategoryView(ModelViewSet):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
 
+class TestView(APIView):
+    authentication_classes = [authentication.TokenAuthentication]
 
+    def get(self, *args, **kwargs):
+        """Return a random number.
+        """
+        return HttpResponse(json.dumps({'number': randint(0,10)}), "application/javascript")
 
-# from ...models import User
+# from ...models import User@
 # from ...forms import CheckPasswordForm, SignUpForm, send_mail as SendEmail
 
 # -----------------------------
