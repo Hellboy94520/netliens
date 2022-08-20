@@ -9,10 +9,6 @@ export const getCategories = () => (dispatch, getState) => {
     type: GET_CATEGORIES,
     payload: [ 'baak1', 'baak2' ]
   });
-  return {
-    type: GET_CATEGORIES,
-    payload: ["book1","book2", "book3"]
-  }
   // axios
   //   .get("/category/list/")
   //   .then((res) => {

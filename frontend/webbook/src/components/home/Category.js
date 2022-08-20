@@ -5,33 +5,19 @@ import categories from "../../reducers/categories";
 
 
 const CategoryPage = (props) => {
-  // const api = useAxios();
-
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     try {
-  //       const response = await api.get("/category/list/");
-  //       setRes(response.data);
-  //     } catch {
-  //       setRes("Something went wrong");
-  //     }
-  //   };
-  //   fetchData();
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, []);
-
-  const [categories, setCategories] = useState(null)
-
+  const [ categories ] = useState(null)
 
   useEffect(() => {
-    setCategories(props.getCategories().payload)
-    console.log(categories)
+    console.log("useEffect")
+    // console.log(props.getCategories())
+    // // setCategories(props.getCategories().categories.categories_list)
+    console.log(props.categories)
   }, [])
 
   return (
     <div>
       <h1>Categories</h1>
-      { categories ? categories : "Vide" }
+      { props.categories ? props.categories : "Vide" }
       {/* { categories.map((content, index) => content) } */}
       {/* { props.categories ? "OK" : "NOK"} */}
       {/* {props.categories ? (
@@ -47,7 +33,8 @@ const CategoryPage = (props) => {
 }
 const mapStateToProps = (state) => {
   console.log("CategoryPage-mapStateToProps")
-  return { categories: state.categories };
+  const { categories } = state
+  return { categories: categories.categories_list };
 };
 
 const mapDispatchToProps = dispatch => {
