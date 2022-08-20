@@ -10,6 +10,7 @@ const Navbar = () => {
         <h1>App Name</h1>
         <div>
           <Link to="/">Home</Link>
+          <Link to="/category/">Category</Link>
           {user ? (
             <>
               <Link to="/protected">Protected Page</Link>

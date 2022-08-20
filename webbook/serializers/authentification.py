@@ -1,8 +1,5 @@
 from rest_framework import serializers
-from .models.user import User
-
-
-
+from webbook.models.user import User
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer as JwtTokenObtainPairSerializer
 
 class TokenObtainPairSerializer(JwtTokenObtainPairSerializer):

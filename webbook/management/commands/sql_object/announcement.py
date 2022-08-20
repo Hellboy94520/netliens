@@ -82,7 +82,7 @@ def conversion(sqlAnnuSiteList, annuSiteAppartientModelName, sqlPointer, importU
         if website_identical.count() > 0:
             is_enable = False
             is_visible = False
-            logging.error("Website is identical to other(s) {list(website_identical.values_list('pk', flat=True))} !")
+            logging.error(f"Website is identical to other(s) {list(website_identical.values_list('pk', flat=True))} !")
             i = 0
             while Announcement.objects.filter(website=website):
                 website = website.replace(f".IMPORT_{i}", "")

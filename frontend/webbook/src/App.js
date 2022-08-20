@@ -9,6 +9,7 @@ import Navbar from "./components/Navbar"
 import Home from "./components/home/Home"
 import Login from "./components/login/Login";
 import ProtectedPage from "./components/home/Protected";
+import CategoryPage from "./components/home/Category";
 
 import PrivateRoute from "./utils/AuthRoute";
 
@@ -29,6 +30,7 @@ class App extends Component {
             <Routes>
               <Route path="/" element={<Home />}/>
               <Route exact path="/login/" element={<Login />}/>
+              <Route path="/category/" element={<CategoryPage />}/>
               <Route element={
                 <PrivateRoute>
                   <ProtectedPage />

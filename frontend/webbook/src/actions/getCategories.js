@@ -5,7 +5,7 @@ import { GET_CATEGORIES } from "./types";
 // GET LEADS
 export const getCategories = () => (dispatch, getState) => {
   axios
-    .get("/category/")
+    .get("/category/list/")
     .then((res) => {
       dispatch({
         type: GET_CATEGORIES,
